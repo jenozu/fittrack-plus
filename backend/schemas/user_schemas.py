@@ -13,7 +13,7 @@ class UserBase(BaseModel):
 # User Registration
 class UserRegister(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=6)
+    password: str = Field(..., min_length=6, max_length=72)
     first_name: Optional[str] = None
     last_name: Optional[str] = None
 

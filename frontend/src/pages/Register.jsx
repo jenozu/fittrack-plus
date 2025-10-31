@@ -40,6 +40,11 @@ const Register = () => {
       return;
     }
     
+    if (formData.password.length > 72) {
+      setError('Password must be less than 72 characters');
+      return;
+    }
+    
     setLoading(true);
     
     const result = await register({
