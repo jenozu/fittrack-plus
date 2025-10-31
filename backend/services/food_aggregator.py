@@ -2,8 +2,8 @@
 Food Aggregation and Normalization Layer
 This module coordinates food searches across multiple sources:
 1. Internal food_master database (cached results)
-2. Nutritionix API
-3. USDA FoodData Central API
+2. Open Food Facts API (free, open-source)
+3. USDA FoodData Central API (free, government database)
 
 All results are normalized to a standard format and cached in food_master.
 """
@@ -12,19 +12,19 @@ from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from models import FoodMaster
-from services.nutritionix_service import NutritionixService
+from services.openfoodfacts_service import OpenFoodFactsService
 from services.usda_service import USDAService
 
 
 class FoodAggregator:
     """
     Aggregates food data from multiple sources.
-    Priority: Internal DB -> Nutritionix -> USDA
+    Priority: Internal DB -> Open Food Facts -> USDA
     """
     
     def __init__(self, db: Session):
         self.db = db
-        self.nutritionix = NutritionixService()
+        self.openfoodfacts = OpenFoodFactsService()
         self.usda = USDAService()
     
     def search_food(self, query: str, limit: int = 20) -> List[Dict]:
@@ -33,7 +33,7 @@ class FoodAggregator:
         
         Strategy:
         1. First check internal food_master database
-        2. If insufficient results, query external APIs (Nutritionix, USDA)
+        2. If insufficient results, query external APIs (Open Food Facts, USDA)
         3. Normalize and cache external results in food_master
         4. Return combined results
         
@@ -88,8 +88,8 @@ class FoodAggregator:
         # Try external APIs
         print(f"[FOOD AGGREGATOR] Searching external APIs for barcode: {barcode}")
         
-        # Try Nutritionix
-        result = self.nutritionix.search_by_barcode(barcode)
+        # Try Open Food Facts
+        result = self.openfoodfacts.search_by_barcode(barcode)
         if result:
             # Cache the result
             self._cache_results([result])
@@ -114,7 +114,7 @@ class FoodAggregator:
     
     def _search_external(self, query: str, limit: int) -> List[Dict]:
         """
-        Search external APIs (Nutritionix and USDA).
+        Search external APIs (Open Food Facts and USDA).
         Returns combined results from all sources.
         """
         all_results = []
@@ -122,12 +122,12 @@ class FoodAggregator:
         # Calculate how many results to request from each API
         per_source_limit = max(5, limit // 2)
         
-        # Query Nutritionix
+        # Query Open Food Facts
         try:
-            nutritionix_results = self.nutritionix.search_food(query, per_source_limit)
-            all_results.extend(nutritionix_results)
+            openfoodfacts_results = self.openfoodfacts.search_food(query, per_source_limit)
+            all_results.extend(openfoodfacts_results)
         except Exception as e:
-            print(f"[FOOD AGGREGATOR] Nutritionix search error: {e}")
+            print(f"[FOOD AGGREGATOR] Open Food Facts search error: {e}")
         
         # Query USDA
         try:

@@ -6,6 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true,
+    allowedHosts: [
+      'fittrack.andel-vps.space',
+      '72.60.170.192',
+      'localhost'
+    ],
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
