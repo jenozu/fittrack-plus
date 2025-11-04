@@ -9,6 +9,8 @@ import sys
 
 # Import routers
 from routers import auth_router, users_router, food_router, exercise_router, dashboard_router
+from routers import water as water_router
+from routers import measurements as measurements_router
 
 # --- Initialize the FastAPI app ---
 app = FastAPI(
@@ -31,9 +33,9 @@ app.add_middleware(
 # --- Database Initialization ---
 try:
     Base.metadata.create_all(bind=engine)
-    print("✅ Database connected successfully and tables verified.")
+    print("[OK] Database connected successfully and tables verified.")
 except OperationalError as e:
-    print("❌ Database connection failed. Check your .env file or PostgreSQL server.")
+    print("[ERROR] Database connection failed. Check your .env file or PostgreSQL server.")
     print(e)
     sys.exit(1)
 
@@ -43,6 +45,8 @@ app.include_router(users_router)
 app.include_router(food_router)
 app.include_router(exercise_router)
 app.include_router(dashboard_router)
+app.include_router(water_router.router)
+app.include_router(measurements_router.router)
 
 # --- Root Route ---
 @app.get("/")
@@ -51,13 +55,15 @@ def root():
     Root route for quick status checks.
     """
     return {
-        "message": "FitTrack+ API is running! 🚀",
+        "message": "FitTrack+ API is running!",
         "version": "1.0.0",
         "docs": "/docs",
         "features": [
             "User Authentication (JWT)",
             "Food Logging with Aggregation Layer",
             "Exercise Tracking",
+            "Water Tracking",
+            "Body Measurements Tracking",
             "Progress Analytics",
             "Streak Gamification"
         ]
@@ -78,10 +84,10 @@ def health_check():
 # --- Lifecycle Events ---
 @app.on_event("startup")
 async def startup_event():
-    print("🚀 FitTrack+ API starting up...")
-    print("📚 API Documentation available at: /docs")
-    print("🔍 Food Aggregation Layer: Active (Nutritionix + USDA)")
+    print("[STARTUP] FitTrack+ API starting up...")
+    print("[INFO] API Documentation available at: /docs")
+    print("[INFO] Food Aggregation Layer: Active (Nutritionix + USDA)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    print("🛑 FitTrack+ API shutting down...")
+    print("[SHUTDOWN] FitTrack+ API shutting down...")

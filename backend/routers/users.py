@@ -53,7 +53,8 @@ def complete_onboarding(
     - Fitness goals (lose/maintain/gain weight)
     - Activity level
     
-    Also calculates recommended calorie and macro targets based on user data.
+    If nutrition targets are provided by frontend, use those.
+    Otherwise, calculate recommended calorie and macro targets based on user data.
     """
     # Update user with onboarding data
     current_user.gender = onboarding_data.gender
@@ -64,23 +65,29 @@ def complete_onboarding(
     current_user.activity_level = onboarding_data.activity_level
     current_user.goal_type = onboarding_data.goal_type
     
-    # Calculate target calories using basic formula
-    # This is a simplified version - could be enhanced with more sophisticated algorithms
-    target_calories = _calculate_target_calories(
-        weight_kg=onboarding_data.current_weight_kg,
-        height_cm=onboarding_data.height_cm,
-        age=_calculate_age(onboarding_data.date_of_birth),
-        gender=onboarding_data.gender,
-        activity_level=onboarding_data.activity_level,
-        goal_type=onboarding_data.goal_type
-    )
-    
-    current_user.target_calories = target_calories
-    
-    # Calculate macro targets (simplified - 30% protein, 40% carbs, 30% fat)
-    current_user.target_protein_g = (target_calories * 0.30) / 4  # 4 cal per gram
-    current_user.target_carbs_g = (target_calories * 0.40) / 4
-    current_user.target_fat_g = (target_calories * 0.30) / 9  # 9 cal per gram
+    # Use frontend-calculated nutrition targets if provided, otherwise calculate here
+    if onboarding_data.target_calories and onboarding_data.target_protein_g:
+        current_user.target_calories = onboarding_data.target_calories
+        current_user.target_protein_g = onboarding_data.target_protein_g
+        current_user.target_carbs_g = onboarding_data.target_carbs_g
+        current_user.target_fat_g = onboarding_data.target_fat_g
+    else:
+        # Fallback to backend calculation
+        target_calories = _calculate_target_calories(
+            weight_kg=onboarding_data.current_weight_kg,
+            height_cm=onboarding_data.height_cm,
+            age=_calculate_age(onboarding_data.date_of_birth),
+            gender=onboarding_data.gender,
+            activity_level=onboarding_data.activity_level,
+            goal_type=onboarding_data.goal_type
+        )
+        
+        current_user.target_calories = target_calories
+        
+        # Calculate macro targets (simplified - 30% protein, 40% carbs, 30% fat)
+        current_user.target_protein_g = (target_calories * 0.30) / 4  # 4 cal per gram
+        current_user.target_carbs_g = (target_calories * 0.40) / 4
+        current_user.target_fat_g = (target_calories * 0.30) / 9  # 9 cal per gram
     
     db.commit()
     db.refresh(current_user)
@@ -133,10 +140,15 @@ def _calculate_target_calories(
     tdee = bmr * multiplier  # Total Daily Energy Expenditure
     
     # Adjust for goals
-    if goal_type == "lose":
+    # Support both old and new goal types
+    if goal_type in ["lose", "lose_weight"]:
         target = tdee - 500  # 500 calorie deficit for ~1 lb/week loss
-    elif goal_type == "gain":
-        target = tdee + 300  # 300 calorie surplus for muscle gain
+    elif goal_type == "recomp":
+        target = tdee - 200  # Small deficit for body recomposition
+    elif goal_type == "lean_bulk":
+        target = tdee + 300  # Small surplus for lean muscle gain
+    elif goal_type in ["gain", "bulk"]:
+        target = tdee + 500  # Larger surplus for weight gain
     else:  # maintain
         target = tdee
     

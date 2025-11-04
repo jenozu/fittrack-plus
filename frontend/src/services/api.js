@@ -78,5 +78,30 @@ export const dashboardAPI = {
   getWeightLogs: (days = 30) => api.get('/dashboard/weight', { params: { days } }),
 };
 
+// Water API
+export const waterAPI = {
+  logWater: (data) => api.post('/water/', data),
+  getSummary: (date) => api.get('/water/summary', { params: { summary_date: date } }),
+  getLogs: (days = 30) => api.get('/water/logs', { params: { days } }),
+  getProgress: (days = 7) => api.get('/water/progress', { params: { days } }),
+  getGoal: () => api.get('/water/goal'),
+  updateGoal: (cups) => api.put('/water/goal', { water_goal_cups: cups }),
+  deleteLog: (id) => api.delete(`/water/${id}`),
+  updateLog: (id, data) => api.put(`/water/${id}`, data),
+};
+
+// Measurements API
+export const measurementsAPI = {
+  create: (data) => api.post('/measurements/', data),
+  getAll: (days = 90) => api.get('/measurements/', { params: { days } }),
+  getLatest: () => api.get('/measurements/latest'),
+  getById: (id) => api.get(`/measurements/${id}`),
+  update: (id, data) => api.put(`/measurements/${id}`, data),
+  delete: (id) => api.delete(`/measurements/${id}`),
+  getComparison: () => api.get('/measurements/comparison/current'),
+  getSummary: () => api.get('/measurements/progress/summary'),
+  getChartData: (days = 90) => api.get('/measurements/progress/chart', { params: { days } }),
+};
+
 export default api;
 

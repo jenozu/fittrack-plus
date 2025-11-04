@@ -20,13 +20,16 @@ class User(Base):
     current_weight_kg = Column(Float, nullable=True)
     goal_weight_kg = Column(Float, nullable=True)
     activity_level = Column(String, nullable=True)  # sedentary, light, moderate, active, very_active
-    goal_type = Column(String, nullable=True)  # lose, maintain, gain
+    goal_type = Column(String, nullable=True)  # lose_weight, recomp, maintain, lean_bulk, bulk
     
     # Target nutrition goals
     target_calories = Column(Integer, default=2000)
     target_protein_g = Column(Float, default=150)
     target_carbs_g = Column(Float, default=200)
     target_fat_g = Column(Float, default=65)
+    
+    # Water goal (in 8oz cups)
+    water_goal_cups = Column(Float, default=8.0)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -36,6 +39,8 @@ class User(Base):
     exercise_entries = relationship("ExerciseEntry", back_populates="user", cascade="all, delete-orphan")
     streak = relationship("Streak", back_populates="user", uselist=False, cascade="all, delete-orphan")
     weight_logs = relationship("WeightLog", back_populates="user", cascade="all, delete-orphan")
+    water_logs = relationship("WaterLog", back_populates="user", cascade="all, delete-orphan")
+    body_measurements = relationship("BodyMeasurement", back_populates="user", cascade="all, delete-orphan")
 
 
 # Food Master table for aggregation layer
@@ -174,4 +179,61 @@ class WeightLog(Base):
     
     __table_args__ = (
         Index('idx_user_weight_date', 'user_id', 'log_date'),
+    )
+
+
+# Water log for hydration tracking
+class WaterLog(Base):
+    __tablename__ = "water_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    cups = Column(Float, default=0)  # 8oz cups
+    ml = Column(Float, default=0)  # milliliters
+    log_date = Column(Date, nullable=False, index=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="water_logs")
+    
+    __table_args__ = (
+        Index('idx_user_water_date', 'user_id', 'log_date'),
+    )
+
+
+# Body measurements for progress tracking
+class BodyMeasurement(Base):
+    __tablename__ = "body_measurements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    measurement_date = Column(Date, nullable=False, index=True)
+    
+    # Measurements in centimeters
+    waist_cm = Column(Float, nullable=True)
+    hips_cm = Column(Float, nullable=True)
+    chest_cm = Column(Float, nullable=True)
+    arms_cm = Column(Float, nullable=True)  # Biceps
+    thighs_cm = Column(Float, nullable=True)
+    calves_cm = Column(Float, nullable=True)
+    neck_cm = Column(Float, nullable=True)
+    shoulders_cm = Column(Float, nullable=True)
+    
+    # Body composition (optional)
+    body_fat_percentage = Column(Float, nullable=True)
+    muscle_mass_kg = Column(Float, nullable=True)
+    
+    # Notes
+    notes = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="body_measurements")
+    
+    __table_args__ = (
+        Index('idx_user_measurement_date', 'user_id', 'measurement_date'),
     )

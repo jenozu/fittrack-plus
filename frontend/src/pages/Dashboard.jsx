@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { dashboardAPI } from '../services/api';
 import { Card, LoadingSpinner } from '../components/ui';
+import WaterWidget from '../components/WaterWidget';
 import { Flame, TrendingUp, Drumstick, Dumbbell, Award } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -123,6 +124,9 @@ const Dashboard = () => {
           </div>
         </div>
       </Card>
+
+      {/* Water Tracking Widget */}
+      <WaterWidget selectedDate={format(new Date(), 'yyyy-MM-dd')} />
 
       {/* Macros Summary */}
       <Card title="Macronutrients">

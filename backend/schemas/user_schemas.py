@@ -49,7 +49,12 @@ class OnboardingData(BaseModel):
     current_weight_kg: float
     goal_weight_kg: Optional[float] = None
     activity_level: str  # sedentary, light, moderate, active, very_active
-    goal_type: str  # lose, maintain, gain
+    goal_type: str  # lose_weight, recomp, maintain, lean_bulk, bulk
+    # Optional: Frontend can calculate and send these
+    target_calories: Optional[int] = None
+    target_protein_g: Optional[float] = None
+    target_carbs_g: Optional[float] = None
+    target_fat_g: Optional[float] = None
 
 
 # User Response
