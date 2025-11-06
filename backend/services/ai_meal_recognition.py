@@ -11,7 +11,10 @@ from openai import OpenAI
 from PIL import Image
 import io
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def get_openai_client():
+    """Get OpenAI client instance (lazy initialization)."""
+    return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def encode_image_to_base64(image_bytes: bytes) -> str:
@@ -64,6 +67,7 @@ If you see multiple items of the same food, combine them into one entry.
 Only include items you can clearly identify."""
 
     try:
+        client = get_openai_client()
         response = client.chat.completions.create(
             model="gpt-4o",  # GPT-4 with vision
             messages=[
