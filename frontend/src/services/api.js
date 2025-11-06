@@ -103,5 +103,112 @@ export const measurementsAPI = {
   getChartData: (days = 90) => api.get('/measurements/progress/chart', { params: { days } }),
 };
 
+// Export API
+export const exportAPI = {
+  exportCSV: (params) => {
+    return api.get('/export/csv', {
+      params,
+      responseType: 'blob',
+    });
+  },
+  exportJSON: (params) => {
+    return api.get('/export/json', {
+      params,
+      responseType: 'blob',
+    });
+  },
+  exportPDF: (params) => {
+    return api.get('/export/pdf', {
+      params,
+      responseType: 'blob',
+    });
+  },
+  exportAll: (params) => {
+    return api.get('/export/all', {
+      params,
+      responseType: 'blob',
+    });
+  },
+};
+
+// Recipe API
+export const recipeAPI = {
+  create: (data) => api.post('/recipes/', data),
+  getAll: (search = '') => api.get('/recipes/', { params: { search } }),
+  getById: (id) => api.get(`/recipes/${id}`),
+  update: (id, data) => api.put(`/recipes/${id}`, data),
+  delete: (id) => api.delete(`/recipes/${id}`),
+  duplicate: (id, newName = null) => api.post(`/recipes/${id}/duplicate`, null, { params: { new_name: newName } }),
+  logToDiary: (data) => api.post('/recipes/log-to-diary', data),
+};
+
+// AI Meal Recognition API
+export const aiMealAPI = {
+  getUsage: () => api.get('/ai/usage'),
+  analyzeMeal: (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    return api.post('/ai/analyze-meal', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  confirmFoods: (foods, mealType, entryDate) => {
+    return api.post('/ai/confirm-foods', foods, {
+      params: {
+        meal_type: mealType,
+        entry_date: entryDate,
+      },
+    });
+  },
+};
+
+// Smart Coaching API
+export const coachingAPI = {
+  getDailyAnalysis: (date) => api.get('/coaching/daily-analysis', { params: { analysis_date: date } }),
+  getSuggestions: (date) => api.get('/coaching/suggestions', { params: { analysis_date: date } }),
+  getEncouragement: (date) => api.get('/coaching/encouragement', { params: { analysis_date: date } }),
+  getWeeklyInsights: () => api.get('/coaching/weekly-insights'),
+  getDashboardSummary: () => api.get('/coaching/dashboard-summary'),
+};
+
+// Meal Planning API
+export const mealPlanAPI = {
+  create: (data) => api.post('/meal-plans/', data),
+  getAll: (activeOnly = true) => api.get('/meal-plans/', { params: { active_only: activeOnly } }),
+  getById: (id) => api.get(`/meal-plans/${id}`),
+  update: (id, data) => api.put(`/meal-plans/${id}`, data),
+  delete: (id) => api.delete(`/meal-plans/${id}`),
+  addMeal: (planId, mealData) => api.post(`/meal-plans/${planId}/meals`, mealData),
+  deleteMeal: (planId, mealId) => api.delete(`/meal-plans/${planId}/meals/${mealId}`),
+  generateGroceryList: (planId) => api.post(`/meal-plans/${planId}/grocery-list`),
+  getGroceryList: (planId) => api.get(`/meal-plans/${planId}/grocery-list`),
+  updateGroceryItem: (itemId, data) => api.put(`/meal-plans/grocery-items/${itemId}`, data),
+  getDailyNutrition: (planId, targetDate) => api.get(`/meal-plans/${planId}/nutrition/${targetDate}`),
+};
+
+// Gamification API
+export const gamificationAPI = {
+  getProgress: () => api.get('/gamification/progress'),
+  checkBadges: () => api.post('/gamification/check-badges'),
+  getAllBadges: () => api.get('/gamification/badges'),
+  getEarnedBadges: () => api.get('/gamification/badges/earned'),
+  getLeaderboard: (limit = 10) => api.get('/gamification/leaderboard', { params: { limit } }),
+  awardXP: (action) => api.post('/gamification/award-xp', null, { params: { action } }),
+};
+
+// Helper function to download blob as file
+export const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
 export default api;
 

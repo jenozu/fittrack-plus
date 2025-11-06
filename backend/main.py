@@ -11,6 +11,12 @@ import sys
 from routers import auth_router, users_router, food_router, exercise_router, dashboard_router
 from routers import water as water_router
 from routers import measurements as measurements_router
+from routers import export as export_router
+from routers import recipes as recipes_router
+from routers import ai_meal as ai_meal_router
+from routers import coaching as coaching_router
+from routers import meal_plans as meal_plans_router
+from routers import gamification as gamification_router
 
 # --- Initialize the FastAPI app ---
 app = FastAPI(
@@ -47,6 +53,12 @@ app.include_router(exercise_router)
 app.include_router(dashboard_router)
 app.include_router(water_router.router)
 app.include_router(measurements_router.router)
+app.include_router(export_router.router)
+app.include_router(recipes_router.router)
+app.include_router(ai_meal_router.router)
+app.include_router(coaching_router.router)
+app.include_router(meal_plans_router.router)
+app.include_router(gamification_router.router)
 
 # --- Root Route ---
 @app.get("/")
@@ -61,11 +73,18 @@ def root():
         "features": [
             "User Authentication (JWT)",
             "Food Logging with Aggregation Layer",
+            "Barcode Scanning",
+            "AI Meal Recognition (GPT-4 Vision)",
+            "Smart Macro Coaching",
+            "Recipe Builder with Auto Nutrition",
+            "Meal Planning with Grocery Lists",
             "Exercise Tracking",
             "Water Tracking",
             "Body Measurements Tracking",
+            "Data Export (CSV, JSON, PDF)",
             "Progress Analytics",
-            "Streak Gamification"
+            "Gamification (Badges, XP, Levels)",
+            "Streak System"
         ]
     }
 

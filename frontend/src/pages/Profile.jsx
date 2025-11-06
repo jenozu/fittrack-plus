@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
 import { Card, Button, Input, Select, LoadingSpinner } from '../components/ui';
-import { User, Target, Activity, Save, Calculator } from 'lucide-react';
+import { User, Target, Activity, Save, Calculator, Download, Database } from 'lucide-react';
 import { calculateNutritionTargets, getGoalTypeOptions } from '../utils/nutritionCalculator';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [useMetric, setUseMetric] = useState(false); // Default to imperial
@@ -173,11 +175,27 @@ const Profile = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-primary-pink to-primary-blue rounded-full flex items-center justify-center">
-          <User className="text-white" size={24} />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary-pink to-primary-blue rounded-full flex items-center justify-center">
+            <User className="text-white" size={24} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-neutral-800">Profile Settings</h1>
+            {user?.level && (
+              <p className="text-sm text-neutral-600">
+                Level {user.level} • {user.xp?.toLocaleString() || 0} XP
+              </p>
+            )}
+          </div>
         </div>
-        <h1 className="text-3xl font-bold text-neutral-800">Profile Settings</h1>
+        <button
+          onClick={() => navigate('/achievements')}
+          className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+        >
+          <Award size={18} />
+          View Achievements
+        </button>
       </div>
 
       {/* Account Info */}
@@ -480,6 +498,42 @@ const Profile = () => {
           </div>
         </div>
       </Card>
+
+      {/* Data Management */}
+      {!editing && (
+        <Card title="Data Management" className="border-l-4 border-green-500">
+          <div className="space-y-4">
+            <p className="text-neutral-600">
+              Your data is yours. Export your fitness journey anytime in multiple formats.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={() => navigate('/export')}
+                className="flex items-center gap-3 p-4 bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 rounded-lg border-2 border-green-200 transition-all"
+              >
+                <Download className="text-green-600" size={32} />
+                <div className="text-left">
+                  <h3 className="font-semibold text-neutral-800">Export Data</h3>
+                  <p className="text-sm text-neutral-600">
+                    Download your data as CSV, JSON, or PDF
+                  </p>
+                </div>
+              </button>
+              
+              <div className="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg border-2 border-neutral-200">
+                <Database className="text-neutral-400" size={32} />
+                <div className="text-left">
+                  <h3 className="font-semibold text-neutral-800">Data Privacy</h3>
+                  <p className="text-sm text-neutral-600">
+                    We never sell your data. Period.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Action Buttons */}
       {editing && (

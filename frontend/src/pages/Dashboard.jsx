@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { dashboardAPI } from '../services/api';
-import { Card, LoadingSpinner } from '../components/ui';
+import { dashboardAPI, measurementsAPI } from '../services/api';
+import { Card, LoadingSpinner, Button } from '../components/ui';
 import WaterWidget from '../components/WaterWidget';
-import { Flame, TrendingUp, Drumstick, Dumbbell, Award } from 'lucide-react';
+import SmartCoach from '../components/SmartCoach';
+import { Flame, TrendingUp, Drumstick, Dumbbell, Award, Ruler, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Dashboard = () => {
@@ -12,6 +13,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [streak, setStreak] = useState(null);
+  const [measurementSummary, setMeasurementSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +29,15 @@ const Dashboard = () => {
       ]);
       setSummary(summaryRes.data);
       setStreak(streakRes.data);
+      
+      // Fetch measurement summary (optional - don't fail if not available)
+      try {
+        const measurementRes = await measurementsAPI.getSummary();
+        setMeasurementSummary(measurementRes.data);
+      } catch (err) {
+        // Measurements not available yet, that's ok
+        setMeasurementSummary(null);
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -128,6 +139,96 @@ const Dashboard = () => {
       {/* Water Tracking Widget */}
       <WaterWidget selectedDate={format(new Date(), 'yyyy-MM-dd')} />
 
+      {/* Smart Coach Widget */}
+      <SmartCoach 
+        selectedDate={format(new Date(), 'yyyy-MM-dd')}
+        onFoodAdded={fetchDashboardData}
+      />
+
+      {/* Measurements Summary Widget */}
+      {measurementSummary && measurementSummary.total_measurements > 0 && (
+        <Card>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                <Ruler className="text-primary-pink" size={20} />
+                Body Measurements Progress
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/measurements')}
+                className="text-sm"
+              >
+                View All →
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {measurementSummary.total_cm_lost && (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                  <TrendingDown className="text-green-600 mb-2" size={20} />
+                  <p className="text-2xl font-bold text-green-700">
+                    {measurementSummary.total_cm_lost.toFixed(1)} cm
+                  </p>
+                  <p className="text-xs text-green-600">Total Lost</p>
+                </div>
+              )}
+              
+              <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
+                <p className="text-sm text-neutral-600 mb-1">Measurements</p>
+                <p className="text-2xl font-bold text-neutral-800">
+                  {measurementSummary.total_measurements}
+                </p>
+                <p className="text-xs text-neutral-500">
+                  Tracked
+                </p>
+              </div>
+              
+              {measurementSummary.waist_change_cm && (
+                <div className={`p-4 rounded-lg border ${
+                  measurementSummary.waist_change_cm < 0 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-orange-50 border-orange-200'
+                }`}>
+                  <p className={`text-xs mb-1 ${
+                    measurementSummary.waist_change_cm < 0 ? 'text-green-600' : 'text-orange-600'
+                  }`}>
+                    Waist
+                  </p>
+                  <p className={`text-2xl font-bold ${
+                    measurementSummary.waist_change_cm < 0 ? 'text-green-700' : 'text-orange-700'
+                  }`}>
+                    {measurementSummary.waist_change_cm > 0 ? '+' : ''}{measurementSummary.waist_change_cm.toFixed(1)}
+                  </p>
+                  <p className="text-xs text-neutral-500">cm change</p>
+                </div>
+              )}
+              
+              {measurementSummary.hips_change_cm && (
+                <div className={`p-4 rounded-lg border ${
+                  measurementSummary.hips_change_cm < 0 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-orange-50 border-orange-200'
+                }`}>
+                  <p className={`text-xs mb-1 ${
+                    measurementSummary.hips_change_cm < 0 ? 'text-green-600' : 'text-orange-600'
+                  }`}>
+                    Hips
+                  </p>
+                  <p className={`text-2xl font-bold ${
+                    measurementSummary.hips_change_cm < 0 ? 'text-green-700' : 'text-orange-700'
+                  }`}>
+                    {measurementSummary.hips_change_cm > 0 ? '+' : ''}{measurementSummary.hips_change_cm.toFixed(1)}
+                  </p>
+                  <p className="text-xs text-neutral-500">cm change</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Macros Summary */}
       <Card title="Macronutrients">
         <div className="grid grid-cols-3 gap-4">
@@ -189,7 +290,7 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <Card title="Quick Actions">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <button
             onClick={() => navigate('/food')}
             className="p-4 bg-gradient-to-br from-primary-pink/20 to-primary-pink/10 hover:from-primary-pink/30 hover:to-primary-pink/20 rounded-lg transition-all"
@@ -203,6 +304,13 @@ const Dashboard = () => {
           >
             <Dumbbell className="mx-auto mb-2 text-primary-blue" size={32} />
             <p className="text-sm font-medium text-neutral-800">Log Exercise</p>
+          </button>
+          <button
+            onClick={() => navigate('/measurements')}
+            className="p-4 bg-gradient-to-br from-orange-200/50 to-orange-100/50 hover:from-orange-200/70 hover:to-orange-100/70 rounded-lg transition-all"
+          >
+            <Ruler className="mx-auto mb-2 text-orange-600" size={32} />
+            <p className="text-sm font-medium text-neutral-800">Measurements</p>
           </button>
           <button
             onClick={() => navigate('/progress')}

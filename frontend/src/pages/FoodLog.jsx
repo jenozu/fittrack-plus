@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { foodAPI, dashboardAPI } from '../services/api';
 import { Card, Button, Input, Select, Modal, LoadingSpinner } from '../components/ui';
-import { Search, Plus, Edit2, Trash2, Coffee, Sun, Moon, Cookie } from 'lucide-react';
+import BarcodeScanner from '../components/BarcodeScanner';
+import AIMealScanner from '../components/AIMealScanner';
+import { Search, Plus, Edit2, Trash2, Coffee, Sun, Moon, Cookie, Camera, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FoodLog = () => {
@@ -14,6 +16,8 @@ const FoodLog = () => {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showAIScanner, setShowAIScanner] = useState(false);
   const [manualEntry, setManualEntry] = useState({
     food_name: '',
     calories: '',
@@ -86,6 +90,38 @@ const FoodLog = () => {
       setSearchResults([]);
     } catch (error) {
       console.error('Failed to add food entry:', error);
+    }
+  };
+
+  const handleBarcodeScan = async (barcode) => {
+    try {
+      // Search by barcode
+      const response = await foodAPI.searchByBarcode(barcode);
+      const food = response.data;
+      
+      // Add to food log automatically
+      await foodAPI.createEntry({
+        food_name: food.food_name,
+        brand_name: food.brand_name,
+        calories: food.calories,
+        protein_g: food.protein_g,
+        carbs_g: food.carbs_g,
+        fat_g: food.fat_g,
+        quantity: food.serving_qty,
+        unit: food.serving_unit,
+        meal_type: 'snack', // Default to snack, user can change later
+        entry_date: selectedDate,
+        food_master_id: food.id,
+      });
+      
+      fetchEntries();
+      fetchSummary();
+      setShowBarcodeScanner(false);
+      alert(`Added: ${food.food_name}`);
+    } catch (error) {
+      console.error('Barcode lookup failed:', error);
+      alert('Food not found by barcode. Please search or add manually.');
+      setShowBarcodeScanner(false);
     }
   };
 
@@ -202,13 +238,29 @@ const FoodLog = () => {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Button
           variant="primary"
           onClick={() => setShowSearchModal(true)}
         >
           <Search size={18} className="mr-2" />
           Search Food
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => setShowAIScanner(true)}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-none"
+        >
+          <Sparkles size={18} className="mr-2" />
+          AI Photo Scan
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => setShowBarcodeScanner(true)}
+          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-none"
+        >
+          <Camera size={18} className="mr-2" />
+          Scan Barcode
         </Button>
         <Button
           variant="secondary"
@@ -402,6 +454,31 @@ const FoodLog = () => {
           />
         </div>
       </Modal>
+
+      {/* AI Meal Scanner */}
+      {showAIScanner && (
+        <AIMealScanner
+          onClose={() => setShowAIScanner(false)}
+          onFoodsLogged={() => {
+            fetchEntries();
+            fetchSummary();
+            setShowAIScanner(false);
+          }}
+          selectedDate={selectedDate}
+        />
+      )}
+
+      {/* Barcode Scanner */}
+      {showBarcodeScanner && (
+        <BarcodeScanner
+          onScan={handleBarcodeScan}
+          onClose={() => setShowBarcodeScanner(false)}
+          onError={(err) => {
+            console.error('Scanner error:', err);
+            setShowBarcodeScanner(false);
+          }}
+        />
+      )}
     </div>
   );
 };

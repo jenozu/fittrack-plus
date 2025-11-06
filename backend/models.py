@@ -31,6 +31,15 @@ class User(Base):
     # Water goal (in 8oz cups)
     water_goal_cups = Column(Float, default=8.0)
     
+    # AI meal recognition usage tracking
+    ai_scans_used = Column(Integer, default=0)
+    ai_scans_reset_date = Column(Date, nullable=True)
+    ai_scans_monthly_limit = Column(Integer, default=5)  # Free tier: 5/month
+    
+    # Gamification
+    xp = Column(Integer, default=0)
+    level = Column(Integer, default=1)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -236,4 +245,153 @@ class BodyMeasurement(Base):
     
     __table_args__ = (
         Index('idx_user_measurement_date', 'user_id', 'measurement_date'),
+    )
+
+
+# Recipes for meal planning
+class Recipe(Base):
+    __tablename__ = "recipes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    servings = Column(Float, default=1.0, nullable=False)
+    prep_time_minutes = Column(Integer, nullable=True)
+    cook_time_minutes = Column(Integer, nullable=True)
+    is_public = Column(Boolean, default=False)  # For future sharing feature
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", backref="recipes")
+    ingredients = relationship("RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan")
+
+
+# Recipe ingredients linking to food master
+class RecipeIngredient(Base):
+    __tablename__ = "recipe_ingredients"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    recipe_id = Column(Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False, index=True)
+    food_master_id = Column(Integer, ForeignKey("food_master.id"), nullable=False)
+    quantity = Column(Float, nullable=False)
+    unit = Column(String, nullable=False)
+    notes = Column(String, nullable=True)
+    
+    # Relationships
+    recipe = relationship("Recipe", back_populates="ingredients")
+    food = relationship("FoodMaster")
+
+
+# Meal Plans for weekly planning
+class MealPlan(Base):
+    __tablename__ = "meal_plans"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    week_start_date = Column(Date, nullable=False, index=True)
+    week_end_date = Column(Date, nullable=False)
+    is_active = Column(Boolean, default=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", backref="meal_plans")
+    planned_meals = relationship("PlannedMeal", back_populates="meal_plan", cascade="all, delete-orphan")
+
+
+# Individual planned meals in a meal plan
+class PlannedMeal(Base):
+    __tablename__ = "planned_meals"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    meal_plan_id = Column(Integer, ForeignKey("meal_plans.id", ondelete="CASCADE"), nullable=False, index=True)
+    meal_date = Column(Date, nullable=False)
+    meal_type = Column(String, nullable=False)  # breakfast, lunch, dinner, snack
+    
+    # Can be either a recipe or a custom meal
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=True)
+    custom_meal_name = Column(String, nullable=True)
+    
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+    meal_plan = relationship("MealPlan", back_populates="planned_meals")
+    recipe = relationship("Recipe")
+
+
+# Grocery lists generated from meal plans
+class GroceryList(Base):
+    __tablename__ = "grocery_lists"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    meal_plan_id = Column(Integer, ForeignKey("meal_plans.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    meal_plan = relationship("MealPlan", backref="grocery_lists")
+    items = relationship("GroceryItem", back_populates="grocery_list", cascade="all, delete-orphan")
+
+
+# Individual items in a grocery list
+class GroceryItem(Base):
+    __tablename__ = "grocery_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    grocery_list_id = Column(Integer, ForeignKey("grocery_lists.id", ondelete="CASCADE"), nullable=False, index=True)
+    food_name = Column(String, nullable=False)
+    quantity = Column(Float, nullable=False)
+    unit = Column(String, nullable=False)
+    category = Column(String, nullable=True)  # produce, protein, dairy, etc.
+    is_checked = Column(Boolean, default=False)
+    
+    # Relationships
+    grocery_list = relationship("GroceryList", back_populates="items")
+
+
+# Badge definitions (achievement types)
+class Badge(Base):
+    __tablename__ = "badges"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, nullable=False, index=True)  # e.g., "streak_7_days"
+    name = Column(String, nullable=False)  # e.g., "Week Warrior"
+    description = Column(Text, nullable=False)
+    icon = Column(String, nullable=True)  # Emoji or icon name
+    category = Column(String, nullable=False)  # streak, protein, consistency, milestone
+    xp_reward = Column(Integer, default=100)
+    
+    # Criteria for earning (stored as JSON-like text for flexibility)
+    criteria_type = Column(String, nullable=False)  # streak, total_protein, days_logged, etc.
+    criteria_value = Column(Integer, nullable=False)  # e.g., 7 for 7-day streak
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user_badges = relationship("UserBadge", back_populates="badge")
+
+
+# User's earned badges
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    badge_id = Column(Integer, ForeignKey("badges.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    earned_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", backref="badges")
+    badge = relationship("Badge", back_populates="user_badges")
+    
+    __table_args__ = (
+        Index('idx_user_badge_unique', 'user_id', 'badge_id', unique=True),
     )

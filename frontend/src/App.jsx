@@ -13,6 +13,11 @@ import FoodLog from './pages/FoodLog';
 import ExerciseLog from './pages/ExerciseLog';
 import Progress from './pages/Progress';
 import Profile from './pages/Profile';
+import Measurements from './pages/Measurements';
+import ExportData from './pages/ExportData';
+import Recipes from './pages/Recipes';
+import MealPlanning from './pages/MealPlanning';
+import Achievements from './pages/Achievements';
 
 function App() {
   return (
@@ -39,7 +44,12 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="food" element={<FoodLog />} />
             <Route path="exercise" element={<ExerciseLog />} />
+            <Route path="recipes" element={<Recipes />} />
+            <Route path="meal-planning" element={<MealPlanning />} />
             <Route path="progress" element={<Progress />} />
+            <Route path="measurements" element={<Measurements />} />
+            <Route path="achievements" element={<Achievements />} />
+            <Route path="export" element={<ExportData />} />
             <Route path="profile" element={<Profile />} />
           </Route>
           
