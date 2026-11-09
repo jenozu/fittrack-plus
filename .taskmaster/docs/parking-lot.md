@@ -12,3 +12,4 @@ task, defer, or delete on purpose.
 - 2026-11-08: Apple Health / Google Fit step and weight sync (not possible from a PWA without a native wrapper).
 - 2026-11-08: Off-site backups (rclone to Backblaze B2 / Google Drive).
 2026-11-08: task 3 review - registration lock fails open on values other than exact 'false'; set exactly ALLOW_REGISTRATION=false at task 19 (or tighten parse). Also /health returns str(e) from DB errors (leaks host/user).
+2026-11-08: backend/README.md is UTF-16; convert to UTF-8 sometime. /health stale startup log says 'Nutritionix + USDA'.

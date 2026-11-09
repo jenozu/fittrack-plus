@@ -39,8 +39,9 @@ app.add_middleware(
 
 # --- Database Initialization ---
 try:
-    Base.metadata.create_all(bind=engine)
-    print("[OK] Database connected successfully and tables verified.")
+    with engine.connect():
+        pass
+    print("[OK] Database connected successfully.")
 except OperationalError as e:
     print("[ERROR] Database connection failed. Check your .env file or PostgreSQL server.")
     print(e)

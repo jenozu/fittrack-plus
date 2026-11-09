@@ -20,11 +20,10 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 0 - Foundation. Done: task 1. Task 2 in-progress, BLOCKED.
-- Blocker: backend/requirements.txt and backend/food_data/ (task 5 layer) missing from tree and git history; dev_setup.sh fails at pip step.
-- Next: human restores those files (or lead adds a rebuild task), then rerun task 2 -> 3 -> 4.
-- Last session: 2026-11-08, phase-runner returned HUMAN NEEDED.
-- Manual checks waiting: 0 (`.taskmaster/docs/manual-checks.md`).
+- Phase 0 - Foundation COMPLETE (tasks 1-4 done). Next: phase 1 (task 5 done earlier; 6 onward).
+- In progress: none. Blocked: none.
+- Last session: 2026-11-08, phase 0 finished. fittrack_db baselined at Alembic head a1c2d3e4f5a6.
+- Manual checks waiting: 2 (`.taskmaster/docs/manual-checks.md`: tasks 2, 4).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
@@ -42,6 +41,9 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 
 ## Learned / gotchas (max 15 lines, newest first)
+- Run pytest/alembic with backend/venv/Scripts/python.exe (system python lacks duckdb); add --basetemp in a writable dir if WinError 5. Agents can't read .env files; pass DATABASE_URL via env.
+- Old-install DBs: `alembic stamp bf60e849d28a && alembic upgrade head` (not `stamp head`). bcrypt pinned 4.0.1 for passlib.
+- ALLOW_REGISTRATION closes only on exact "false"; set it exactly so at task 19.
 - CNF 2026 column names are unverified: run `python -m food_data.import_cnf <dir> --inspect` before importing (task 17.4).
 - `backend/requirements.txt` was UTF-16; it's now UTF-8. Keep it UTF-8 (Windows editors can silently switch it back).
 - `search_foods()` must stay two-stage (prefix candidates, then ranking); a single-pass version took ~600 ms on 500k rows.
@@ -50,7 +52,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 | Tier | Done first try | Escalated up | Notes |
 |---|---|---|---|
 | haiku | 1 | 0 | task 1 |
-| sonnet | 0 | 0 | |
+| sonnet | 3 | 0 | |
 | opus | 0 | 0 | |
 <!-- If one tier escalates on 3 tasks in a row, the phase-runner escalates to the lead, who may raise that tier's
      starting complexity in .claude/skills/next-task/SKILL.md. If haiku passes everything, give it complexity 4 too. -->

@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 4/19 tasks done.**
+**Progress: 5/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -16,7 +16,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **3. Security basics** _(after 2)_  
   Fail fast without a real SECRET_KEY, restrict CORS, and stop strangers from registering on the public URL.  
   _Test:_ `pytest backend/tests/test_security.py -q`: (a) importing utils.security with SECRET_KEY unset raises; (b) POST /auth/register returns 403 with ALLOW_REGISTRATION=false; (c) a request with Origin: https://evil.example gets no Access-Control-Allow-Origin header.
-- [ ] **4. Adopt Alembic migrations** _(after 3)_  
+- [x] **4. Adopt Alembic migrations** _(after 3)_  
   Replace Base.metadata.create_all with Alembic so existing tables can be changed safely (create_all never alters a table).  
   _Test:_ Drop and recreate the local db, run `alembic upgrade head`, start uvicorn, register a user and log a food via /docs. `alembic check` (or `alembic revision --autogenerate` producing an empty migration) shows models and db agree.
 

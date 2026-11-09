@@ -45,12 +45,12 @@
         "id": 4,
         "title": "Adopt Alembic migrations",
         "description": "Replace Base.metadata.create_all with Alembic so existing tables can be changed safely (create_all never alters a table).",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           3
         ],
-        "details": "- `pip install alembic` is already in requirements. In backend/: `alembic init alembic`.\n- alembic/env.py: `from dotenv import load_dotenv; load_dotenv()`; set `config.set_main_option(\"sqlalchemy.url\", os.environ[\"DATABASE_URL\"])`;\n  `from database import Base; import models; target_metadata = Base.metadata`.\n- Exclude the food tables, which food_data/schema.sql owns: add `include_object` that returns False for tables\n  `foods` and `food_portions` (and anything with `info={\"managed_by\": \"food_data\"}`). Pass it to context.configure.\n- Baseline: on an EMPTY local db run `alembic revision --autogenerate -m \"baseline\"`, review the file (it must create the\n  existing tables only), `alembic upgrade head`.\n- Existing databases that already have the tables (e.g. an old VPS install): `alembic stamp head` instead of upgrade.\n  Write this in backend/README.md.\n- Remove `Base.metadata.create_all(bind=engine)` from main.py startup. scripts/vps/deploy.sh already runs\n  `alembic upgrade head` once backend/alembic.ini exists.",
+        "details": "- `pip install alembic` is already in requirements. In backend/: `alembic init alembic`.\n- alembic/env.py: `from dotenv import load_dotenv; load_dotenv()`; set `config.set_main_option(\"sqlalchemy.url\", os.environ[\"DATABASE_URL\"])`;\n  `from database import Base; import models; target_metadata = Base.metadata`.\n- Exclude the food tables, which food_data/schema.sql owns: add `include_object` that returns False for tables\n  `foods` and `food_portions` (and anything with `info={\"managed_by\": \"food_data\"}`). Pass it to context.configure.\n- Baseline: on an EMPTY local db run `alembic revision --autogenerate -m \"baseline\"`, review the file (it must create the\n  existing tables only), `alembic upgrade head`.\n- Existing databases that already have the tables (e.g. an old VPS install): `alembic stamp head` instead of upgrade.\n  Write this in backend/README.md.\n- Remove `Base.metadata.create_all(bind=engine)` from main.py startup. scripts/vps/deploy.sh already runs\n  `alembic upgrade head` once backend/alembic.ini exists.\n\n[2026-11-08T21:46:11-05:00] built alembic + baseline bf60e849d28a; upgrade/check clean on scratch db. fittrack_db NOT stamped: lacks users.water_goal_cups, ai_scans_used, ai_scans_reset_date, ai_scans_monthly_limit, xp, level\n\n[2026-11-08T21:47:45-05:00] sonnet: added migration a1c2d3e4f5a6 (users cols IF NOT EXISTS); bcrypt==4.0.1 pinned+installed; fittrack_db stamped bf60e849d28a then upgraded, alembic check clean (no other diffs); scratch db upgrade+check clean, register/login/food entry e2e OK via TestClient; scratch dropped\n\n[2026-11-08T21:48:38-05:00] builder (haiku): backend/README.md (UTF-16 LE, BOM, CRLF kept) - Alembic existing-db instruction changed from 'alembic stamp head' to 'alembic stamp bf60e849d28a && alembic upgrade head' with one-sentence reason (a1c2d3e4f5a6 IF NOT EXISTS columns would be skipped). Verified encoding, BOM, CRLF, and edit present.\n\n[2026-11-08T21:48:56-05:00] done by sonnet (+haiku README fix); verified; reviewer CHANGES NEEDED (README stamp) fixed. fittrack_db stamped baseline + upgraded to a1c2d3e4f5a6. Added bcrypt==4.0.1 pin and users-columns migration. done pending manual check",
         "testStrategy": "Drop and recreate the local db, run `alembic upgrade head`, start uvicorn, register a user and log a food via /docs.\n`alembic check` (or `alembic revision --autogenerate` producing an empty migration) shows models and db agree.",
         "complexity": 6,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T21:44:18-05:00",
+      "updated": "2026-11-08T21:48:56-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
