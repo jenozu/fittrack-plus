@@ -175,11 +175,11 @@
             "id": 2,
             "title": "Nutrition maths",
             "description": "Pure function scale(food, grams) -> kcal/protein/carbs/fat/fiber/sugar/sodium, rounded sensibly.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
-            "details": "backend/services/nutrition.py: `def scale(food: dict, grams: float) -> dict` = value_100g * grams / 100 for each nutrient,\nNone stays None; kcal rounded to 1 decimal, others to 2. `def grams_for(food, portion_label, quantity)` looks up the portion\n(case-insensitive) and returns grams * quantity; \"100 g\" and \"g\" are always valid (1 g each for \"g\").",
+            "details": "backend/services/nutrition.py: `def scale(food: dict, grams: float) -> dict` = value_100g * grams / 100 for each nutrient,\nNone stays None; kcal rounded to 1 decimal, others to 2. `def grams_for(food, portion_label, quantity)` looks up the portion\n(case-insensitive) and returns grams * quantity; \"100 g\" and \"g\" are always valid (1 g each for \"g\").\n\n[2026-11-08T22:02:26-05:00] plan (haiku): backend/services/nutrition.py + backend/tests/test_nutrition.py - scale() over *_100g keys, sodium kept as sodium_mg; grams_for() case-insensitive portion lookup with built-in 'g' and '100 g'; ValueError on unknown. Result: 6 pytest unit tests pass (python -m pytest tests/test_nutrition.py). Not marked done; orchestrator verifies.\n\n[2026-11-08T22:02:54-05:00] done by haiku; verified. sodium key is sodium_mg",
             "testStrategy": "Unit tests: 150 g of a 89 kcal/100 g food = 133.5 kcal; 2 x '1 cup (240 g)' = 480 g; unknown portion raises ValueError."
           },
           {
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:01:55-05:00",
+      "updated": "2026-11-08T22:02:54-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

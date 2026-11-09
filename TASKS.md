@@ -38,7 +38,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   Log food by grams or portion; the server computes calories/macros from per-100 g data and stores them on the entry.  
   _Test:_ `pytest backend/tests/test_diary.py -q` passes (see subtasks). Old rows created before the migration still list correctly.
   - [x] 7.1 Migration: new food_entries columns
-  - [ ] 7.2 Nutrition maths
+  - [x] 7.2 Nutrition maths
   - [ ] 7.3 Entry endpoints
   - [ ] 7.4 Stop writing food_master
 - [ ] **8. Custom foods** _(after 7)_  
