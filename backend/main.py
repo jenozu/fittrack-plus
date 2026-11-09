@@ -6,6 +6,7 @@ from sqlalchemy.exc import OperationalError
 from database import Base, engine
 import models
 import sys
+import os
 
 # Import routers
 from routers import auth_router, users_router, food_router, exercise_router, dashboard_router
@@ -30,7 +31,7 @@ app = FastAPI(
 # Replace "*" with your actual domain when deploying.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update this in production
+    allow_origins=[o.strip() for o in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

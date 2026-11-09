@@ -11,3 +11,4 @@ task, defer, or delete on purpose.
 - 2026-11-08: AI photo logging (existing ai_meal_recognition.py) — costs money per call; only if manual logging proves to be the bottleneck.
 - 2026-11-08: Apple Health / Google Fit step and weight sync (not possible from a PWA without a native wrapper).
 - 2026-11-08: Off-site backups (rclone to Backblaze B2 / Google Drive).
+2026-11-08: task 3 review - registration lock fails open on values other than exact 'false'; set exactly ALLOW_REGISTRATION=false at task 19 (or tighten parse). Also /health returns str(e) from DB errors (leaks host/user).

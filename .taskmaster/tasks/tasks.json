@@ -31,12 +31,12 @@
         "id": 3,
         "title": "Security basics",
         "description": "Fail fast without a real SECRET_KEY, restrict CORS, and stop strangers from registering on the public URL.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           2
         ],
-        "details": "- backend/utils/security.py: remove the default `\"your-secret-key-change-in-production-please\"`. If SECRET_KEY is unset\n  or shorter than 32 chars, raise at import time with a clear message. (The default is public on GitHub, so anyone could forge login tokens.)\n- backend/main.py: replace `allow_origins=[\"*\"]` with `os.getenv(\"ALLOWED_ORIGINS\", \"http://localhost:3000,http://localhost:5173\").split(\",\")`.\n  In production the frontend is same-origin (nginx /api), so CORS barely matters, but `*` with credentials is wrong.\n- Registration lock: env `ALLOW_REGISTRATION` (default \"true\"). In routers/auth.py register endpoint, return 403\n  \"Registration is closed\" when it is \"false\". After both people have accounts (task 19), set it to false on the VPS.\n- Check token lifetime in utils/security.py: use 30 days for this personal app so nobody gets logged out weekly\n  (phones keep the PWA open for weeks); keep it configurable via ACCESS_TOKEN_EXPIRE_DAYS.\n- Add backend/tests/test_security.py using FastAPI TestClient.",
+        "details": "- backend/utils/security.py: remove the default `\"your-secret-key-change-in-production-please\"`. If SECRET_KEY is unset\n  or shorter than 32 chars, raise at import time with a clear message. (The default is public on GitHub, so anyone could forge login tokens.)\n- backend/main.py: replace `allow_origins=[\"*\"]` with `os.getenv(\"ALLOWED_ORIGINS\", \"http://localhost:3000,http://localhost:5173\").split(\",\")`.\n  In production the frontend is same-origin (nginx /api), so CORS barely matters, but `*` with credentials is wrong.\n- Registration lock: env `ALLOW_REGISTRATION` (default \"true\"). In routers/auth.py register endpoint, return 403\n  \"Registration is closed\" when it is \"false\". After both people have accounts (task 19), set it to false on the VPS.\n- Check token lifetime in utils/security.py: use 30 days for this personal app so nobody gets logged out weekly\n  (phones keep the PWA open for weeks); keep it configurable via ACCESS_TOKEN_EXPIRE_DAYS.\n- Add backend/tests/test_security.py using FastAPI TestClient.\n\n[2026-11-08T21:43:39-05:00] done by builder: SECRET_KEY check, CORS env, ALLOW_REGISTRATION, 30d token, .env.example, tests/test_security.py (3 pass)\n\n[2026-11-08T21:44:18-05:00] done by sonnet; verified PASS, reviewer APPROVE (low: ALLOW_REGISTRATION only closes on exact 'false'; .env.example content not inspected by agents - human glance that it holds placeholders only)",
         "testStrategy": "`pytest backend/tests/test_security.py -q`: (a) importing utils.security with SECRET_KEY unset raises; (b) POST /auth/register\nreturns 403 with ALLOW_REGISTRATION=false; (c) a request with Origin: https://evil.example gets no Access-Control-Allow-Origin header.",
         "complexity": 3,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T21:42:43-05:00",
+      "updated": "2026-11-08T21:44:18-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

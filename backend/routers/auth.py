@@ -3,6 +3,7 @@ Authentication Router
 Handles user registration and login with JWT tokens.
 """
 
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from schemas.user_schemas import UserRegister, UserLogin, Token, UserResponse
@@ -22,6 +23,9 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     - Initializes a streak record for gamification
     - Returns the created user data
     """
+    if os.getenv("ALLOW_REGISTRATION", "true").lower() == "false":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Registration is closed")
+
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:

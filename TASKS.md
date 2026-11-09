@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 3/19 tasks done.**
+**Progress: 4/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -13,7 +13,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **2. Set up local development** _(after 1)_  
   Postgres in Docker, backend venv, frontend packages, .env, and the food tables, so the app runs on the developer's computer.  
   _Test:_ `curl localhost:8000/health` returns 200. The frontend loads in the browser. In backend/: `TEST_DATABASE_URL=postgresql://fittrack:fittrack@localhost:5432/fittrack_test pytest food_data -q` -> 10 passed (create the db first: `docker compose -f scripts/local/docker-compose.dev.yml exec -T db createdb -U fittrack fittrack_test`).
-- [ ] **3. Security basics** _(after 2)_  
+- [x] **3. Security basics** _(after 2)_  
   Fail fast without a real SECRET_KEY, restrict CORS, and stop strangers from registering on the public URL.  
   _Test:_ `pytest backend/tests/test_security.py -q`: (a) importing utils.security with SECRET_KEY unset raises; (b) POST /auth/register returns 403 with ALLOW_REGISTRATION=false; (c) a request with Origin: https://evil.example gets no Access-Control-Allow-Origin header.
 - [ ] **4. Adopt Alembic migrations** _(after 3)_  

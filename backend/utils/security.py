@@ -8,9 +8,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Security Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production-please")
+SECRET_KEY = os.getenv("SECRET_KEY", "")
+if len(SECRET_KEY) < 32:
+    raise RuntimeError("SECRET_KEY must be set to at least 32 characters (see backend/.env.example)")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * int(os.getenv("ACCESS_TOKEN_EXPIRE_DAYS", "30"))
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
