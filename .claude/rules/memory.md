@@ -20,11 +20,11 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 1 complete (tasks 5-9 done). Phase 0 done too (1-4 earlier commits).
-- Next: Phase 2, task 10.1 (frontend API client). FoodLog.jsx must adopt new API shapes (see task 10 log).
-- In progress: none. Blocked: none.
-- Last session: 2026-11-08, phase 1 run.
-- Manual checks waiting: 0 (`.taskmaster/docs/manual-checks.md`).
+- Phase 2 - Core loop on a phone: COMPLETE (tasks 10-15 done, built; none run on a real phone yet).
+- Next: phase 3 (16 PWA, 17 VPS, 18 deploy). Blocked: none yet; 17.x needs domain/SSH from the human.
+- In progress: none.
+- Last session: 2026-11-08, phase 2 run.
+- Manual checks waiting: 7 task sections (`.taskmaster/docs/manual-checks.md`).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
@@ -42,6 +42,9 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 
 ## Learned / gotchas (max 15 lines, newest first)
+- Repo-wide `npm run lint` is red (~86 pre-existing errors in untouched pages); check touched files with `npx eslint <files>` instead.
+- zxing-wasm exports map blocks dist/ paths: use `zxing-wasm/reader/zxing_reader.wasm?url` (task 11).
+- Windows pytest may need `--basetemp=<scratchpad>` (default temp dir PermissionError).
 - Run pytest with `backend/venv/Scripts/python.exe -m pytest -p no:cacheprovider --basetemp=<writable dir>`; global python lacks food_data and default tmp is permission-denied.
 - Migration 7.1 adds the foods FK only if `foods` exists: apply food_data schema before alembic on deploy.
 - Run pytest/alembic with backend/venv/Scripts/python.exe (system python lacks duckdb); add --basetemp in a writable dir if WinError 5. Agents can't read .env files; pass DATABASE_URL via env.
@@ -54,8 +57,8 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ## Model routing record (update counts at each close-out)
 | Tier | Done first try | Escalated up | Notes |
 |---|---|---|---|
-| haiku | 1 | 0 | task 1 |
-| sonnet | 3 | 0 | |
+| haiku | 3 | 0 | tasks 1, 13, 14 |
+| sonnet | 9 | 0 | task 11 needed one same-tier fix round (spec gap) |
 | opus | 0 | 0 | |
 <!-- If one tier escalates on 3 tasks in a row, the phase-runner escalates to the lead, who may raise that tier's
      starting complexity in .claude/skills/next-task/SKILL.md. If haiku passes everything, give it complexity 4 too. -->
