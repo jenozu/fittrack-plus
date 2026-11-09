@@ -20,13 +20,12 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 2 - Core loop on a phone: COMPLETE (tasks 10-15 done, built; none run on a real phone yet).
-- Next: phase 3 (16 PWA, 17 VPS, 18 deploy). Blocked: none yet; 17.x needs domain/SSH from the human.
-- In progress: none.
-- Last session: 2026-11-08, phase 2 run.
-- Manual checks waiting: 7 task sections (`.taskmaster/docs/manual-checks.md`).
+- Phase 3 - Ship. Done: 16 (PWA, manual check pending). Next: 17 (server setup/deploy) then 18 (backups).
+- Blocked: 17/18 need the human (domain, DNS, VPS ssh). Scripts in scripts/vps/ already exist.
+- Last session: 2026-11-08, phase 3 stopped at HUMAN NEEDED.
+- Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (includes task 16).
 
-## Facts (stable, max 15 lines)
+ (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
 - Local db: native PG17 (no Docker; superuser `postgres` needs no password locally), `postgresql://fittrack:fittrack@localhost:5432/fittrack_db`; tests use `.../fittrack_test`.
 - VPS: Ubuntu, app at `/var/www/fittrack-plus`, user `fittrack`, service `fittrack-backend`, nginx `/api/` -> :8000.
@@ -42,6 +41,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 
 ## Learned / gotchas (max 15 lines, newest first)
+- vite-plugin-pwa resolved to 2.0.0 (task said 1.x); works on Vite 5. `npm run lint` has ~98 pre-existing errors (React unused import).
 - Repo-wide `npm run lint` is red (~86 pre-existing errors in untouched pages); check touched files with `npx eslint <files>` instead.
 - zxing-wasm exports map blocks dist/ paths: use `zxing-wasm/reader/zxing_reader.wasm?url` (task 11).
 - Windows pytest may need `--basetemp=<scratchpad>` (default temp dir PermissionError).
