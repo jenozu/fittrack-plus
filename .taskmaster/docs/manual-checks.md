@@ -50,3 +50,8 @@ tell the lead which failed, then delete the sections that passed.
 2. Desktop: top nav same 4 links.
 3. URLs /exercise /recipes /meal-planning /measurements /achievements /export redirect to /.
 4. Profile: no achievements button, level line or export card.
+
+## Task 14 - Onboarding and targets (2026-11-08)
+1. Onboard test profile (30 y, 165 cm, 60 kg, female, moderate): target ~2046 kcal.
+2. Profile: edit calories/macros, Save; Today shows the new targets; survives reload.
+3. Note: lean bulk is +300 (spec example +250) - confirm OK.

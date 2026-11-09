@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 13/19 tasks done.**
+**Progress: 14/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -66,7 +66,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **13. Hide non-core features** _(after 1)_  
   Feature flags hide AI scan, coach, badges, meal planning, recipes, water, measurements, export, exercise from navigation and routes.  
   _Test:_ Every visible link works; no hidden page is reachable by URL (redirects to /); `npm run build` passes.
-- [ ] **14. Check onboarding and targets** _(after 3)_  
+- [x] **14. Check onboarding and targets** _(after 3)_  
   Make sure calorie and macro targets are computed correctly and can be edited.  
   _Test:_ `npm test`: 30 y, 165 cm, 60 kg, female, moderate -> BMR 1320.25, TDEE ~2046. Manual: edit targets in Profile, Today screen updates.
 - [ ] **15. Weight log and trend** _(after 4)_  

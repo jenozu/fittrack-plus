@@ -146,8 +146,9 @@ export const calculateNutritionTargets = (userData) => {
   const goalConfig = GOAL_CONFIGS[goal_type];
   if (!goalConfig) return null;
 
-  // Calculate target calories
-  const targetCalories = Math.round(tdee + goalConfig.calorieAdjustment);
+  // Calculate target calories, never below the safety floor
+  const calorieFloor = gender === 'male' ? 1500 : 1200;
+  const targetCalories = Math.max(calorieFloor, Math.round(tdee + goalConfig.calorieAdjustment));
 
   // Calculate macros
   // Protein: goal-specific grams per kg of body weight
