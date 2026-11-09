@@ -20,10 +20,10 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 0 - Foundation. Done: 1 (repo cleanup), 5 (earlier).
-- Next: task 2 (local dev) in-progress, unblocked: owner chose local PG17 over Docker (see decision log).
-- fittrack_db holds old app tables (users, food_entries, water_logs...); task 4 Alembic must baseline them.
-- Last session: 2026-11-08, phase 0 run stopped at task 2.
+- Phase 0 - Foundation. Done: task 1. Task 2 in-progress, BLOCKED.
+- Blocker: backend/requirements.txt and backend/food_data/ (task 5 layer) missing from tree and git history; dev_setup.sh fails at pip step.
+- Next: human restores those files (or lead adds a rebuild task), then rerun task 2 -> 3 -> 4.
+- Last session: 2026-11-08, phase-runner returned HUMAN NEEDED.
 - Manual checks waiting: 0 (`.taskmaster/docs/manual-checks.md`).
 
 ## Facts (stable, max 15 lines)
