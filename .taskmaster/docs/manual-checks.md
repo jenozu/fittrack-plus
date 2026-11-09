@@ -59,3 +59,10 @@ tell the lead which failed, then delete the sections that passed.
 ## Task 15 - Weight log and trend (2026-11-08)
 1. Progress page at 390 px (log row may be cramped): log a weight -> point appears; five days -> 5 points + 7-day average line.
 2. Log twice same day -> one point, value replaced. kg/lb toggle persists after reload (localStorage, not profile). 30/90 days switch works.
+
+## Task 16 - Installable PWA (2026-11-08)
+1. `cd frontend && npm run build && npx vite preview`; Chrome DevTools > Application > Manifest: no errors, "installable", icons shown.
+2. Application > Service Workers: sw.js registered; /api/ requests never served from SW cache.
+3. After login the Install modal shows once; "Got it" then reload: not shown again.
+4. After deploy (task 17): iPhone (Safari > Share > Add to Home Screen) and Android (Chrome > Install app) open full-screen with icon; scanner still works.
+Note: icons are placeholder "F+"; vite-plugin-pwa resolved to 2.0.0 (spec said 1.x), builds fine on Vite 5.

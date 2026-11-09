@@ -20,3 +20,4 @@ task, defer, or delete on purpose.
 - 2026-11-08: PortionPicker edit mode: unmatched portion_label silently falls back to first portion on save; defaultMeal exported from component file (move to util).
 - 2026-11-08: backend/routers/users.py _calculate_target_calories is a second macro formula (30/40/30); consider removing for one source of truth.
 - 2026-11-08: add users.weight_unit via Alembic so kg/lb follows the user across devices (currently localStorage); log-weight shortcut on Today.
+- 2026-11-08 frontend: replace placeholder PWA icons with real logo; Install entry in Profile to reopen instructions

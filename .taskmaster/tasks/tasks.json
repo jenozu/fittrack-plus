@@ -368,12 +368,12 @@
         "id": 16,
         "title": "Make it an installable PWA",
         "description": "Manifest, icons, service worker and iOS tags so it installs from the browser and opens full-screen.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           13
         ],
-        "details": "- `npm i -D vite-plugin-pwa` (v1.x supports Vite 5). vite.config.js: VitePWA({ registerType: \"autoUpdate\",\n  manifest: { name: \"FitTrack+\", short_name: \"FitTrack\", start_url: \"/\", scope: \"/\", display: \"standalone\",\n  background_color: \"#ffffff\", theme_color: \"#F0A7D9\", icons: [192, 512, and a 512 maskable] },\n  workbox: { navigateFallback: \"/index.html\", navigateFallbackDenylist: [/^\\/api\\//],\n  runtimeCaching: [{ urlPattern: /^\\/api\\//, handler: \"NetworkOnly\" }] } }).\n  Never cache API responses: diaries must always be fresh.\n- Icons: frontend/public/icons/ (192, 512, maskable-512, apple-touch-icon 180x180). Generate from one square logo\n  (e.g. `npx @vite-pwa/assets-generator`).\n- frontend/index.html: <meta name=\"apple-mobile-web-app-capable\" content=\"yes\">, apple-mobile-web-app-status-bar-style,\n  <link rel=\"apple-touch-icon\" href=\"/icons/apple-touch-icon.png\">, viewport with viewport-fit=cover; use\n  env(safe-area-inset-bottom) padding for the bottom nav.\n- An \"Install the app\" page/modal: iPhone = Safari > Share > Add to Home Screen; Android = Chrome menu > Install app.\n  Show it once after first login if not running standalone (matchMedia('(display-mode: standalone)')).\n- nginx already serves sw.js and the manifest with no-cache (scripts/vps/setup_server.sh).",
+        "details": "- `npm i -D vite-plugin-pwa` (v1.x supports Vite 5). vite.config.js: VitePWA({ registerType: \"autoUpdate\",\n  manifest: { name: \"FitTrack+\", short_name: \"FitTrack\", start_url: \"/\", scope: \"/\", display: \"standalone\",\n  background_color: \"#ffffff\", theme_color: \"#F0A7D9\", icons: [192, 512, and a 512 maskable] },\n  workbox: { navigateFallback: \"/index.html\", navigateFallbackDenylist: [/^\\/api\\//],\n  runtimeCaching: [{ urlPattern: /^\\/api\\//, handler: \"NetworkOnly\" }] } }).\n  Never cache API responses: diaries must always be fresh.\n- Icons: frontend/public/icons/ (192, 512, maskable-512, apple-touch-icon 180x180). Generate from one square logo\n  (e.g. `npx @vite-pwa/assets-generator`).\n- frontend/index.html: <meta name=\"apple-mobile-web-app-capable\" content=\"yes\">, apple-mobile-web-app-status-bar-style,\n  <link rel=\"apple-touch-icon\" href=\"/icons/apple-touch-icon.png\">, viewport with viewport-fit=cover; use\n  env(safe-area-inset-bottom) padding for the bottom nav.\n- An \"Install the app\" page/modal: iPhone = Safari > Share > Add to Home Screen; Android = Chrome menu > Install app.\n  Show it once after first login if not running standalone (matchMedia('(display-mode: standalone)')).\n- nginx already serves sw.js and the manifest with no-cache (scripts/vps/setup_server.sh).\n\n[2026-11-08T22:50:52-05:00] plan (sonnet): vite.config.js, index.html, public/icons via PIL, InstallPrompt in Layout, vite-plugin-pwa\n\n[2026-11-08T22:52:03-05:00] built: vite-plugin-pwa, icons (PIL, placeholder F+ logo), index.html tags, InstallPrompt in Layout. build emits sw.js+manifest. lint: only repo-wide pre-existing 'React unused' style errors.\n\n[2026-11-08T22:53:12-05:00] done by sonnet; verified (build ok). deviation: vite-plugin-pwa 2.0.0 not 1.x, works. done pending manual check",
         "testStrategy": "`npm run build` emits dist/sw.js and dist/manifest.webmanifest. Chrome devtools > Application > Manifest shows no errors and\n\"installable\". After deploy (task 17), installing on both phones opens full-screen with the icon, and the scanner still works.",
         "complexity": 5,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:42:45-05:00",
+      "updated": "2026-11-08T22:53:12-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
