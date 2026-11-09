@@ -63,6 +63,7 @@ export const foodAPI = {
   createEntry: (body) => api.post('/food/entries', body),
   updateEntry: (id, body) => api.put(`/food/entries/${id}`, body),
   deleteEntry: (id) => api.delete(`/food/entries/${id}`),
+  copyEntries: (body) => api.post('/food/entries/copy', body),
   createCustom: (body) => api.post('/food/custom', body),
   copyFood: (id) => api.post(`/food/${id}/copy`),
 };

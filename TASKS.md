@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 11/19 tasks done.**
+**Progress: 12/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -60,7 +60,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **11. Barcode scanner that works on iPhone and Android** _(after 10)_  
   Replace quagga with the BarcodeDetector API plus the barcode-detector (ZXing WebAssembly) polyfill; misses lead to 'add this food'.  
   _Test:_ On a real iPhone (Safari) and Android (Chrome): scan 5 packaged foods; each opens the right product or the add form. Closing the scanner turns the camera light off. Works after "Add to Home Screen" too (re-check in task 16).
-- [ ] **12. Today screen (diary dashboard)** _(after 9, 10)_  
+- [x] **12. Today screen (diary dashboard)** _(after 9, 10)_  
   The home screen: today's meals, totals vs targets, quick add, day navigation.  
   _Test:_ Manual at 390x844: log breakfast/lunch/dinner/snack, edit one entry's grams, delete one, navigate to yesterday and back, copy yesterday's breakfast. Totals match the sum of the entries.
 - [ ] **13. Hide non-core features** _(after 1)_  

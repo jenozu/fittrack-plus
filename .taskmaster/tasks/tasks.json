@@ -311,13 +311,13 @@
         "id": 12,
         "title": "Today screen (diary dashboard)",
         "description": "The home screen: today's meals, totals vs targets, quick add, day navigation.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           9,
           10
         ],
-        "details": "pages/Dashboard.jsx (route \"/\"):\n- Header: date with < > arrows and \"Today\" button (dates in the user's local timezone, sent as YYYY-MM-DD).\n- Summary: calories remaining big number (target - eaten), bars for protein/carbs/fat vs targets (from the user profile).\n- Four meal sections with entries (name, portion, kcal). Tap an entry -> PortionPicker in edit mode (update/delete).\n  \"+ Add\" per meal opens FoodLog with that meal preselected. Scan button opens BarcodeScanner directly.\n- \"Copy yesterday's <meal>\" action per meal (task 9 endpoint). Recent foods row for one-tap add with last portion.\n- Loading and empty states; no layout shift on 390 px.",
+        "details": "pages/Dashboard.jsx (route \"/\"):\n- Header: date with < > arrows and \"Today\" button (dates in the user's local timezone, sent as YYYY-MM-DD).\n- Summary: calories remaining big number (target - eaten), bars for protein/carbs/fat vs targets (from the user profile).\n- Four meal sections with entries (name, portion, kcal). Tap an entry -> PortionPicker in edit mode (update/delete).\n  \"+ Add\" per meal opens FoodLog with that meal preselected. Scan button opens BarcodeScanner directly.\n- \"Copy yesterday's <meal>\" action per meal (task 9 endpoint). Recent foods row for one-tap add with last portion.\n- Loading and empty states; no layout shift on 390 px.\n\n[2026-11-08T22:31:29-05:00] built Dashboard.jsx, PortionPicker edit mode, FoodLog ?meal&date params, foodAPI.copyEntries; build+lint pass; manual 390px check pending\n\n[2026-11-08T22:33:02-05:00] done by sonnet; verified; manual check pending",
         "testStrategy": "Manual at 390x844: log breakfast/lunch/dinner/snack, edit one entry's grams, delete one, navigate to yesterday and back,\ncopy yesterday's breakfast. Totals match the sum of the entries.",
         "complexity": 5,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:29:24-05:00",
+      "updated": "2026-11-08T22:33:02-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

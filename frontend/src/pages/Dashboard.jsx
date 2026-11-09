@@ -1,336 +1,208 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { dashboardAPI, measurementsAPI } from '../services/api';
-import { Card, LoadingSpinner, Button } from '../components/ui';
-import WaterWidget from '../components/WaterWidget';
-import SmartCoach from '../components/SmartCoach';
-import { Flame, TrendingUp, Drumstick, Dumbbell, Award, Ruler, TrendingDown } from 'lucide-react';
-import { format } from 'date-fns';
+import { addDays, format, parseISO } from 'date-fns';
+import { ChevronLeft, ChevronRight, Plus, ScanLine } from 'lucide-react';
+import { dashboardAPI, foodAPI } from '../services/api';
+import { LoadingSpinner } from '../components/ui';
+import BarcodeScanner from '../components/BarcodeScanner';
+import CustomFoodForm from '../components/CustomFoodForm';
+import PortionPicker, { defaultMeal } from '../components/PortionPicker';
+
+const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
+const ymd = (d) => format(d, 'yyyy-MM-dd');
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+const num = (v) => Math.round(v || 0);
+
+function portionText(e) {
+  if (e.portion_label === 'g' || (!e.portion_label && e.grams)) return `${num(e.grams)} g`;
+  return e.portion_label ? `${Math.round((e.quantity || 1) * 10) / 10} ${e.portion_label}` : '';
+}
+
+function Bar({ label, value, target }) {
+  const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
+  return (
+    <div>
+      <div className="flex justify-between text-sm"><span>{label}</span><span>{num(value)} / {num(target)} g</span></div>
+      <div className="h-2 rounded-full bg-neutral-200"><div className="h-2 rounded-full bg-pink-300" style={{ width: `${pct}%` }} /></div>
+    </div>
+  );
+}
 
 const Dashboard = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [summary, setSummary] = useState(null);
-  const [streak, setStreak] = useState(null);
-  const [measurementSummary, setMeasurementSummary] = useState(null);
+  const today = ymd(new Date());
+  const [date, setDate] = useState(today);
+  const [data, setData] = useState(null); // {entries, totals, target}
+  const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [edit, setEdit] = useState(null); // {entry, food}
+  const [scanning, setScanning] = useState(false);
+  const [picked, setPicked] = useState(null);
+  const [missing, setMissing] = useState(null);
+  const [customForm, setCustomForm] = useState(false);
+  const [note, setNote] = useState('');
 
-  useEffect(() => {
-    fetchDashboardData();
+  const load = useCallback(async (d, sig) => {
+    try {
+      const [day, sum] = await Promise.all([foodAPI.getEntries(d), dashboardAPI.getDailySummary(d)]);
+      if (sig?.stale) return;
+      setData({ entries: day.data.entries, totals: day.data.totals, target: sum.data });
+      setError(false);
+    } catch {
+      if (!sig?.stale) setError(true);
+    } finally {
+      if (!sig?.stale) setLoading(false);
+    }
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const [summaryRes, streakRes] = await Promise.all([
-        dashboardAPI.getDailySummary(today),
-        dashboardAPI.getStreak(),
-      ]);
-      setSummary(summaryRes.data);
-      setStreak(streakRes.data);
-      
-      // Fetch measurement summary (optional - don't fail if not available)
-      try {
-        const measurementRes = await measurementsAPI.getSummary();
-        setMeasurementSummary(measurementRes.data);
-      } catch (err) {
-        // Measurements not available yet, that's ok
-        setMeasurementSummary(null);
-      }
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const sig = { stale: false };
+    setLoading(true);
+    load(date, sig);
+    return () => { sig.stale = true; };
+  }, [date, load]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
+  useEffect(() => {
+    foodAPI.recent().then((r) => setRecent(r.data.slice(0, 10))).catch(() => {});
+  }, []);
+
+  const refresh = () => { setEdit(null); setPicked(null); load(date); };
+  const shift = (n) => setDate(ymd(addDays(parseISO(date), n)));
+
+  async function openEdit(entry) {
+    if (!entry.food_id) { // quick-add entries have no food to re-portion
+      if (window.confirm(`Delete ${entry.food_name}?`)) { await foodAPI.deleteEntry(entry.id).catch(() => {}); refresh(); }
+      return;
+    }
+    try {
+      const r = await foodAPI.get(entry.food_id);
+      setEdit({ entry, food: r.data });
+    } catch { setNote("Couldn't open that entry."); }
   }
 
-  const caloriesPercentage = summary ? (summary.total_calories / summary.target_calories) * 100 : 0;
-  const caloriesColor = summary?.calories_remaining > 0 ? 'text-green-600' : 'text-red-600';
+  async function quickAdd(u) {
+    const body = { food_id: u.food.id, meal_type: defaultMeal(), entry_date: date,
+      ...(u.portion_label && u.portion_label !== 'g' ? { portion_label: u.portion_label, quantity: u.quantity || 1 } : { grams: u.grams || 100 }) };
+    try { await foodAPI.createEntry(body); load(date); } catch { setNote("Couldn't add that food."); }
+  }
+
+  async function copyYesterday(meal) {
+    const from_date = ymd(addDays(parseISO(date), -1));
+    try {
+      const r = await foodAPI.copyEntries({ from_date, to_date: date, meal_type: meal });
+      setNote(r.data.length ? '' : `Nothing logged for ${meal} yesterday.`);
+      load(date);
+    } catch { setNote("Couldn't copy."); }
+  }
+
+  async function onScan(code) {
+    setScanning(false);
+    try {
+      setPicked((await foodAPI.byBarcode(code)).data);
+    } catch (e) {
+      if (e.response?.status === 404) setMissing(code); else setNote('Barcode lookup failed. Try again.');
+    }
+  }
+
+  const t = data?.target;
+  const tot = data?.totals;
+  const iconBtn = 'flex h-11 w-11 items-center justify-center rounded-lg';
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary-pink to-primary-blue rounded-xl p-6 text-white">
-        <h1 className="text-3xl font-bold">
-          Welcome back, {user?.first_name || 'there'}! 👋
-        </h1>
-        <p className="mt-2 text-white/90">
-          {format(new Date(), 'EEEE, MMMM d, yyyy')}
-        </p>
+    <div className="space-y-4 pb-4">
+      <div className="flex items-center justify-between">
+        <button type="button" aria-label="Previous day" onClick={() => shift(-1)} className={iconBtn}><ChevronLeft /></button>
+        <div className="text-center">
+          <h1 className="text-lg font-semibold">{date === today ? 'Today' : format(parseISO(date), 'EEE, MMM d')}</h1>
+          {date !== today && <button type="button" onClick={() => setDate(today)} className="min-h-[44px] text-sm text-blue-600">Today</button>}
+        </div>
+        <button type="button" aria-label="Next day" onClick={() => shift(1)} className={iconBtn}><ChevronRight /></button>
       </div>
 
-      {/* Streak Card */}
-      <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <Award className="text-white" size={32} />
+      {error && <p className="text-sm text-red-500">Couldn&apos;t load. <button type="button" className="underline" onClick={() => load(date)}>Retry</button></p>}
+      {note && <p className="text-sm text-neutral-600">{note}</p>}
+
+      <div className="min-h-[170px] space-y-3 rounded-2xl bg-white p-4 shadow-sm">
+        {loading || !data ? (
+          <div className="flex h-[140px] items-center justify-center"><LoadingSpinner /></div>
+        ) : (
+          <>
+            <div className="text-center">
+              <div className="text-5xl font-bold" data-testid="remaining">{num(t.target_calories - tot.calories)}</div>
+              <div className="text-sm text-neutral-500">kcal remaining · {num(tot.calories)} of {num(t.target_calories)}</div>
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-neutral-800">
-                {streak?.current_streak || 0} Day Streak! 🔥
-              </h3>
-              <p className="text-neutral-600">
-                Longest: {streak?.longest_streak || 0} days
-              </p>
-            </div>
-          </div>
+            <Bar label="Protein" value={tot.protein_g} target={t.target_protein_g} />
+            <Bar label="Carbs" value={tot.carbs_g} target={t.target_carbs_g} />
+            <Bar label="Fat" value={tot.fat_g} target={t.target_fat_g} />
+          </>
+        )}
+      </div>
+
+      <button type="button" onClick={() => setScanning(true)}
+        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 text-base text-white">
+        <ScanLine size={20} /> Scan barcode
+      </button>
+
+      {recent.length > 0 && (
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4">
+          {recent.map((u) => (
+            <button key={u.food.id} type="button" onClick={() => quickAdd(u)}
+              className="min-h-[44px] shrink-0 rounded-full border border-neutral-300 bg-white px-3 text-sm">
+              + {u.food.name.length > 22 ? `${u.food.name.slice(0, 22)}…` : u.food.name}
+            </button>
+          ))}
         </div>
-      </Card>
-
-      {/* Calories Summary */}
-      <Card title="Today's Calorie Summary">
-        <div className="space-y-4">
-          {/* Calories Remaining - Big Display */}
-          <div className="text-center py-6 bg-gradient-to-br from-primary-blue/10 to-primary-pink/10 rounded-lg">
-            <p className="text-sm text-neutral-600 mb-2">Calories Remaining</p>
-            <h2 className={`text-5xl font-bold ${caloriesColor}`}>
-              {summary?.calories_remaining || 0}
-            </h2>
-            <p className="text-sm text-neutral-600 mt-2">
-              Target: {summary?.target_calories || 0} cal
-            </p>
-          </div>
-
-          {/* Breakdown */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-neutral-50 rounded-lg">
-              <Drumstick className="mx-auto mb-2 text-primary-pink" size={24} />
-              <p className="text-2xl font-bold text-neutral-800">{summary?.total_calories || 0}</p>
-              <p className="text-xs text-neutral-600">Consumed</p>
-            </div>
-            <div className="text-center p-4 bg-neutral-50 rounded-lg">
-              <Dumbbell className="mx-auto mb-2 text-primary-blue" size={24} />
-              <p className="text-2xl font-bold text-neutral-800">{summary?.calories_burned || 0}</p>
-              <p className="text-xs text-neutral-600">Burned</p>
-            </div>
-            <div className="text-center p-4 bg-neutral-50 rounded-lg">
-              <Flame className="mx-auto mb-2 text-orange-500" size={24} />
-              <p className="text-2xl font-bold text-neutral-800">{summary?.target_calories || 0}</p>
-              <p className="text-xs text-neutral-600">Goal</p>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div>
-            <div className="flex justify-between text-sm text-neutral-600 mb-2">
-              <span>Daily Progress</span>
-              <span>{Math.round(caloriesPercentage)}%</span>
-            </div>
-            <div className="w-full bg-neutral-200 rounded-full h-3">
-              <div
-                className="bg-gradient-to-r from-primary-pink to-primary-blue h-3 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(caloriesPercentage, 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Water Tracking Widget */}
-      <WaterWidget selectedDate={format(new Date(), 'yyyy-MM-dd')} />
-
-      {/* Smart Coach Widget */}
-      <SmartCoach 
-        selectedDate={format(new Date(), 'yyyy-MM-dd')}
-        onFoodAdded={fetchDashboardData}
-      />
-
-      {/* Measurements Summary Widget */}
-      {measurementSummary && measurementSummary.total_measurements > 0 && (
-        <Card>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
-                <Ruler className="text-primary-pink" size={20} />
-                Body Measurements Progress
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/measurements')}
-                className="text-sm"
-              >
-                View All →
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {measurementSummary.total_cm_lost && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                  <TrendingDown className="text-green-600 mb-2" size={20} />
-                  <p className="text-2xl font-bold text-green-700">
-                    {measurementSummary.total_cm_lost.toFixed(1)} cm
-                  </p>
-                  <p className="text-xs text-green-600">Total Lost</p>
-                </div>
-              )}
-              
-              <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200">
-                <p className="text-sm text-neutral-600 mb-1">Measurements</p>
-                <p className="text-2xl font-bold text-neutral-800">
-                  {measurementSummary.total_measurements}
-                </p>
-                <p className="text-xs text-neutral-500">
-                  Tracked
-                </p>
-              </div>
-              
-              {measurementSummary.waist_change_cm && (
-                <div className={`p-4 rounded-lg border ${
-                  measurementSummary.waist_change_cm < 0 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-orange-50 border-orange-200'
-                }`}>
-                  <p className={`text-xs mb-1 ${
-                    measurementSummary.waist_change_cm < 0 ? 'text-green-600' : 'text-orange-600'
-                  }`}>
-                    Waist
-                  </p>
-                  <p className={`text-2xl font-bold ${
-                    measurementSummary.waist_change_cm < 0 ? 'text-green-700' : 'text-orange-700'
-                  }`}>
-                    {measurementSummary.waist_change_cm > 0 ? '+' : ''}{measurementSummary.waist_change_cm.toFixed(1)}
-                  </p>
-                  <p className="text-xs text-neutral-500">cm change</p>
-                </div>
-              )}
-              
-              {measurementSummary.hips_change_cm && (
-                <div className={`p-4 rounded-lg border ${
-                  measurementSummary.hips_change_cm < 0 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-orange-50 border-orange-200'
-                }`}>
-                  <p className={`text-xs mb-1 ${
-                    measurementSummary.hips_change_cm < 0 ? 'text-green-600' : 'text-orange-600'
-                  }`}>
-                    Hips
-                  </p>
-                  <p className={`text-2xl font-bold ${
-                    measurementSummary.hips_change_cm < 0 ? 'text-green-700' : 'text-orange-700'
-                  }`}>
-                    {measurementSummary.hips_change_cm > 0 ? '+' : ''}{measurementSummary.hips_change_cm.toFixed(1)}
-                  </p>
-                  <p className="text-xs text-neutral-500">cm change</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
       )}
 
-      {/* Macros Summary */}
-      <Card title="Macronutrients">
-        <div className="grid grid-cols-3 gap-4">
-          {/* Protein */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium text-neutral-700">Protein</span>
-              <span className="text-neutral-600">
-                {Math.round(summary?.total_protein_g || 0)}g / {Math.round(summary?.target_protein_g || 0)}g
-              </span>
+      {data && MEALS.map((m) => {
+        const items = data.entries.filter((e) => e.meal_type === m);
+        const kcal = items.reduce((s, e) => s + e.calories, 0);
+        return (
+          <section key={m} className="rounded-2xl bg-white p-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">{cap(m)}</h2>
+              <span className="text-sm text-neutral-500">{num(kcal)} kcal</span>
             </div>
-            <div className="w-full bg-neutral-200 rounded-full h-2">
-              <div
-                className="bg-red-400 h-2 rounded-full"
-                style={{ 
-                  width: `${Math.min((summary?.total_protein_g / summary?.target_protein_g) * 100 || 0, 100)}%` 
-                }}
-              />
+            {items.length === 0 && <p className="py-2 text-sm text-neutral-400">Nothing yet</p>}
+            {items.map((e) => (
+              <button key={e.id} type="button" onClick={() => openEdit(e)}
+                className="flex min-h-[44px] w-full items-center justify-between gap-2 border-b border-neutral-100 text-left last:border-0">
+                <span className="min-w-0"><span className="block truncate">{e.food_name}</span>
+                  <span className="block text-xs text-neutral-500">{portionText(e)}</span></span>
+                <span className="shrink-0 text-sm">{num(e.calories)}</span>
+              </button>
+            ))}
+            <div className="mt-1 flex gap-2">
+              <button type="button" onClick={() => navigate(`/food?meal=${m}&date=${date}`)}
+                className="flex min-h-[44px] flex-1 items-center justify-center gap-1 rounded-lg bg-pink-100 text-sm">
+                <Plus size={16} /> Add
+              </button>
+              <button type="button" onClick={() => copyYesterday(m)}
+                className="min-h-[44px] flex-1 rounded-lg border border-neutral-300 text-sm">Copy yesterday&apos;s {m}</button>
             </div>
-          </div>
+          </section>
+        );
+      })}
 
-          {/* Carbs */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium text-neutral-700">Carbs</span>
-              <span className="text-neutral-600">
-                {Math.round(summary?.total_carbs_g || 0)}g / {Math.round(summary?.target_carbs_g || 0)}g
-              </span>
-            </div>
-            <div className="w-full bg-neutral-200 rounded-full h-2">
-              <div
-                className="bg-blue-400 h-2 rounded-full"
-                style={{ 
-                  width: `${Math.min((summary?.total_carbs_g / summary?.target_carbs_g) * 100 || 0, 100)}%` 
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Fat */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium text-neutral-700">Fat</span>
-              <span className="text-neutral-600">
-                {Math.round(summary?.total_fat_g || 0)}g / {Math.round(summary?.target_fat_g || 0)}g
-              </span>
-            </div>
-            <div className="w-full bg-neutral-200 rounded-full h-2">
-              <div
-                className="bg-yellow-400 h-2 rounded-full"
-                style={{ 
-                  width: `${Math.min((summary?.total_fat_g / summary?.target_fat_g) * 100 || 0, 100)}%` 
-                }}
-              />
-            </div>
+      {edit && <PortionPicker food={edit.food} entry={edit.entry} date={date} onAdded={refresh} onDeleted={refresh} onClose={() => setEdit(null)} />}
+      {picked && <PortionPicker food={picked} date={date} onAdded={refresh} onClose={() => setPicked(null)} />}
+      {scanning && <BarcodeScanner onScan={onScan} onClose={() => setScanning(false)} />}
+      {missing && !customForm && (
+        <div className="flex items-center justify-between gap-2 rounded-2xl bg-white p-3 shadow-sm">
+          <p className="text-sm">No food found for {missing}.</p>
+          <div className="flex gap-2">
+            <button type="button" className="min-h-[44px] px-2 text-sm" onClick={() => setMissing(null)}>Dismiss</button>
+            <button type="button" className="min-h-[44px] rounded-lg bg-pink-100 px-3 text-sm" onClick={() => setCustomForm(true)}>Add it</button>
           </div>
         </div>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card title="Quick Actions">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <button
-            onClick={() => navigate('/food')}
-            className="p-4 bg-gradient-to-br from-primary-pink/20 to-primary-pink/10 hover:from-primary-pink/30 hover:to-primary-pink/20 rounded-lg transition-all"
-          >
-            <Drumstick className="mx-auto mb-2 text-primary-pink" size={32} />
-            <p className="text-sm font-medium text-neutral-800">Log Food</p>
-          </button>
-          <button
-            onClick={() => navigate('/exercise')}
-            className="p-4 bg-gradient-to-br from-primary-blue/20 to-primary-blue/10 hover:from-primary-blue/30 hover:to-primary-blue/20 rounded-lg transition-all"
-          >
-            <Dumbbell className="mx-auto mb-2 text-primary-blue" size={32} />
-            <p className="text-sm font-medium text-neutral-800">Log Exercise</p>
-          </button>
-          <button
-            onClick={() => navigate('/measurements')}
-            className="p-4 bg-gradient-to-br from-orange-200/50 to-orange-100/50 hover:from-orange-200/70 hover:to-orange-100/70 rounded-lg transition-all"
-          >
-            <Ruler className="mx-auto mb-2 text-orange-600" size={32} />
-            <p className="text-sm font-medium text-neutral-800">Measurements</p>
-          </button>
-          <button
-            onClick={() => navigate('/progress')}
-            className="p-4 bg-gradient-to-br from-green-200/50 to-green-100/50 hover:from-green-200/70 hover:to-green-100/70 rounded-lg transition-all"
-          >
-            <TrendingUp className="mx-auto mb-2 text-green-600" size={32} />
-            <p className="text-sm font-medium text-neutral-800">View Progress</p>
-          </button>
-          <button
-            onClick={() => navigate('/profile')}
-            className="p-4 bg-gradient-to-br from-purple-200/50 to-purple-100/50 hover:from-purple-200/70 hover:to-purple-100/70 rounded-lg transition-all"
-          >
-            <Award className="mx-auto mb-2 text-purple-600" size={32} />
-            <p className="text-sm font-medium text-neutral-800">Profile</p>
-          </button>
-        </div>
-      </Card>
+      )}
+      {customForm && (
+        <CustomFoodForm barcode={missing || ''} onClose={() => { setCustomForm(false); setMissing(null); }}
+          onCreated={(f) => { setCustomForm(false); setMissing(null); setPicked(f); }} />
+      )}
     </div>
   );
 };
 
 export default Dashboard;
-

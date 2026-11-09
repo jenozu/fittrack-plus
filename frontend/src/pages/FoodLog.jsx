@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { foodAPI, dashboardAPI } from '../services/api';
 import { Card, Button, Input, Select, Modal, LoadingSpinner } from '../components/ui';
 import BarcodeScanner from '../components/BarcodeScanner';
@@ -9,12 +10,14 @@ import { Search, Plus, Trash2, Coffee, Sun, Moon, Cookie, Camera } from 'lucide-
 import { format } from 'date-fns';
 
 const FoodLog = () => {
+  const [params] = useSearchParams(); // ?date=YYYY-MM-DD&meal=lunch from the Today screen
+  const meal = params.get('meal') || undefined;
   const [entries, setEntries] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [picked, setPicked] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(params.get('date') || format(new Date(), 'yyyy-MM-dd'));
+  const [showSearchModal, setShowSearchModal] = useState(!!meal);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [missing, setMissing] = useState(null); // barcode with no match
@@ -389,6 +392,7 @@ const FoodLog = () => {
         <PortionPicker
           food={picked}
           date={selectedDate}
+          meal={meal}
           onAdded={handleAdded}
           onClose={() => setPicked(null)}
         />

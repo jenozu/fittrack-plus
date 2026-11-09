@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { foodAPI } from '../services/api';
 
-function defaultMeal(d = new Date()) {
+// eslint-disable-next-line react-refresh/only-export-components
+export function defaultMeal(d = new Date()) {
   const m = d.getHours() * 60 + d.getMinutes();
   if (m < 630) return 'breakfast';
   if (m < 900) return 'lunch';
@@ -13,12 +14,14 @@ const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
 const r = (v, d) => Math.round(v * 10 ** d) / 10 ** d; // same rounding as services/nutrition.py
 
 // food: FoodOut; date: 'YYYY-MM-DD'; onAdded(entry) / onClose() callbacks.
-export default function PortionPicker({ food, date, onAdded, onClose }) {
+// meal: optional preselected meal. entry: edit mode (update/delete that diary entry); onAdded fires after save, onDeleted after delete.
+export default function PortionPicker({ food, date, meal: mealProp, entry, onAdded, onDeleted, onClose }) {
   const portions = food.portions || [];
+  const editLabel = entry && (entry.portion_label === 'g' || portions.some((p) => p.label === entry.portion_label)) ? entry.portion_label : null;
   const first = food.serving_label && portions.find((p) => p.label === food.serving_label) ? food.serving_label : portions[0]?.label;
-  const [label, setLabel] = useState(first || 'g');
-  const [qty, setQty] = useState(first ? '1' : '100');
-  const [meal, setMeal] = useState(defaultMeal());
+  const [label, setLabel] = useState(editLabel || first || 'g');
+  const [qty, setQty] = useState(editLabel ? String(editLabel === 'g' ? entry.grams ?? entry.quantity : entry.quantity) : first ? '1' : '100');
+  const [meal, setMeal] = useState(entry?.meal_type || mealProp || defaultMeal());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
 
@@ -33,8 +36,18 @@ export default function PortionPicker({ food, date, onAdded, onClose }) {
     const body = { food_id: food.id, meal_type: meal, entry_date: date,
       ...(label === 'g' ? { grams: q } : { portion_label: label, quantity: q }) };
     try {
-      const res = await foodAPI.createEntry(body);
+      const res = entry ? await foodAPI.updateEntry(entry.id, body) : await foodAPI.createEntry(body);
       onAdded?.(res.data);
+    } catch {
+      setError(true); setBusy(false);
+    }
+  }
+
+  async function del() {
+    setBusy(true); setError(false);
+    try {
+      await foodAPI.deleteEntry(entry.id);
+      onDeleted?.();
     } catch {
       setError(true); setBusy(false);
     }
@@ -62,7 +75,11 @@ export default function PortionPicker({ food, date, onAdded, onClose }) {
         </p>
         {error && <p className="text-sm text-red-500">Couldn&apos;t add. Try again.</p>}
         <button type="button" disabled={!valid || busy} onClick={add}
-          className="min-h-[44px] rounded-lg bg-neutral-900 text-base text-white disabled:opacity-50">Add</button>
+          className="min-h-[44px] rounded-lg bg-neutral-900 text-base text-white disabled:opacity-50">{entry ? 'Save' : 'Add'}</button>
+        {entry && (
+          <button type="button" disabled={busy} onClick={del}
+            className="min-h-[44px] rounded-lg border border-red-300 text-base text-red-600 disabled:opacity-50">Delete</button>
+        )}
       </div>
     </div>
   );

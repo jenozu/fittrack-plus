@@ -37,3 +37,10 @@ tell the lead which failed, then delete the sections that passed.
 2. iPhone Safari + Android Chrome: scan 5 packaged foods -> PortionPicker for the right product.
 3. Unknown barcode (or typed number) -> "No food found" card -> "Not found - add it" -> form with barcode prefilled -> Save -> PortionPicker.
 4. Close scanner: camera light off. Torch button on Android. Repeat after Add to Home Screen (task 16).
+
+## Task 12 - Today screen (2026-11-08)
+1. 390x844, "/" : "+ Add" per meal for breakfast/lunch/dinner/snack lands in the right meal (meal preselected).
+2. Tap entry -> change grams -> Save; Delete another. Totals update; remaining = target - eaten; macro bars match sums.
+3. < yesterday, Today to return. "Copy yesterday's breakfast" works; empty day shows note.
+4. Recent chip one-tap add; scan button opens camera. No horizontal scroll, no layout jump, no console errors.
+5. Edit-mode oddity: entry whose portion_label matches no portion falls back to first portion on save (low risk).
