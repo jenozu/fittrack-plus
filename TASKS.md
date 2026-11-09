@@ -55,7 +55,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   _Test:_ Manual at 390x844 in Chrome devtools device mode: type "chick bre" -> results within ~0.5 s; pick "1 cup, chopped" x 1.5 -> preview updates; Add -> appears in the right meal. `npm run build` and `npm run lint` pass.
   - [x] 10.1 API client
   - [x] 10.2 Search component
-  - [ ] 10.3 Portion picker sheet
+  - [x] 10.3 Portion picker sheet
   - [ ] 10.4 Wire into FoodLog page
 - [ ] **11. Barcode scanner that works on iPhone and Android** _(after 10)_  
   Replace quagga with the BarcodeDetector API plus the barcode-detector (ZXing WebAssembly) polyfill; misses lead to 'add this food'.  

@@ -272,11 +272,11 @@
             "id": 3,
             "title": "Portion picker sheet",
             "description": "PortionPicker.jsx bottom sheet: portion select, quantity, live totals, meal select.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
-            "details": "Bottom sheet (fixed, rounded top, large tap targets >= 44 px). Portion <select> from food.portions plus \"g\" (free grams);\nquantity numeric input (inputMode=\"decimal\", accepts 0.5, 1/2 is optional); live preview kcal/P/C/F computed client-side with the\nsame maths as backend/services/nutrition.py; meal selector defaulting by time of day (before 10:30 breakfast, before 15:00 lunch,\nbefore 21:00 dinner, else snack). \"Add\" calls createEntry with {food_id, portion_label, quantity} or {grams}.",
+            "details": "Bottom sheet (fixed, rounded top, large tap targets >= 44 px). Portion <select> from food.portions plus \"g\" (free grams);\nquantity numeric input (inputMode=\"decimal\", accepts 0.5, 1/2 is optional); live preview kcal/P/C/F computed client-side with the\nsame maths as backend/services/nutrition.py; meal selector defaulting by time of day (before 10:30 breakfast, before 15:00 lunch,\nbefore 21:00 dinner, else snack). \"Add\" calls createEntry with {food_id, portion_label, quantity} or {grams}.\n\n[2026-11-08T22:21:45-05:00] plan (sonnet): frontend/src/components/PortionPicker.jsx - bottom sheet, client-side scale like nutrition.py\n\n[2026-11-08T22:22:00-05:00] built PortionPicker.jsx; build+eslint pass; 150g*97/100=145.5 by construction; browser flow not run\n\n[2026-11-08T22:22:56-05:00] done by sonnet; verified (manual check pending)",
             "testStrategy": "150 g of Bananas, raw shows 145.5 kcal (97/100 g); changing meal and adding stores the right meal_type."
           },
           {
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:21:22-05:00",
+      "updated": "2026-11-08T22:22:56-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

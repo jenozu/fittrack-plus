@@ -21,3 +21,8 @@ tell the lead which failed, then delete the sections that passed.
 1. Mount FoodSearch (wired in 10.4), Network tab filter food/search. Type g,gr,gre,greek fast: <=2 requests, earlier ones cancelled; slow-3G: newest results win.
 2. Empty box shows Recent; suspect foods show warning icon; rows show name, brand, kcal, source tag; input autofocused.
 3. 390x844: no horizontal scroll, rows >=44 px. Check source tag for Open Food Facts food shows "Open Food Facts" (key guessed as "off").
+
+## Task 10.3 - Portion picker (2026-11-08)
+1. After 10.4 wiring: search Bananas, raw; pick g, 150 -> preview 145.5 kcal.
+2. Change meal to dinner, Add -> entry stored with meal_type dinner. Portion label x 0.5 sends portion_label+quantity.
+3. 390x844: sheet clears home bar, no zoom on focus, number keyboard. Note: "0,5" (comma) not accepted.
