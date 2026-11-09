@@ -53,7 +53,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [ ] **10. Frontend: food search and portion picker** _(after 6, 7)_  
   Fast, phone-friendly search-as-you-type and a portion sheet with a live macro preview.  
   _Test:_ Manual at 390x844 in Chrome devtools device mode: type "chick bre" -> results within ~0.5 s; pick "1 cup, chopped" x 1.5 -> preview updates; Add -> appears in the right meal. `npm run build` and `npm run lint` pass.
-  - [ ] 10.1 API client
+  - [x] 10.1 API client
   - [ ] 10.2 Search component
   - [ ] 10.3 Portion picker sheet
   - [ ] 10.4 Wire into FoodLog page

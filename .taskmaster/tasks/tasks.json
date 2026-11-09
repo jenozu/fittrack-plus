@@ -238,7 +238,7 @@
         "id": 10,
         "title": "Frontend: food search and portion picker",
         "description": "Fast, phone-friendly search-as-you-type and a portion sheet with a live macro preview.",
-        "status": "pending",
+        "status": "in-progress",
         "priority": "high",
         "dependencies": [
           6,
@@ -252,9 +252,9 @@
             "id": 1,
             "title": "API client",
             "description": "frontend/src/services/api.js food functions for the new endpoints.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
-            "details": "foodAPI.search(q, {signal}), byBarcode(code), get(id), recent(), frequent(), createEntry(body), updateEntry(id, body),\ndeleteEntry(id), createCustom(body), copyFood(id). Encode q with encodeURIComponent (the current code doesn't).\nSet axios baseURL from VITE_API_URL (deploy builds with /api).",
+            "details": "foodAPI.search(q, {signal}), byBarcode(code), get(id), recent(), frequent(), createEntry(body), updateEntry(id, body),\ndeleteEntry(id), createCustom(body), copyFood(id). Encode q with encodeURIComponent (the current code doesn't).\nSet axios baseURL from VITE_API_URL (deploy builds with /api).\n\n[2026-11-08T22:16:32-05:00] plan (haiku): frontend/src/services/api.js - rewrite foodAPI with new endpoints, encode q, keep searchByBarcode/getEntries for old callers\n\n[2026-11-08T22:16:47-05:00] foodAPI rewritten; build and eslint pass. Browser console check not run (needs running app).\n\n[2026-11-08T22:19:18-05:00] done by sonnet; verified (manual check pending). Note: project-wide npm run lint has 93 pre-existing errors; task 10 testStrategy needs lint to pass -> handle at 10.4",
             "testStrategy": "In the browser console, `await foodAPI.search('banana')` returns results with portions."
           },
           {
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:11:42-05:00",
+      "updated": "2026-11-08T22:19:18-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

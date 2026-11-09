@@ -52,12 +52,19 @@ export const usersAPI = {
 
 // Food API
 export const foodAPI = {
-  search: (query, limit = 20) => api.get(`/food/search?q=${query}&limit=${limit}`),
-  searchByBarcode: (barcode) => api.get(`/food/barcode/${barcode}`),
+  search: (q, { signal, limit = 20 } = {}) =>
+    api.get(`/food/search?q=${encodeURIComponent(q)}&limit=${limit}`, { signal }),
+  byBarcode: (code) => api.get(`/food/barcode/${encodeURIComponent(code)}`),
+  searchByBarcode: (code) => api.get(`/food/barcode/${encodeURIComponent(code)}`), // legacy alias for FoodLog.jsx
+  get: (id) => api.get(`/food/${id}`),
+  recent: () => api.get('/food/recent'),
+  frequent: () => api.get('/food/frequent'),
   getEntries: (date) => api.get('/food/entries', { params: { entry_date: date } }),
-  createEntry: (data) => api.post('/food/entries', data),
-  updateEntry: (id, data) => api.put(`/food/entries/${id}`, data),
+  createEntry: (body) => api.post('/food/entries', body),
+  updateEntry: (id, body) => api.put(`/food/entries/${id}`, body),
   deleteEntry: (id) => api.delete(`/food/entries/${id}`),
+  createCustom: (body) => api.post('/food/custom', body),
+  copyFood: (id) => api.post(`/food/${id}/copy`),
 };
 
 // Exercise API
