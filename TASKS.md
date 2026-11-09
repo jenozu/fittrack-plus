@@ -3,11 +3,11 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 1/19 tasks done.**
+**Progress: 2/19 tasks done.**
 
 ## Phase 0 - Foundation
 
-- [ ] **1. Clean up the repo**  
+- [x] **1. Clean up the repo**  
   Untrack the committed virtualenv and caches, remove the dead top-level mockup, archive old planning docs and deploy scripts.  
   _Test:_ `git ls-files | grep -c -E "venv/|__pycache__"` prints 0. `ls` at repo root shows README.md, backend, frontend, docs, scripts, .taskmaster.
 - [ ] **2. Set up local development** _(after 1)_  

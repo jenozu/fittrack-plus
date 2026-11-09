@@ -62,3 +62,9 @@ htmlcov/
 *.swp
 .cache/
 
+# Added by cleanup_repo.sh
+backend/venv/
+**/__pycache__/
+frontend/dist/
+fooddata/
+*.dump
