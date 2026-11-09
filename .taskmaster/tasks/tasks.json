@@ -354,12 +354,12 @@
         "id": 15,
         "title": "Weight log and trend",
         "description": "Log weight quickly and see a smoothed trend.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           4
         ],
-        "details": "Check the existing WeightLog model/endpoints (grep \"weight\" in routers/users.py and dashboard.py) and the Progress page.\nAdd: quick \"log weight\" on Progress (and optionally Today), kg/lb toggle stored on the profile, chart of daily weights\nwith a 7-day moving average line (Recharts), last 30/90 days. One entry per day (logging again replaces that day's value).",
+        "details": "Check the existing WeightLog model/endpoints (grep \"weight\" in routers/users.py and dashboard.py) and the Progress page.\nAdd: quick \"log weight\" on Progress (and optionally Today), kg/lb toggle stored on the profile, chart of daily weights\nwith a 7-day moving average line (Recharts), last 30/90 days. One entry per day (logging again replaces that day's value).\n\n[2026-11-08T22:41:38-05:00] sonnet: upsert in dashboard.py POST /weight (no migration), weight bounds, test_weight.py, Progress.jsx weight card w/ 7d avg; unit toggle in localStorage\n\n[2026-11-08T22:42:45-05:00] done by sonnet; verified; deviation: unit in localStorage; manual check pending",
         "testStrategy": "Log 5 weights on different days; chart shows points and the average line; logging twice on one day keeps one value.",
         "complexity": 3,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:39:50-05:00",
+      "updated": "2026-11-08T22:42:45-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

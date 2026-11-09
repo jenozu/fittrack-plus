@@ -221,15 +221,23 @@ def log_weight(
     """
     Log a weight entry.
     """
-    weight_log = WeightLog(
-        user_id=current_user.id,
-        weight_kg=weight_data.weight_kg,
-        log_date=weight_data.log_date,
-        notes=weight_data.notes
-    )
-    
-    db.add(weight_log)
-    
+    # one entry per user per day: logging again replaces that day's value
+    weight_log = db.query(WeightLog).filter(
+        WeightLog.user_id == current_user.id,
+        WeightLog.log_date == weight_data.log_date
+    ).first()
+    if weight_log:
+        weight_log.weight_kg = weight_data.weight_kg
+        weight_log.notes = weight_data.notes
+    else:
+        weight_log = WeightLog(
+            user_id=current_user.id,
+            weight_kg=weight_data.weight_kg,
+            log_date=weight_data.log_date,
+            notes=weight_data.notes
+        )
+        db.add(weight_log)
+
     # Also update current weight in user profile if logging for today
     if weight_data.log_date == date.today():
         current_user.current_weight_kg = weight_data.weight_kg

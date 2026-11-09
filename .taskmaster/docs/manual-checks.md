@@ -55,3 +55,7 @@ tell the lead which failed, then delete the sections that passed.
 1. Onboard test profile (30 y, 165 cm, 60 kg, female, moderate): target ~2046 kcal.
 2. Profile: edit calories/macros, Save; Today shows the new targets; survives reload.
 3. Note: lean bulk is +300 (spec example +250) - confirm OK.
+
+## Task 15 - Weight log and trend (2026-11-08)
+1. Progress page at 390 px (log row may be cramped): log a weight -> point appears; five days -> 5 points + 7-day average line.
+2. Log twice same day -> one point, value replaced. kg/lb toggle persists after reload (localStorage, not profile). 30/90 days switch works.

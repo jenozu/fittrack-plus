@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import date, datetime
 
@@ -19,7 +19,7 @@ class StreakResponse(BaseModel):
 
 # Weight Log Schemas
 class WeightLogBase(BaseModel):
-    weight_kg: float
+    weight_kg: float = Field(gt=20, lt=500)
     log_date: date
     notes: Optional[str] = None
 
