@@ -4,6 +4,7 @@ import { Card, Button, Input, Select, Modal, LoadingSpinner } from '../component
 import BarcodeScanner from '../components/BarcodeScanner';
 import FoodSearch from '../components/FoodSearch';
 import PortionPicker from '../components/PortionPicker';
+import CustomFoodForm from '../components/CustomFoodForm';
 import { Search, Plus, Trash2, Coffee, Sun, Moon, Cookie, Camera } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -16,6 +17,8 @@ const FoodLog = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [missing, setMissing] = useState(null); // barcode with no match
+  const [customForm, setCustomForm] = useState(null); // {barcode}
   const [manualEntry, setManualEntry] = useState({
     food_name: '',
     calories: '',
@@ -59,16 +62,17 @@ const FoodLog = () => {
     setShowSearchModal(false);
   };
 
-  const handleBarcodeScan = async (barcode) => {
+  const handleBarcodeScan = useCallback(async (barcode) => {
     setShowBarcodeScanner(false);
     try {
       const response = await foodAPI.byBarcode(barcode);
       setPicked(response.data);
     } catch (error) {
       console.error('Barcode lookup failed:', error);
-      alert('Food not found by barcode. Please search or add manually.');
+      if (error.response?.status === 404) setMissing(barcode);
+      else alert('Barcode lookup failed. Try again.');
     }
-  };
+  }, []);
 
   const handleManualAdd = async () => {
     try {
@@ -274,7 +278,7 @@ const FoodLog = () => {
       >
         <FoodSearch
           onSelect={setPicked}
-          onCreate={() => { setShowSearchModal(false); setShowManualModal(true); }}
+          onCreate={() => { setShowSearchModal(false); setCustomForm({ barcode: '' }); }}
         />
       </Modal>
 
@@ -359,6 +363,28 @@ const FoodLog = () => {
         </div>
       </Modal>
 
+      {missing && (
+        <Card>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm">No food found for {missing}.</p>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setMissing(null)}>Dismiss</Button>
+              <Button variant="secondary" onClick={() => { setCustomForm({ barcode: missing }); setMissing(null); }}>
+                Not found - add it
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {customForm && (
+        <CustomFoodForm
+          barcode={customForm.barcode}
+          onClose={() => setCustomForm(null)}
+          onCreated={(food) => { setCustomForm(null); setPicked(food); }}
+        />
+      )}
+
       {picked && (
         <PortionPicker
           food={picked}
@@ -373,10 +399,6 @@ const FoodLog = () => {
         <BarcodeScanner
           onScan={handleBarcodeScan}
           onClose={() => setShowBarcodeScanner(false)}
-          onError={(err) => {
-            console.error('Scanner error:', err);
-            setShowBarcodeScanner(false);
-          }}
         />
       )}
 

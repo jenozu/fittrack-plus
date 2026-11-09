@@ -19,15 +19,6 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
-  },
-  build: {
-    commonjsOptions: {
-      include: [/quagga/, /node_modules/],
-      transformMixedEsModules: true
-    }
-  },
-  optimizeDeps: {
-    include: ['quagga']
   }
 })
 

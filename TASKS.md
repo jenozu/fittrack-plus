@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 10/19 tasks done.**
+**Progress: 11/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -57,7 +57,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   - [x] 10.2 Search component
   - [x] 10.3 Portion picker sheet
   - [x] 10.4 Wire into FoodLog page
-- [ ] **11. Barcode scanner that works on iPhone and Android** _(after 10)_  
+- [x] **11. Barcode scanner that works on iPhone and Android** _(after 10)_  
   Replace quagga with the BarcodeDetector API plus the barcode-detector (ZXing WebAssembly) polyfill; misses lead to 'add this food'.  
   _Test:_ On a real iPhone (Safari) and Android (Chrome): scan 5 packaged foods; each opens the right product or the add form. Closing the scanner turns the camera light off. Works after "Add to Home Screen" too (re-check in task 16).
 - [ ] **12. Today screen (diary dashboard)** _(after 9, 10)_  

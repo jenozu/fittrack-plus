@@ -297,12 +297,12 @@
         "id": 11,
         "title": "Barcode scanner that works on iPhone and Android",
         "description": "Replace quagga with the BarcodeDetector API plus the barcode-detector (ZXing WebAssembly) polyfill; misses lead to 'add this food'.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           10
         ],
-        "details": "- `npm rm quagga && npm i barcode-detector` (v3.x). iPhone Safari has no native BarcodeDetector, so use the package's\n  ponyfill: `import { BarcodeDetector, prepareZXingModule } from \"barcode-detector/ponyfill\"`, only when\n  `!(\"BarcodeDetector\" in window)`; otherwise use the native one.\n- Self-host the .wasm (the package fetches it from jsDelivr by default, which breaks offline/PWA): import\n  `zxing_reader.wasm?url` from node_modules/zxing-wasm/dist/reader/ and pass it via prepareZXingModule({overrides: {locateFile}}).\n  Check the package README for the exact current path before coding.\n- components/BarcodeScanner.jsx: getUserMedia({video: {facingMode: {ideal: \"environment\"}}}); <video playsInline muted autoPlay>\n  (playsInline is required on iOS); detect every ~150 ms with formats [\"ean_13\",\"ean_8\",\"upc_a\",\"upc_e\"]; require the same code\n  twice in a row before accepting; vibrate(50) if available; torch toggle when track.getCapabilities().torch; always stop tracks on close.\n- On a code: foodAPI.byBarcode(code) -> PortionPicker. On 404: \"Not found - add it\" opens the custom food form with the barcode filled.\n- Manual fallback: a \"type the number\" field.\n- Camera needs HTTPS (localhost is fine). To test on a phone before task 17, use `npm i -D @vitejs/plugin-basic-ssl` +\n  `vite --host` and accept the warning, or test on the deployed VPS.",
+        "details": "- `npm rm quagga && npm i barcode-detector` (v3.x). iPhone Safari has no native BarcodeDetector, so use the package's\n  ponyfill: `import { BarcodeDetector, prepareZXingModule } from \"barcode-detector/ponyfill\"`, only when\n  `!(\"BarcodeDetector\" in window)`; otherwise use the native one.\n- Self-host the .wasm (the package fetches it from jsDelivr by default, which breaks offline/PWA): import\n  `zxing_reader.wasm?url` from node_modules/zxing-wasm/dist/reader/ and pass it via prepareZXingModule({overrides: {locateFile}}).\n  Check the package README for the exact current path before coding.\n- components/BarcodeScanner.jsx: getUserMedia({video: {facingMode: {ideal: \"environment\"}}}); <video playsInline muted autoPlay>\n  (playsInline is required on iOS); detect every ~150 ms with formats [\"ean_13\",\"ean_8\",\"upc_a\",\"upc_e\"]; require the same code\n  twice in a row before accepting; vibrate(50) if available; torch toggle when track.getCapabilities().torch; always stop tracks on close.\n- On a code: foodAPI.byBarcode(code) -> PortionPicker. On 404: \"Not found - add it\" opens the custom food form with the barcode filled.\n- Manual fallback: a \"type the number\" field.\n- Camera needs HTTPS (localhost is fine). To test on a phone before task 17, use `npm i -D @vitejs/plugin-basic-ssl` +\n  `vite --host` and accept the warning, or test on the deployed VPS.\n\n[2026-11-08T22:26:32-05:00] sonnet: replaced quagga with barcode-detector ponyfill + self-hosted wasm; BarcodeScanner rewritten; 404 -> confirm -> manual modal (barcode not prefilled, modal has no barcode field). Build+lint pass; phone test pending.\n\n[2026-11-08T22:27:40-05:00] verifier FAIL (spec: 404 should open custom food form w/ barcode; none existed). Fix by sonnet (same tier, spec gap not a capability failure)\n\n[2026-11-08T22:28:21-05:00] sonnet: added CustomFoodForm.jsx (POST /food/custom); scanner 404 -> inline 'Not found - add it' card -> form with barcode; FoodSearch onCreate -> form; created food opens PortionPicker. eslint+build pass.\n\n[2026-11-08T22:29:24-05:00] done by sonnet (1 fix round, same tier); verified; phone test pending",
         "testStrategy": "On a real iPhone (Safari) and Android (Chrome): scan 5 packaged foods; each opens the right product or the add form. Closing the\nscanner turns the camera light off. Works after \"Add to Home Screen\" too (re-check in task 16).",
         "complexity": 6,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:25:00-05:00",
+      "updated": "2026-11-08T22:29:24-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

@@ -31,3 +31,9 @@ tell the lead which failed, then delete the sections that passed.
 1. Backend + `npm run dev`, Chrome device mode 390x844, Food Log -> Search Food.
 2. Type "chick bre": results ~0.5 s. Tap, pick "1 cup, chopped" x 1.5: preview updates. Add -> entry in right meal, totals update.
 3. Barcode scan opens PortionPicker; miss shows not-found alert. Footer attribution visible. No console errors.
+
+## Task 11 - Barcode scanner (2026-11-08)
+1. Camera needs HTTPS: deploy, or `vite --host` with @vitejs/plugin-basic-ssl (not installed).
+2. iPhone Safari + Android Chrome: scan 5 packaged foods -> PortionPicker for the right product.
+3. Unknown barcode (or typed number) -> "No food found" card -> "Not found - add it" -> form with barcode prefilled -> Save -> PortionPicker.
+4. Close scanner: camera light off. Torch button on Android. Repeat after Add to Home Screen (task 16).
