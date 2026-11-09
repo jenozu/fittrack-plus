@@ -85,3 +85,24 @@ def test_other_user_gets_404(diary):
     assert c.get("/food/entries", params={"entry_date": TODAY}).json()["entries"] == []
     who["id"] = ids[0]
     assert c.delete(f"/food/entries/{e['id']}").status_code == 204
+
+
+def test_recent_frequent_copy(diary):
+    from datetime import timedelta
+    c, _, _, _ = diary
+    a = _banana(c)
+    b = c.get("/food/barcode/068100084245").json()
+    yday = (date.today() - timedelta(days=1)).isoformat()
+    for f, g, d, m in [(a, 100, yday, "breakfast"), (b, 50, yday, "breakfast"), (a, 120, yday, "lunch")]:
+        assert c.post("/food/entries", json={"food_id": f["id"], "grams": g, "meal_type": m, "entry_date": d}).status_code == 201
+    r = c.get("/food/recent").json()
+    assert [x["food"]["id"] for x in r] == [a["id"], b["id"]] and r[0]["grams"] == 120
+    fr = c.get("/food/frequent").json()
+    assert fr[0]["food"]["id"] == a["id"] and fr[0]["times_logged"] == 2
+    r = c.post("/food/entries/copy", json={"from_date": yday, "to_date": TODAY, "meal_type": "breakfast"})
+    assert r.status_code == 201 and len(r.json()) == 2
+    got = c.get("/food/entries", params={"entry_date": TODAY}).json()["entries"]
+    src = {e["food_id"]: e for e in c.get("/food/entries", params={"entry_date": yday}).json()["entries"] if e["meal_type"] == "breakfast"}
+    assert len(got) == 2
+    for e in got:
+        assert e["calories"] == src[e["food_id"]]["calories"] and e["grams"] == src[e["food_id"]]["grams"]

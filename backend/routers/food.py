@@ -11,7 +11,7 @@ from uuid import uuid4
 from sqlalchemy import text
 from schemas.food_schemas import (
     FoodOut, FoodEntryCreate, CustomFoodIn,
-    FoodEntryUpdate, FoodEntryResponse, FoodEntryDay
+    FoodEntryUpdate, FoodEntryResponse, FoodEntryDay, FoodUsageOut, EntryCopyIn
 )
 from services import nutrition
 from models import User, FoodEntry, Streak, Food
@@ -47,6 +47,47 @@ def search_by_barcode(
             detail="Food item not found for this barcode"
         )
     return result
+
+
+def _usage(db: Session, user_id: int, rows) -> list:
+    out = []
+    for r in rows:
+        food = _visible_food(db, r.food_id, user_id)
+        if food:
+            out.append({"food": food, "grams": r.grams, "portion_label": r.portion_label,
+                        "quantity": r.quantity, "times_logged": getattr(r, "times_logged", None)})
+    return out
+
+
+@router.get("/recent", response_model=List[FoodUsageOut])
+def recent_foods(limit: int = Query(20, ge=1, le=100), current_user: User = Depends(get_current_user),
+                 db: Session = Depends(get_db)):
+    """Distinct foods by most recent entry, with the last amount used."""
+    rows = db.execute(text("""
+        SELECT * FROM (
+            SELECT DISTINCT ON (food_id) food_id, grams, portion_label, quantity, created_at, id
+            FROM food_entries WHERE user_id = :u AND food_id IS NOT NULL
+            ORDER BY food_id, created_at DESC, id DESC
+        ) t ORDER BY created_at DESC, id DESC LIMIT :n"""), {"u": current_user.id, "n": limit}).fetchall()
+    return _usage(db, current_user.id, rows)
+
+
+@router.get("/frequent", response_model=List[FoodUsageOut])
+def frequent_foods(limit: int = Query(20, ge=1, le=100), days: int = Query(60, ge=1, le=3650),
+                   current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Most-logged foods in the last `days` days, with the last amount used."""
+    rows = db.execute(text("""
+        SELECT c.food_id, c.times_logged, l.grams, l.portion_label, l.quantity FROM (
+            SELECT food_id, COUNT(*) AS times_logged, MAX(created_at) AS last_at
+            FROM food_entries
+            WHERE user_id = :u AND food_id IS NOT NULL AND entry_date >= CURRENT_DATE - :d
+            GROUP BY food_id) c
+        JOIN LATERAL (
+            SELECT grams, portion_label, quantity FROM food_entries
+            WHERE user_id = :u AND food_id = c.food_id ORDER BY created_at DESC, id DESC LIMIT 1) l ON TRUE
+        ORDER BY c.times_logged DESC, c.last_at DESC LIMIT :n"""),
+        {"u": current_user.id, "d": days, "n": limit}).fetchall()
+    return _usage(db, current_user.id, rows)
 
 
 @router.get("/{food_id:int}", response_model=FoodOut)
@@ -223,6 +264,28 @@ def create_food_entry(
     db.refresh(entry)
     _update_streak(current_user.id, entry_data.entry_date, db)
     return entry
+
+
+@router.post("/entries/copy", response_model=List[FoodEntryResponse], status_code=status.HTTP_201_CREATED)
+def copy_entries(body: EntryCopyIn, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Duplicate one day's entries (optionally one meal) onto another day, snapshot included."""
+    q = db.query(FoodEntry).filter(FoodEntry.user_id == current_user.id, FoodEntry.entry_date == body.from_date)
+    if body.meal_type:
+        q = q.filter(FoodEntry.meal_type == body.meal_type)
+    copies = []
+    for e in q.order_by(FoodEntry.created_at, FoodEntry.id).all():
+        c = FoodEntry(**{k: getattr(e, k) for k in (
+            "food_name", "brand_name", "calories", "protein_g", "carbs_g", "fat_g", "quantity", "unit",
+            "meal_type", "food_id", "grams", "portion_label", "fiber_g", "sugar_g", "sodium_mg")},
+            user_id=current_user.id, entry_date=body.to_date)
+        db.add(c)
+        copies.append(c)
+    db.commit()
+    for c in copies:
+        db.refresh(c)
+    if copies:
+        _update_streak(current_user.id, body.to_date, db)
+    return copies
 
 
 @router.get("/entries", response_model=FoodEntryDay)

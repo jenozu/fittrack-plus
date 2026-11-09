@@ -114,6 +114,21 @@ class FoodEntryCreate(BaseModel):
     entry_date: date
 
 
+class FoodUsageOut(BaseModel):
+    """A food the user logged before, with the amount they last used."""
+    food: "FoodOut"
+    grams: Optional[float] = None
+    portion_label: Optional[str] = None
+    quantity: Optional[float] = None
+    times_logged: Optional[int] = None
+
+
+class EntryCopyIn(BaseModel):
+    from_date: date
+    to_date: date
+    meal_type: Optional[str] = None
+
+
 class FoodEntryUpdate(BaseModel):
     grams: Optional[float] = Field(None, gt=0)
     portion_label: Optional[str] = None

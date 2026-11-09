@@ -224,12 +224,12 @@
         "id": 9,
         "title": "Recent foods, frequent foods, copy a meal",
         "description": "One-tap re-logging, which is most of daily use.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           7
         ],
-        "details": "- GET /food/recent?limit=20: the user's distinct foods by most recent entry (DISTINCT ON food_id ORDER BY food_id, created_at DESC,\n  then order by created_at DESC), each with last grams/portion used and the full FoodOut.\n- GET /food/frequent?limit=20&days=60: most-logged foods in the window.\n- POST /food/entries/copy {from_date, to_date, meal_type?}: duplicates entries (snapshot included) to another day/meal.\nMake sure there is an index on food_entries(user_id, entry_date) (exists: idx_user_date) and add (user_id, created_at) if slow.",
+        "details": "- GET /food/recent?limit=20: the user's distinct foods by most recent entry (DISTINCT ON food_id ORDER BY food_id, created_at DESC,\n  then order by created_at DESC), each with last grams/portion used and the full FoodOut.\n- GET /food/frequent?limit=20&days=60: most-logged foods in the window.\n- POST /food/entries/copy {from_date, to_date, meal_type?}: duplicates entries (snapshot included) to another day/meal.\nMake sure there is an index on food_entries(user_id, entry_date) (exists: idx_user_date) and add (user_id, created_at) if slow.\n\n[2026-11-08T22:10:20-05:00] plan (sonnet): routers/food.py, schemas, test_diary - raw SQL DISTINCT ON / lateral; copy endpoint\n\n[2026-11-08T22:10:55-05:00] done: recent/frequent/copy endpoints + test; all tests pass\n\n[2026-11-08T22:11:42-05:00] done by sonnet; verified",
         "testStrategy": "pytest: log A, B, A -> recent = [A, B] with A's last grams; copy yesterday's breakfast creates identical rows on today.",
         "complexity": 4,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:09:44-05:00",
+      "updated": "2026-11-08T22:11:42-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
