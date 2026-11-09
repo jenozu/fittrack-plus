@@ -20,10 +20,11 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 0 - Foundation COMPLETE (tasks 1-4 done). Next: phase 1 (task 5 done earlier; 6 onward).
+- Phase 1 complete (tasks 5-9 done). Phase 0 done too (1-4 earlier commits).
+- Next: Phase 2, task 10.1 (frontend API client). FoodLog.jsx must adopt new API shapes (see task 10 log).
 - In progress: none. Blocked: none.
-- Last session: 2026-11-08, phase 0 finished. fittrack_db baselined at Alembic head a1c2d3e4f5a6.
-- Manual checks waiting: 2 (`.taskmaster/docs/manual-checks.md`: tasks 2, 4).
+- Last session: 2026-11-08, phase 1 run.
+- Manual checks waiting: 0 (`.taskmaster/docs/manual-checks.md`).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
@@ -41,6 +42,8 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 
 ## Learned / gotchas (max 15 lines, newest first)
+- Run pytest with `backend/venv/Scripts/python.exe -m pytest -p no:cacheprovider --basetemp=<writable dir>`; global python lacks food_data and default tmp is permission-denied.
+- Migration 7.1 adds the foods FK only if `foods` exists: apply food_data schema before alembic on deploy.
 - Run pytest/alembic with backend/venv/Scripts/python.exe (system python lacks duckdb); add --basetemp in a writable dir if WinError 5. Agents can't read .env files; pass DATABASE_URL via env.
 - Old-install DBs: `alembic stamp bf60e849d28a && alembic upgrade head` (not `stamp head`). bcrypt pinned 4.0.1 for passlib.
 - ALLOW_REGISTRATION closes only on exact "false"; set it exactly so at task 19.
