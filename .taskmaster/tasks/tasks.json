@@ -261,11 +261,11 @@
             "id": 2,
             "title": "Search component",
             "description": "FoodSearch.jsx with debounce + request cancellation.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               1
             ],
-            "details": "frontend/src/components/FoodSearch.jsx: input autofocus; 200 ms debounce; AbortController cancels the previous request;\nshow recent foods while the box is empty; each row: name, brand (muted), kcal for the default portion (serving_label or 100 g),\nsmall source tag (USDA / Health Canada / Open Food Facts / Mine); \"suspect\" quality shows a subtle warning icon.\nEmpty state: \"Can't find it? Create a food\" -> custom food form (task 8 endpoint).",
+            "details": "frontend/src/components/FoodSearch.jsx: input autofocus; 200 ms debounce; AbortController cancels the previous request;\nshow recent foods while the box is empty; each row: name, brand (muted), kcal for the default portion (serving_label or 100 g),\nsmall source tag (USDA / Health Canada / Open Food Facts / Mine); \"suspect\" quality shows a subtle warning icon.\nEmpty state: \"Can't find it? Create a food\" -> custom food form (task 8 endpoint).\n\n[2026-11-08T22:20:23-05:00] FoodSearch.jsx built; build+lint pass; debounce 200ms + abort on each change; not wired into a page yet\n\n[2026-11-08T22:21:21-05:00] done by sonnet; verified (manual check pending). Minor: Create-a-food link shows even with results (acceptable).",
             "testStrategy": "Typing fast 'g','gr','gre','greek' sends at most 2 requests (Network tab); stale results never overwrite newer ones."
           },
           {
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:19:18-05:00",
+      "updated": "2026-11-08T22:21:22-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

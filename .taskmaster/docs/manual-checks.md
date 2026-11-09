@@ -16,3 +16,8 @@ tell the lead which failed, then delete the sections that passed.
 1. Run backend + `cd frontend && npm run dev`, log in, DevTools console.
 2. `await foodAPI.search('banana')` returns foods with `portions` (if foodAPI is not on window, check via FoodLog search once 10.4 lands).
 3. Search 'a b&c' sends q=a%20b%26c.
+
+## Task 10.2 - Search component (2026-11-08)
+1. Mount FoodSearch (wired in 10.4), Network tab filter food/search. Type g,gr,gre,greek fast: <=2 requests, earlier ones cancelled; slow-3G: newest results win.
+2. Empty box shows Recent; suspect foods show warning icon; rows show name, brand, kcal, source tag; input autofocused.
+3. 390x844: no horizontal scroll, rows >=44 px. Check source tag for Open Food Facts food shows "Open Food Facts" (key guessed as "off").
