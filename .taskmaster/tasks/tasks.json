@@ -409,7 +409,7 @@
             "dependencies": [
               1
             ],
-            "details": "If the old database has data worth keeping: point DATABASE_URL at it, run `alembic stamp <baseline revision>` then\n`alembic upgrade head`. If it only has test data, skip and use the fresh database.",
+            "details": "If the old database has data worth keeping: point DATABASE_URL at it, run `alembic stamp <baseline revision>` then\n`alembic upgrade head`. If it only has test data, skip and use the fresh database.\n\n[2026-11-09T07:49:30-05:00] human 2026-11-09: fresh install, no old data to keep; cancel or make a no-op",
             "testStrategy": "`alembic current` on the VPS shows head."
           },
           {
@@ -445,6 +445,16 @@
             ],
             "details": "In the app: search banana, chicken breast, greek yogurt, kraft dinner, shreddies. If any search takes >300 ms server-side\n(check `journalctl -u fittrack-backend` timing or EXPLAIN ANALYZE SELECT * FROM search_foods('greek yog', 20)), log it on this task\nand consider: `VACUUM ANALYZE foods;`, raising work_mem, or --min-scans 1 on the OFF import to drop never-scanned products.",
             "testStrategy": "All five searches under 300 ms; results recorded in the task log."
+          },
+          {
+            "title": "IP/HTTP-only mode for setup_server.sh",
+            "description": "",
+            "status": "pending",
+            "dependencies": [],
+            "details": "No domain yet (human, 2026-11-09). Make DOMAIN and EMAIL optional in scripts/vps/setup_server.sh: when DOMAIN is empty, nginx uses server_name _ and certbot is skipped (log a message saying HTTPS is deferred until a domain exists). Behaviour with DOMAIN set stays unchanged. Do this before 17.1 runs on the server.",
+            "testStrategy": "shellcheck -S warning scripts/vps/setup_server.sh if available; bash -n passes; read through both branches (DOMAIN empty / set) and confirm certbot only runs when DOMAIN is set.",
+            "complexity": 3,
+            "id": 6
           }
         ]
       },
@@ -483,7 +493,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-09T07:48:55-05:00",
+      "updated": "2026-11-09T07:49:30-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

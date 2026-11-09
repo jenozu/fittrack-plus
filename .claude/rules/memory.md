@@ -26,6 +26,16 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 - Last session: 2026-11-09, phase 3 stopped at HUMAN NEEDED (ssh auth).
 - Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (task 16; camera/PWA install need HTTPS).
 
+## Facts (stable, max 15 lines)
+- Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
+- Local db: native PG17 (no Docker; superuser `postgres` needs no password locally), `postgresql://fittrack:fittrack@localhost:5432/fittrack_db`; tests use `.../fittrack_test`.
+- VPS: Ubuntu, app at `/var/www/fittrack-plus`, user `fittrack`, service `fittrack-backend`, nginx `/api/` -> :8000.
+- Domain: none yet, serve on the IP over HTTP (camera scan + PWA install need HTTPS later) · SSH target: root@2.25.108.3 (also in `.claude/deploy-target`). Fresh install, no old data.
+- Food data: local Postgres (`foods`, `food_portions`, `search_foods()`), per 100 g. Live Open Food Facts calls only on barcode misses.
+- Diary entries store a nutrition snapshot; never recompute past days.
+- Hidden (non-goal) features stay hidden: AI scan, coach, badges, meal plans, recipes, water, measurements, export, exercise.
+- Users: the owner + his girlfriend. Registration gets closed after both sign up (task 19).
+
 ## Decisions since the PRD (max 8 lines, newest first; full text in prd.md decision log)
 - 2026-11-08: Local dev on native PG17, not Docker. dev_setup.sh skips docker if missing.
 - 2026-11-08: Lead (main, Opus) launches a phase-runner (Sonnet, medium) per phase; it routes tasks to builders
