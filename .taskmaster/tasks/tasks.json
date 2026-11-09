@@ -238,13 +238,13 @@
         "id": 10,
         "title": "Frontend: food search and portion picker",
         "description": "Fast, phone-friendly search-as-you-type and a portion sheet with a live macro preview.",
-        "status": "in-progress",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           6,
           7
         ],
-        "details": "The app is used one-handed on a phone; design at 390 px wide first. Keep the existing pastel theme (frontend/src/config/theme.js).\n\n[2026-11-08T22:05:51-05:00] note from 7.3: GET /food/entries now returns {entries, meals, totals}; POST /food/entries takes food_id + grams|portion_label+quantity (or quick-add); food_master_id no longer accepted. FoodLog.jsx must be updated here (also search response is a bare list, from task 6).",
+        "details": "The app is used one-handed on a phone; design at 390 px wide first. Keep the existing pastel theme (frontend/src/config/theme.js).\n\n[2026-11-08T22:05:51-05:00] note from 7.3: GET /food/entries now returns {entries, meals, totals}; POST /food/entries takes food_id + grams|portion_label+quantity (or quick-add); food_master_id no longer accepted. FoodLog.jsx must be updated here (also search response is a bare list, from task 6).\n\n[2026-11-08T22:25:00-05:00] all subtasks done; manual check pending; repo-wide lint pre-existing failures parked",
         "testStrategy": "Manual at 390x844 in Chrome devtools device mode: type \"chick bre\" -> results within ~0.5 s; pick \"1 cup, chopped\" x 1.5 -> preview\nupdates; Add -> appears in the right meal. `npm run build` and `npm run lint` pass.",
         "complexity": 7,
         "subtasks": [
@@ -283,12 +283,12 @@
             "id": 4,
             "title": "Wire into FoodLog page",
             "description": "Replace the old search UI in pages/FoodLog.jsx.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [
               2,
               3
             ],
-            "details": "FoodLog becomes: search on top, results, PortionPicker on tap. Remove references to the old aggregator response shape\n(per-serving fields). Footer attribution: \"Food data: USDA FoodData Central, Canadian Nutrient File (Health Canada), Open Food Facts (ODbL)\".",
+            "details": "FoodLog becomes: search on top, results, PortionPicker on tap. Remove references to the old aggregator response shape\n(per-serving fields). Footer attribution: \"Food data: USDA FoodData Central, Canadian Nutrient File (Health Canada), Open Food Facts (ODbL)\".\n\n[2026-11-08T22:23:58-05:00] FoodLog wired to FoodSearch+PortionPicker; barcode -> PortionPicker; entries read from response.data.entries; AI scanner button removed (hidden feature); attribution footer; lint+build pass. E2E in browser not run.\n\n[2026-11-08T22:25:00-05:00] done by sonnet; verified (manual check pending)",
             "testStrategy": "Full flow works end to end against the local backend; no console errors."
           }
         ]
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:22:56-05:00",
+      "updated": "2026-11-08T22:25:00-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

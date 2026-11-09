@@ -26,3 +26,8 @@ tell the lead which failed, then delete the sections that passed.
 1. After 10.4 wiring: search Bananas, raw; pick g, 150 -> preview 145.5 kcal.
 2. Change meal to dinner, Add -> entry stored with meal_type dinner. Portion label x 0.5 sends portion_label+quantity.
 3. 390x844: sheet clears home bar, no zoom on focus, number keyboard. Note: "0,5" (comma) not accepted.
+
+## Task 10.4 / 10 - Wire into FoodLog (2026-11-08)
+1. Backend + `npm run dev`, Chrome device mode 390x844, Food Log -> Search Food.
+2. Type "chick bre": results ~0.5 s. Tap, pick "1 cup, chopped" x 1.5: preview updates. Add -> entry in right meal, totals update.
+3. Barcode scan opens PortionPicker; miss shows not-found alert. Footer attribution visible. No console errors.

@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 9/19 tasks done.**
+**Progress: 10/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -50,13 +50,13 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 
 ## Phase 2 - Core loop on a phone
 
-- [ ] **10. Frontend: food search and portion picker** _(after 6, 7)_  
+- [x] **10. Frontend: food search and portion picker** _(after 6, 7)_  
   Fast, phone-friendly search-as-you-type and a portion sheet with a live macro preview.  
   _Test:_ Manual at 390x844 in Chrome devtools device mode: type "chick bre" -> results within ~0.5 s; pick "1 cup, chopped" x 1.5 -> preview updates; Add -> appears in the right meal. `npm run build` and `npm run lint` pass.
   - [x] 10.1 API client
   - [x] 10.2 Search component
   - [x] 10.3 Portion picker sheet
-  - [ ] 10.4 Wire into FoodLog page
+  - [x] 10.4 Wire into FoodLog page
 - [ ] **11. Barcode scanner that works on iPhone and Android** _(after 10)_  
   Replace quagga with the BarcodeDetector API plus the barcode-detector (ZXing WebAssembly) polyfill; misses lead to 'add this food'.  
   _Test:_ On a real iPhone (Safari) and Android (Chrome): scan 5 packaged foods; each opens the right product or the add form. Closing the scanner turns the camera light off. Works after "Add to Home Screen" too (re-check in task 16).

@@ -16,3 +16,4 @@ task, defer, or delete on purpose.
 - 2026-11-08: /food/search now returns bare list; frontend FoodLog.jsx:63 expects .results (fix in Phase 2). Docs still mention Nutritionix (API_SETUP_GUIDE.md, READMEs).
 - 2026-11-08: Drop the food_master table and FoodMaster model/schemas once hidden features (ai_meal, recipes, meal_plans, smart_coach) are rebuilt on food_data; food flow no longer touches it (task 7.4).
 - 2026-11-08: move custom-food write helpers from routers/food.py into food_data/service.py; test food delete nulls food_entries.food_id; copy_food loses extra portions
+- 2026-11-08: repo-wide 'npm run lint' has ~91 pre-existing errors in untouched pages (Progress, Recipes, Register...). Task 10 testStrategy says lint passes; clean up. Also: FoodLog entry rows show 'quantity unit' - show portion_label/grams; hook custom food form into FoodSearch onCreate.

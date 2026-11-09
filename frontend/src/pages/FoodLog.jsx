@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { foodAPI, dashboardAPI } from '../services/api';
 import { Card, Button, Input, Select, Modal, LoadingSpinner } from '../components/ui';
 import BarcodeScanner from '../components/BarcodeScanner';
-import AIMealScanner from '../components/AIMealScanner';
-import { Search, Plus, Edit2, Trash2, Coffee, Sun, Moon, Cookie, Camera, Sparkles } from 'lucide-react';
+import FoodSearch from '../components/FoodSearch';
+import PortionPicker from '../components/PortionPicker';
+import { Search, Plus, Trash2, Coffee, Sun, Moon, Cookie, Camera } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FoodLog = () => {
   const [entries, setEntries] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searching, setSearching] = useState(false);
+  const [picked, setPicked] = useState(null);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [showAIScanner, setShowAIScanner] = useState(false);
   const [manualEntry, setManualEntry] = useState({
     food_name: '',
     calories: '',
@@ -29,99 +27,46 @@ const FoodLog = () => {
     meal_type: 'breakfast',
   });
 
-  useEffect(() => {
-    fetchEntries();
-    fetchSummary();
-  }, [selectedDate]);
-
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     try {
       const response = await foodAPI.getEntries(selectedDate);
-      setEntries(response.data);
+      setEntries(response.data.entries);
     } catch (error) {
       console.error('Failed to fetch food entries:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
 
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     try {
       const response = await dashboardAPI.getDailySummary(selectedDate);
       setSummary(response.data);
     } catch (error) {
       console.error('Failed to fetch summary:', error);
     }
-  };
+  }, [selectedDate]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    setSearching(true);
-    try {
-      const response = await foodAPI.search(searchQuery);
-      setSearchResults(response.data.results);
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setSearching(false);
-    }
-  };
+  useEffect(() => {
+    fetchEntries();
+    fetchSummary();
+  }, [fetchEntries, fetchSummary]);
 
-  const handleAddFromSearch = async (food) => {
-    try {
-      await foodAPI.createEntry({
-        food_name: food.food_name,
-        brand_name: food.brand_name,
-        calories: food.calories,
-        protein_g: food.protein_g,
-        carbs_g: food.carbs_g,
-        fat_g: food.fat_g,
-        quantity: food.serving_qty,
-        unit: food.serving_unit,
-        meal_type: 'breakfast',
-        entry_date: selectedDate,
-        food_master_id: food.id,
-      });
-      fetchEntries();
-      fetchSummary();
-      setShowSearchModal(false);
-      setSearchQuery('');
-      setSearchResults([]);
-    } catch (error) {
-      console.error('Failed to add food entry:', error);
-    }
+  const handleAdded = () => {
+    fetchEntries();
+    fetchSummary();
+    setPicked(null);
+    setShowSearchModal(false);
   };
 
   const handleBarcodeScan = async (barcode) => {
+    setShowBarcodeScanner(false);
     try {
-      // Search by barcode
-      const response = await foodAPI.searchByBarcode(barcode);
-      const food = response.data;
-      
-      // Add to food log automatically
-      await foodAPI.createEntry({
-        food_name: food.food_name,
-        brand_name: food.brand_name,
-        calories: food.calories,
-        protein_g: food.protein_g,
-        carbs_g: food.carbs_g,
-        fat_g: food.fat_g,
-        quantity: food.serving_qty,
-        unit: food.serving_unit,
-        meal_type: 'snack', // Default to snack, user can change later
-        entry_date: selectedDate,
-        food_master_id: food.id,
-      });
-      
-      fetchEntries();
-      fetchSummary();
-      setShowBarcodeScanner(false);
-      alert(`Added: ${food.food_name}`);
+      const response = await foodAPI.byBarcode(barcode);
+      setPicked(response.data);
     } catch (error) {
       console.error('Barcode lookup failed:', error);
       alert('Food not found by barcode. Please search or add manually.');
-      setShowBarcodeScanner(false);
     }
   };
 
@@ -248,14 +193,6 @@ const FoodLog = () => {
         </Button>
         <Button
           variant="secondary"
-          onClick={() => setShowAIScanner(true)}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-none"
-        >
-          <Sparkles size={18} className="mr-2" />
-          AI Photo Scan
-        </Button>
-        <Button
-          variant="secondary"
           onClick={() => setShowBarcodeScanner(true)}
           className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-none"
         >
@@ -335,43 +272,10 @@ const FoodLog = () => {
         title="Search Food"
         size="lg"
       >
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Search for food..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button onClick={handleSearch} disabled={searching}>
-              {searching ? <LoadingSpinner size="sm" /> : 'Search'}
-            </Button>
-          </div>
-
-          {searchResults.length > 0 && (
-            <div className="max-h-96 overflow-y-auto space-y-2 scrollbar-thin">
-              {searchResults.map((food, index) => (
-                <div
-                  key={index}
-                  className="p-4 border-2 border-neutral-200 rounded-lg hover:border-primary-blue transition-colors cursor-pointer"
-                  onClick={() => handleAddFromSearch(food)}
-                >
-                  <h4 className="font-medium text-neutral-800">
-                    {food.food_name}
-                    {food.brand_name && (
-                      <span className="text-sm text-neutral-500 ml-2">({food.brand_name})</span>
-                    )}
-                  </h4>
-                  <p className="text-sm text-neutral-600 mt-1">
-                    {food.serving_qty} {food.serving_unit} • {Math.round(food.calories)} cal •
-                    P: {Math.round(food.protein_g)}g • C: {Math.round(food.carbs_g)}g • F: {Math.round(food.fat_g)}g
-                  </p>
-                  <p className="text-xs text-primary-blue mt-1">Click to add</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <FoodSearch
+          onSelect={setPicked}
+          onCreate={() => { setShowSearchModal(false); setShowManualModal(true); }}
+        />
       </Modal>
 
       {/* Manual Entry Modal */}
@@ -455,16 +359,12 @@ const FoodLog = () => {
         </div>
       </Modal>
 
-      {/* AI Meal Scanner */}
-      {showAIScanner && (
-        <AIMealScanner
-          onClose={() => setShowAIScanner(false)}
-          onFoodsLogged={() => {
-            fetchEntries();
-            fetchSummary();
-            setShowAIScanner(false);
-          }}
-          selectedDate={selectedDate}
+      {picked && (
+        <PortionPicker
+          food={picked}
+          date={selectedDate}
+          onAdded={handleAdded}
+          onClose={() => setPicked(null)}
         />
       )}
 
@@ -479,6 +379,10 @@ const FoodLog = () => {
           }}
         />
       )}
+
+      <p className="text-xs text-neutral-400 text-center">
+        Food data: USDA FoodData Central, Canadian Nutrient File (Health Canada), Open Food Facts (ODbL)
+      </p>
     </div>
   );
 };
