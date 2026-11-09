@@ -36,7 +36,7 @@ WANTED = {ENERGY_KCAL, ENERGY_ATWATER_GENERAL, ENERGY_ATWATER_SPECIFIC, PROTEIN,
 
 DATA_TYPES = {"foundation_food": "usda_foundation", "sr_legacy_food": "usda_sr"}
 
-csv.field_size_limit(sys.maxsize)
+csv.field_size_limit(2**31 - 1)
 
 
 class Source:

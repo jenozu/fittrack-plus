@@ -27,7 +27,7 @@ from pathlib import Path
 
 from .common import FoodRow, apply_schema, connect, to_float, upsert_foods
 
-csv.field_size_limit(sys.maxsize)
+csv.field_size_limit(2**31 - 1)
 
 
 def _norm(s: str) -> str:

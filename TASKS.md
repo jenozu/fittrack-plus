@@ -3,14 +3,14 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 2/19 tasks done.**
+**Progress: 3/19 tasks done.**
 
 ## Phase 0 - Foundation
 
 - [x] **1. Clean up the repo**  
   Untrack the committed virtualenv and caches, remove the dead top-level mockup, archive old planning docs and deploy scripts.  
   _Test:_ `git ls-files | grep -c -E "venv/|__pycache__"` prints 0. `ls` at repo root shows README.md, backend, frontend, docs, scripts, .taskmaster.
-- [ ] **2. Set up local development** _(after 1)_  
+- [x] **2. Set up local development** _(after 1)_  
   Postgres in Docker, backend venv, frontend packages, .env, and the food tables, so the app runs on the developer's computer.  
   _Test:_ `curl localhost:8000/health` returns 200. The frontend loads in the browser. In backend/: `TEST_DATABASE_URL=postgresql://fittrack:fittrack@localhost:5432/fittrack_test pytest food_data -q` -> 10 passed (create the db first: `docker compose -f scripts/local/docker-compose.dev.yml exec -T db createdb -U fittrack fittrack_test`).
 - [ ] **3. Security basics** _(after 2)_  
