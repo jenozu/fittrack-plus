@@ -21,7 +21,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 
 ## Now (overwrite each time, max 6 lines)
 - Phase 3 - Ship. Done: 16 (PWA, manual check pending). Next: 17 (server setup/deploy) then 18 (backups).
-- Blocked: 17/18 need the human (domain, DNS, VPS ssh). Scripts in scripts/vps/ already exist.
+- 2026-11-09 human answered: no domain (IP/HTTP), fresh install, ssh root@2.25.108.3. Scripts in scripts/vps/.
 - Last session: 2026-11-08, phase 3 stopped at HUMAN NEEDED.
 - Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (includes task 16).
 
@@ -29,7 +29,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
 - Local db: native PG17 (no Docker; superuser `postgres` needs no password locally), `postgresql://fittrack:fittrack@localhost:5432/fittrack_db`; tests use `.../fittrack_test`.
 - VPS: Ubuntu, app at `/var/www/fittrack-plus`, user `fittrack`, service `fittrack-backend`, nginx `/api/` -> :8000.
-- Domain: _(fill in at task 17.1)_ · SSH target: _(fill in; also in `.claude/deploy-target`)_
+- Domain: none yet, serve on the IP over HTTP (camera scan + PWA install need HTTPS later) · SSH target: root@2.25.108.3 (also in `.claude/deploy-target`)
 - Food data: local Postgres (`foods`, `food_portions`, `search_foods()`), per 100 g. Live Open Food Facts calls only on barcode misses.
 - Diary entries store a nutrition snapshot; never recompute past days.
 - Hidden (non-goal) features stay hidden: AI scan, coach, badges, meal plans, recipes, water, measurements, export, exercise.
@@ -64,5 +64,3 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
      starting complexity in .claude/skills/next-task/SKILL.md. If haiku passes everything, give it complexity 4 too. -->
 
 ## Open questions for the human (max 5; delete once answered)
-- What domain/subdomain will the app use? (needed for task 17.1)
-- Is there an old FitTrack+ install on the VPS with real data worth keeping? (task 17.2)
