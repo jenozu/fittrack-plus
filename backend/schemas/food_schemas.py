@@ -35,6 +35,31 @@ class FoodMasterResponse(FoodMasterBase):
         from_attributes = True
 
 
+# Food database (food_data.service) output; all nutrition per 100 g
+class PortionOut(BaseModel):
+    label: str
+    grams: float
+
+
+class FoodOut(BaseModel):
+    id: int
+    source: str
+    name: str
+    brand: Optional[str] = None
+    barcode: Optional[str] = None
+    kcal_100g: float
+    protein_100g: float
+    carbs_100g: float
+    fat_100g: float
+    fiber_100g: Optional[float] = None
+    sugar_100g: Optional[float] = None
+    sodium_mg_100g: Optional[float] = None
+    serving_g: Optional[float] = None
+    serving_label: Optional[str] = None
+    quality: str
+    portions: List[PortionOut]
+
+
 # Food Search Response
 class FoodSearchResult(BaseModel):
     id: Optional[int] = None

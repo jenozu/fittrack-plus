@@ -13,3 +13,4 @@ task, defer, or delete on purpose.
 - 2026-11-08: Off-site backups (rclone to Backblaze B2 / Google Drive).
 2026-11-08: task 3 review - registration lock fails open on values other than exact 'false'; set exactly ALLOW_REGISTRATION=false at task 19 (or tighten parse). Also /health returns str(e) from DB errors (leaks host/user).
 2026-11-08: backend/README.md is UTF-16; convert to UTF-8 sometime. /health stale startup log says 'Nutritionix + USDA'.
+- 2026-11-08: /food/search now returns bare list; frontend FoodLog.jsx:63 expects .results (fix in Phase 2). Docs still mention Nutritionix (API_SETUP_GUIDE.md, READMEs).

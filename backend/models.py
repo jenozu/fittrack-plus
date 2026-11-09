@@ -391,7 +391,45 @@ class UserBadge(Base):
     # Relationships
     user = relationship("User", backref="badges")
     badge = relationship("Badge", back_populates="user_badges")
-    
+
     __table_args__ = (
         Index('idx_user_badge_unique', 'user_id', 'badge_id', unique=True),
     )
+
+
+# Food database tables. Owned by food_data/schema.sql (not Alembic); read through food_data.service.
+# Generated columns (search_text, search_vec) are intentionally not declared.
+class Food(Base):
+    __tablename__ = "foods"
+    __table_args__ = {"info": {"managed_by": "food_data"}}
+
+    id = Column(Integer, primary_key=True)
+    source = Column(String, nullable=False)
+    source_id = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    brand = Column(String)
+    barcode = Column(String)
+    kcal_100g = Column(Float, nullable=False)
+    protein_100g = Column(Float, nullable=False, default=0)
+    carbs_100g = Column(Float, nullable=False, default=0)
+    fat_100g = Column(Float, nullable=False, default=0)
+    fiber_100g = Column(Float)
+    sugar_100g = Column(Float)
+    sodium_mg_100g = Column(Float)
+    serving_g = Column(Float)
+    serving_label = Column(String)
+    popularity = Column(Integer, nullable=False, default=0)
+    quality = Column(String, nullable=False, default="ok")
+    created_by_user = Column(Integer)
+    updated_at = Column(DateTime(timezone=True))
+
+
+class FoodPortion(Base):
+    __tablename__ = "food_portions"
+    __table_args__ = {"info": {"managed_by": "food_data"}}
+
+    id = Column(Integer, primary_key=True)
+    food_id = Column(Integer, ForeignKey("foods.id", ondelete="CASCADE"), nullable=False)
+    label = Column(String, nullable=False)
+    grams = Column(Float, nullable=False)
+    seq = Column(Integer, nullable=False, default=0)

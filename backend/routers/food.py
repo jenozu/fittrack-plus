@@ -9,57 +9,54 @@ from sqlalchemy import and_
 from typing import List
 from datetime import date, datetime
 from schemas.food_schemas import (
-    FoodSearchResponse, FoodSearchResult, FoodEntryCreate, 
+    FoodOut, FoodEntryCreate,
     FoodEntryUpdate, FoodEntryResponse
 )
-from models import User, FoodEntry, Streak
+from models import User, FoodEntry, Streak, Food
 from utils.auth import get_db, get_current_user
-from services.food_aggregator import FoodAggregator
+from food_data import service as food_service
 
 router = APIRouter(prefix="/food", tags=["Food"])
 
 
-@router.get("/search", response_model=FoodSearchResponse)
+@router.get("/search", response_model=List[FoodOut])
 def search_food(
     q: str = Query(..., min_length=2, description="Search query"),
     limit: int = Query(20, ge=1, le=50, description="Maximum results"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Search for food items across all sources (internal DB + external APIs).
-    
-    Uses the Food Aggregation Layer to:
-    1. Check internal food_master database first
-    2. Query external APIs (Nutritionix, USDA) if needed
-    3. Cache and normalize results
-    """
-    aggregator = FoodAggregator(db)
-    results = aggregator.search_food(q, limit)
-    
-    return {
-        "results": results,
-        "total_count": len(results)
-    }
+    """Search the local food database (plus the user's own custom foods)."""
+    return food_service.search_foods(db, q, limit, current_user.id)
 
 
-@router.get("/barcode/{barcode}")
+@router.get("/barcode/{barcode}", response_model=FoodOut)
 def search_by_barcode(
     barcode: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Search for a food item by barcode/UPC.
-    """
-    aggregator = FoodAggregator(db)
-    result = aggregator.search_by_barcode(barcode)
-    
+    """Look up a barcode: local database first, then one live Open Food Facts call."""
+    result = food_service.lookup_barcode(db, barcode, current_user.id)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Food item not found for this barcode"
         )
-    
     return result
+
+
+@router.get("/{food_id:int}", response_model=FoodOut)
+def get_food(
+    food_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    food = food_service.get_food(db, food_id)
+    created_by = db.query(Food.created_by_user).filter(Food.id == food_id).scalar() if food else None
+    if not food or (food["source"] == "custom" and created_by != current_user.id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food not found")
+    return food
 
 
 @router.post("/entries", response_model=FoodEntryResponse, status_code=status.HTTP_201_CREATED)

@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 5/19 tasks done.**
+**Progress: 6/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -31,7 +31,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   - [x] 5.4 Open Food Facts importer
   - [x] 5.5 Service: search, get, barcode with live fallback
   - [x] 5.6 Download/import shell scripts
-- [ ] **6. Serve the food database from the API** _(after 4, 5)_  
+- [x] **6. Serve the food database from the API** _(after 4, 5)_  
   Point /food/search and /food/barcode at food_data.service and delete the mock and paid-API services.  
   _Test:_ backend/tests/test_food_api.py with TestClient + a logged-in test user against the test db loaded from the food_data fixtures: search "banana" -> first result "Bananas, raw" with portions[0]=={"label":"100 g","grams":100}; unauthenticated search -> 401; barcode 068100084245 -> Kraft Dinner; unknown barcode with the live fetch monkeypatched to None -> 404. Locally with real USDA/CNF data: `curl -H "Authorization: Bearer $T" "localhost:8000/food/search?q=chicken%20breast"` looks sensible.
 - [ ] **7. Diary entries store grams and a nutrition snapshot** _(after 6)_  
