@@ -5,13 +5,13 @@ Handles food search, logging, and CRUD operations.
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 from typing import List
 from datetime import date, datetime
 from schemas.food_schemas import (
     FoodOut, FoodEntryCreate,
-    FoodEntryUpdate, FoodEntryResponse
+    FoodEntryUpdate, FoodEntryResponse, FoodEntryDay
 )
+from services import nutrition
 from models import User, FoodEntry, Streak, Food
 from utils.auth import get_db, get_current_user
 from food_data import service as food_service
@@ -59,60 +59,105 @@ def get_food(
     return food
 
 
+def _visible_food(db: Session, food_id: int, user_id: int):
+    """get_food, but another user's custom food counts as missing."""
+    food = food_service.get_food(db, food_id)
+    if food and food["source"] == "custom":
+        owner = db.query(Food.created_by_user).filter(Food.id == food_id).scalar()
+        if owner != user_id:
+            return None
+    return food
+
+
+def _bad(msg: str) -> HTTPException:
+    return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=msg)
+
+
+def _grams_from(food: dict, grams, portion_label, quantity) -> tuple:
+    """Return (grams, portion_label, quantity) from either grams or portion+quantity."""
+    if grams is not None:
+        return grams, "g", grams
+    if portion_label:
+        try:
+            return nutrition.grams_for(food, portion_label, quantity or 1.0), portion_label, quantity or 1.0
+        except ValueError as e:
+            raise _bad(str(e))
+    raise _bad("Provide grams or portion_label")
+
+
+def _snapshot(entry: FoodEntry, food: dict, grams: float, portion_label: str, quantity: float) -> None:
+    n = nutrition.scale(food, grams)
+    entry.food_id = food["id"]
+    entry.food_name = food["name"]
+    entry.brand_name = food.get("brand")
+    entry.grams, entry.portion_label, entry.quantity = grams, portion_label, quantity
+    entry.unit = portion_label
+    entry.calories = n["kcal"] or 0
+    entry.protein_g, entry.carbs_g, entry.fat_g = n["protein"], n["carbs"], n["fat"]
+    entry.fiber_g, entry.sugar_g, entry.sodium_mg = n["fiber"], n["sugar"], n["sodium_mg"]
+
+
+def _owned_entry(db: Session, entry_id: int, user_id: int) -> FoodEntry:
+    entry = db.query(FoodEntry).filter(FoodEntry.id == entry_id, FoodEntry.user_id == user_id).first()
+    if not entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food entry not found")
+    return entry
+
+
+_TOTAL_FIELDS = ("calories", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "sodium_mg")
+
+
 @router.post("/entries", response_model=FoodEntryResponse, status_code=status.HTTP_201_CREATED)
 def create_food_entry(
     entry_data: FoodEntryCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Log a new food entry.
-    
-    Creates a food log entry and updates the user's streak if logging for today.
-    """
-    # Create food entry
-    food_entry = FoodEntry(
-        user_id=current_user.id,
-        food_name=entry_data.food_name,
-        brand_name=entry_data.brand_name,
-        calories=entry_data.calories,
-        protein_g=entry_data.protein_g,
-        carbs_g=entry_data.carbs_g,
-        fat_g=entry_data.fat_g,
-        quantity=entry_data.quantity,
-        unit=entry_data.unit,
-        meal_type=entry_data.meal_type,
-        entry_date=entry_data.entry_date,
-        food_master_id=entry_data.food_master_id
-    )
-    
-    db.add(food_entry)
+    """Log a food by grams or portion (food_id) or quick-add (name + calories); updates the streak."""
+    entry = FoodEntry(user_id=current_user.id, meal_type=entry_data.meal_type, entry_date=entry_data.entry_date)
+    if entry_data.food_id is not None:
+        food = _visible_food(db, entry_data.food_id, current_user.id)
+        if not food:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food not found")
+        _snapshot(entry, food, *_grams_from(food, entry_data.grams, entry_data.portion_label, entry_data.quantity))
+    else:
+        if not entry_data.food_name or entry_data.calories is None:
+            raise _bad("Provide food_id, or food_name and calories")
+        entry.food_name = entry_data.food_name
+        entry.brand_name = entry_data.brand_name
+        entry.calories = entry_data.calories
+        entry.protein_g, entry.carbs_g, entry.fat_g = entry_data.protein_g, entry_data.carbs_g, entry_data.fat_g
+        entry.quantity, entry.unit = 1.0, "serving"
+
+    db.add(entry)
     db.commit()
-    db.refresh(food_entry)
-    
-    # Update streak if logging for today
+    db.refresh(entry)
     _update_streak(current_user.id, entry_data.entry_date, db)
-    
-    return food_entry
+    return entry
 
 
-@router.get("/entries", response_model=List[FoodEntryResponse])
+@router.get("/entries", response_model=FoodEntryDay)
 def get_food_entries(
     entry_date: date = Query(None, description="Filter by date"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get food entries for the current user.
-    Optionally filter by date.
-    """
+    """Entries (newest first) plus per-meal and overall totals."""
     query = db.query(FoodEntry).filter(FoodEntry.user_id == current_user.id)
-    
     if entry_date:
         query = query.filter(FoodEntry.entry_date == entry_date)
-    
     entries = query.order_by(FoodEntry.created_at.desc()).all()
-    return entries
+
+    totals = dict.fromkeys(_TOTAL_FIELDS, 0.0)
+    meals: dict[str, dict] = {}
+    for e in entries:
+        meal = meals.setdefault(e.meal_type or "other", dict.fromkeys(_TOTAL_FIELDS, 0.0))
+        for f in _TOTAL_FIELDS:
+            v = getattr(e, f) or 0
+            meal[f] += v
+            totals[f] += v
+    rnd = lambda d: {k: round(v, 2) for k, v in d.items()}
+    return {"entries": entries, "meals": {k: rnd(v) for k, v in meals.items()}, "totals": rnd(totals)}
 
 
 @router.get("/entries/{entry_id}", response_model=FoodEntryResponse)
@@ -124,18 +169,7 @@ def get_food_entry(
     """
     Get a specific food entry by ID.
     """
-    entry = db.query(FoodEntry).filter(
-        and_(
-            FoodEntry.id == entry_id,
-            FoodEntry.user_id == current_user.id
-        )
-    ).first()
-    
-    if not entry:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Food entry not found"
-        )
+    entry = _owned_entry(db, entry_id, current_user.id)
     
     return entry
 
@@ -150,26 +184,30 @@ def update_food_entry(
     """
     Update a food entry.
     """
-    entry = db.query(FoodEntry).filter(
-        and_(
-            FoodEntry.id == entry_id,
-            FoodEntry.user_id == current_user.id
-        )
-    ).first()
-    
-    if not entry:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Food entry not found"
-        )
-    
-    # Update only provided fields
-    for field, value in entry_data.dict(exclude_unset=True).items():
+    entry = _owned_entry(db, entry_id, current_user.id)
+    data = entry_data.dict(exclude_unset=True)
+    grams, label, qty = data.pop("grams", None), data.pop("portion_label", None), data.pop("quantity", None)
+
+    if grams is not None or label:
+        food = _visible_food(db, entry.food_id, current_user.id) if entry.food_id else None
+        if food:
+            _snapshot(entry, food, *_grams_from(food, grams, label, qty))
+        elif grams is not None and entry.grams:
+            # food is gone (or quick-add with grams): scale the stored snapshot
+            ratio = grams / entry.grams
+            for f in _TOTAL_FIELDS:
+                v = getattr(entry, f)
+                if v is not None:
+                    setattr(entry, f, round(v * ratio, 2))
+            entry.grams, entry.portion_label, entry.quantity, entry.unit = grams, "g", grams, "g"
+        else:
+            raise _bad("Cannot change the amount of this entry")
+
+    for field, value in data.items():
         setattr(entry, field, value)
-    
+
     db.commit()
     db.refresh(entry)
-    
     return entry
 
 
@@ -182,18 +220,7 @@ def delete_food_entry(
     """
     Delete a food entry.
     """
-    entry = db.query(FoodEntry).filter(
-        and_(
-            FoodEntry.id == entry_id,
-            FoodEntry.user_id == current_user.id
-        )
-    ).first()
-    
-    if not entry:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Food entry not found"
-        )
+    entry = _owned_entry(db, entry_id, current_user.id)
     
     db.delete(entry)
     db.commit()

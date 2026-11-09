@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import date, datetime
 
 
@@ -82,44 +82,75 @@ class FoodSearchResponse(BaseModel):
 
 
 # Food Entry Schemas
-class FoodEntryBase(BaseModel):
-    food_name: str
+class FoodEntryCreate(BaseModel):
+    """Either food_id + (grams | portion_label + quantity), or quick-add (food_name + calories)."""
+    food_id: Optional[int] = None
+    grams: Optional[float] = Field(None, gt=0)
+    portion_label: Optional[str] = None
+    quantity: Optional[float] = Field(None, gt=0)
+    food_name: Optional[str] = None
     brand_name: Optional[str] = None
-    calories: float
+    calories: Optional[float] = Field(None, ge=0)
     protein_g: float = 0
     carbs_g: float = 0
     fat_g: float = 0
-    quantity: float = 1.0
-    unit: str = "serving"
     meal_type: Optional[str] = None  # breakfast, lunch, dinner, snack
     entry_date: date
 
 
-class FoodEntryCreate(FoodEntryBase):
-    food_master_id: Optional[int] = None
-
-
 class FoodEntryUpdate(BaseModel):
+    grams: Optional[float] = Field(None, gt=0)
+    portion_label: Optional[str] = None
+    quantity: Optional[float] = Field(None, gt=0)
     food_name: Optional[str] = None
     brand_name: Optional[str] = None
-    calories: Optional[float] = None
+    calories: Optional[float] = Field(None, ge=0)
     protein_g: Optional[float] = None
     carbs_g: Optional[float] = None
     fat_g: Optional[float] = None
-    quantity: Optional[float] = None
-    unit: Optional[str] = None
     meal_type: Optional[str] = None
     entry_date: Optional[date] = None
 
 
-class FoodEntryResponse(FoodEntryBase):
+class FoodEntryResponse(BaseModel):
     id: int
     user_id: int
-    food_master_id: Optional[int] = None
+    food_id: Optional[int] = None
+    food_name: str
+    brand_name: Optional[str] = None
+    calories: float
+    protein_g: Optional[float] = 0
+    carbs_g: Optional[float] = 0
+    fat_g: Optional[float] = 0
+    fiber_g: Optional[float] = None
+    sugar_g: Optional[float] = None
+    sodium_mg: Optional[float] = None
+    grams: Optional[float] = None
+    portion_label: Optional[str] = None
+    quantity: Optional[float] = None
+    unit: Optional[str] = None
+    meal_type: Optional[str] = None
+    entry_date: date
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class FoodEntryTotals(BaseModel):
+    calories: float = 0
+    protein_g: float = 0
+    carbs_g: float = 0
+    fat_g: float = 0
+    fiber_g: float = 0
+    sugar_g: float = 0
+    sodium_mg: float = 0
+
+
+class FoodEntryDay(BaseModel):
+    entries: List[FoodEntryResponse]
+    meals: Dict[str, FoodEntryTotals]
+    totals: FoodEntryTotals
 
 
 # Daily Summary
