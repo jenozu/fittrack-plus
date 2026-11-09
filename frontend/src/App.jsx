@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import { features } from './config/features';
 
 // Pages
 import Login from './pages/Login';
@@ -43,13 +44,13 @@ function App() {
           }>
             <Route index element={<Dashboard />} />
             <Route path="food" element={<FoodLog />} />
-            <Route path="exercise" element={<ExerciseLog />} />
-            <Route path="recipes" element={<Recipes />} />
-            <Route path="meal-planning" element={<MealPlanning />} />
+            {features.exercise && <Route path="exercise" element={<ExerciseLog />} />}
+            {features.recipes && <Route path="recipes" element={<Recipes />} />}
+            {features.mealPlanning && <Route path="meal-planning" element={<MealPlanning />} />}
             <Route path="progress" element={<Progress />} />
-            <Route path="measurements" element={<Measurements />} />
-            <Route path="achievements" element={<Achievements />} />
-            <Route path="export" element={<ExportData />} />
+            {features.measurements && <Route path="measurements" element={<Measurements />} />}
+            {features.gamification && <Route path="achievements" element={<Achievements />} />}
+            {features.export && <Route path="export" element={<ExportData />} />}
             <Route path="profile" element={<Profile />} />
           </Route>
           

@@ -44,3 +44,9 @@ tell the lead which failed, then delete the sections that passed.
 3. < yesterday, Today to return. "Copy yesterday's breakfast" works; empty day shows note.
 4. Recent chip one-tap add; scan button opens camera. No horizontal scroll, no layout jump, no console errors.
 5. Edit-mode oddity: entry whose portion_label matches no portion falls back to first portion on save (low risk).
+
+## Task 13 - Hide non-core features (2026-11-08)
+1. 390x844: bottom bar has Today, Add, Progress, Profile; each works, active highlighted; content not hidden behind bar; logout icon works. (If bar sits under iPhone home indicator add viewport-fit=cover to index.html.)
+2. Desktop: top nav same 4 links.
+3. URLs /exercise /recipes /meal-planning /measurements /achievements /export redirect to /.
+4. Profile: no achievements button, level line or export card.

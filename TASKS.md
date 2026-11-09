@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 12/19 tasks done.**
+**Progress: 13/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -63,7 +63,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **12. Today screen (diary dashboard)** _(after 9, 10)_  
   The home screen: today's meals, totals vs targets, quick add, day navigation.  
   _Test:_ Manual at 390x844: log breakfast/lunch/dinner/snack, edit one entry's grams, delete one, navigate to yesterday and back, copy yesterday's breakfast. Totals match the sum of the entries.
-- [ ] **13. Hide non-core features** _(after 1)_  
+- [x] **13. Hide non-core features** _(after 1)_  
   Feature flags hide AI scan, coach, badges, meal planning, recipes, water, measurements, export, exercise from navigation and routes.  
   _Test:_ Every visible link works; no hidden page is reachable by URL (redirects to /); `npm run build` passes.
 - [ ] **14. Check onboarding and targets** _(after 3)_  
