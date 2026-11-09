@@ -21,14 +21,14 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 
 ## Now (overwrite each time, max 6 lines)
 - Phase 0 - Foundation. Done: 1 (repo cleanup), 5 (earlier).
-- Next: task 2 (local dev) is in-progress and BLOCKED: Docker Desktop not installed on dev machine.
-- Local PostgreSQL 17 is running on :5432 (not Docker); options: install Docker, or approve using it.
+- Next: task 2 (local dev) in-progress, unblocked: owner chose local PG17 over Docker (see decision log).
+- fittrack_db holds old app tables (users, food_entries, water_logs...); task 4 Alembic must baseline them.
 - Last session: 2026-11-08, phase 0 run stopped at task 2.
 - Manual checks waiting: 0 (`.taskmaster/docs/manual-checks.md`).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
-- Local db: Docker, `postgresql://fittrack:fittrack@localhost:5432/fittrack_db`; tests use `.../fittrack_test`.
+- Local db: native PG17 (no Docker; superuser `postgres` needs no password locally), `postgresql://fittrack:fittrack@localhost:5432/fittrack_db`; tests use `.../fittrack_test`.
 - VPS: Ubuntu, app at `/var/www/fittrack-plus`, user `fittrack`, service `fittrack-backend`, nginx `/api/` -> :8000.
 - Domain: _(fill in at task 17.1)_ · SSH target: _(fill in; also in `.claude/deploy-target`)_
 - Food data: local Postgres (`foods`, `food_portions`, `search_foods()`), per 100 g. Live Open Food Facts calls only on barcode misses.
@@ -37,6 +37,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 - Users: the owner + his girlfriend. Registration gets closed after both sign up (task 19).
 
 ## Decisions since the PRD (max 8 lines, newest first; full text in prd.md decision log)
+- 2026-11-08: Local dev on native PG17, not Docker. dev_setup.sh skips docker if missing.
 - 2026-11-08: Lead (main, Opus) launches a phase-runner (Sonnet, medium) per phase; it routes tasks to builders
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 

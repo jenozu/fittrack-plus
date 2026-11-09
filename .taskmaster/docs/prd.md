@@ -111,6 +111,9 @@ rate-limited and not meant for typeahead; USDA lacks Canadian products).
 - Small VPS RAM: setup adds swap; OFF import uses `--memory-limit 1GB` by default.
 
 ## Decision log
+- 2026-11-08: Local dev uses the PostgreSQL 17 already installed on the dev machine (no Docker Desktop).
+  Role fittrack/fittrack owns fittrack_db (pre-existing old-schema db, 1 user row, kept) and fittrack_test.
+  dev_setup.sh skips the Docker step when docker is missing. Owner's choice.
 - 2026-11-08: Keep the existing React + FastAPI + Postgres app and VPS instead of rebuilding in
   Expo/Supabase. Reason: it is already a web app; the blocker was food data, not the stack.
 - 2026-11-08: Food data comes from free bulk downloads imported into our own Postgres (USDA

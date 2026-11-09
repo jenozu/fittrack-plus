@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Set up FitTrack+ for development on your computer (task 2).
-# Needs: Python 3.11+, Node 20+, and Docker Desktop (for Postgres). Windows: run in Git Bash.
+# Needs: Python 3.11+, Node 20+, and Postgres: Docker Desktop, or a local Postgres on :5432 with role
+# fittrack/fittrack and dbs fittrack_db + fittrack_test (used when docker is missing). Windows: run in Git Bash.
 #   bash scripts/local/dev_setup.sh
 # Then, in two terminals:
 #   cd backend && source venv/bin/activate (Windows: source venv/Scripts/activate) && uvicorn main:app --reload
@@ -8,12 +9,17 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-echo "1. Postgres in Docker (port 5432, data kept in a Docker volume)"
-docker compose -f scripts/local/docker-compose.dev.yml up -d
-for _ in {1..30}; do
-  docker compose -f scripts/local/docker-compose.dev.yml exec -T db pg_isready -U fittrack -q && break
-  sleep 1
-done
+if command -v docker >/dev/null; then
+  echo "1. Postgres in Docker (port 5432, data kept in a Docker volume)"
+  docker compose -f scripts/local/docker-compose.dev.yml up -d
+  for _ in {1..30}; do
+    docker compose -f scripts/local/docker-compose.dev.yml exec -T db pg_isready -U fittrack -q && break
+    sleep 1
+  done
+else
+  # No Docker: use a local Postgres on :5432 that already has role fittrack/fittrack and dbs fittrack_db, fittrack_test.
+  echo "1. No Docker, using local Postgres on localhost:5432"
+fi
 
 echo "2. backend/.env"
 if [[ ! -f backend/.env ]]; then
@@ -51,6 +57,6 @@ Ready. Optional: load real food data locally (small sets only, ~2 minutes):
   bash scripts/food/import_food_data.sh ./fooddata --skip-off
 
 Run the food tests:
-  docker compose -f scripts/local/docker-compose.dev.yml exec -T db createdb -U fittrack fittrack_test || true
+  (Docker only) docker compose -f scripts/local/docker-compose.dev.yml exec -T db createdb -U fittrack fittrack_test || true
   cd backend && TEST_DATABASE_URL=postgresql://fittrack:fittrack@localhost:5432/fittrack_test ../$VPY -m pytest food_data -q
 NEXT
