@@ -7,14 +7,17 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import date, datetime
+from uuid import uuid4
+from sqlalchemy import text
 from schemas.food_schemas import (
-    FoodOut, FoodEntryCreate,
+    FoodOut, FoodEntryCreate, CustomFoodIn,
     FoodEntryUpdate, FoodEntryResponse, FoodEntryDay
 )
 from services import nutrition
 from models import User, FoodEntry, Streak, Food
 from utils.auth import get_db, get_current_user
 from food_data import service as food_service
+from food_data.common import normalize_barcode
 
 router = APIRouter(prefix="/food", tags=["Food"])
 
@@ -57,6 +60,92 @@ def get_food(
     if not food or (food["source"] == "custom" and created_by != current_user.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food not found")
     return food
+
+
+_CUSTOM_COLS = ("name", "brand", "barcode", "kcal_100g", "protein_100g", "carbs_100g", "fat_100g",
+                "fiber_100g", "sugar_100g", "sodium_mg_100g", "serving_g", "serving_label")
+
+
+def _custom_values(d: CustomFoodIn) -> dict:
+    """Request body -> foods columns (per 100 g)."""
+    if d.basis == "serving":
+        if not d.serving_g:
+            raise _bad("serving_g is required when basis is 'serving'")
+        k = 100 / d.serving_g
+    else:
+        k = 1
+    scale = lambda v: None if v is None else round(v * k, 2)
+    return dict(
+        name=d.name.strip(), brand=d.brand, barcode=normalize_barcode(d.barcode),
+        kcal_100g=scale(d.kcal), protein_100g=scale(d.protein), carbs_100g=scale(d.carbs),
+        fat_100g=scale(d.fat), fiber_100g=scale(d.fiber), sugar_100g=scale(d.sugar),
+        sodium_mg_100g=scale(d.sodium_mg), serving_g=d.serving_g,
+        serving_label=(d.serving_label or "1 serving") if d.serving_g else None,
+    )
+
+
+def _set_portion(db: Session, food_id: int, serving_g, label) -> None:
+    db.execute(text("DELETE FROM food_portions WHERE food_id = :f"), {"f": food_id})
+    if serving_g:
+        db.execute(text("INSERT INTO food_portions (food_id, label, grams) VALUES (:f, :l, :g)"),
+                   {"f": food_id, "l": label, "g": serving_g})
+
+
+def _insert_custom(db: Session, user_id: int, v: dict) -> dict:
+    cols = ", ".join(_CUSTOM_COLS)
+    binds = ", ".join(":" + c for c in _CUSTOM_COLS)
+    food_id = db.execute(
+        text(f"INSERT INTO foods (source, source_id, created_by_user, {cols}) "
+             f"VALUES ('custom', :sid, :uid, {binds}) RETURNING id"),
+        {**v, "sid": f"u{user_id}-{uuid4().hex[:12]}", "uid": user_id},
+    ).scalar_one()
+    _set_portion(db, food_id, v["serving_g"], v["serving_label"])
+    db.commit()
+    return food_service.get_food(db, food_id)
+
+
+def _own_custom(db: Session, food_id: int, user_id: int) -> None:
+    owner = db.execute(
+        text("SELECT created_by_user FROM foods WHERE id = :id AND source = 'custom'"), {"id": food_id}
+    ).fetchone()
+    if not owner or owner[0] != user_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food not found")
+
+
+@router.post("/custom", response_model=FoodOut, status_code=status.HTTP_201_CREATED)
+def create_custom_food(body: CustomFoodIn, current_user: User = Depends(get_current_user),
+                       db: Session = Depends(get_db)):
+    return _insert_custom(db, current_user.id, _custom_values(body))
+
+
+@router.put("/custom/{food_id:int}", response_model=FoodOut)
+def update_custom_food(food_id: int, body: CustomFoodIn, current_user: User = Depends(get_current_user),
+                       db: Session = Depends(get_db)):
+    _own_custom(db, food_id, current_user.id)
+    v = _custom_values(body)
+    sets = ", ".join(f"{c} = :{c}" for c in _CUSTOM_COLS)
+    db.execute(text(f"UPDATE foods SET {sets}, updated_at = now() WHERE id = :id"), {**v, "id": food_id})
+    _set_portion(db, food_id, v["serving_g"], v["serving_label"])
+    db.commit()
+    return food_service.get_food(db, food_id)
+
+
+@router.delete("/custom/{food_id:int}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_custom_food(food_id: int, current_user: User = Depends(get_current_user),
+                       db: Session = Depends(get_db)):
+    _own_custom(db, food_id, current_user.id)
+    db.execute(text("DELETE FROM foods WHERE id = :id"), {"id": food_id})  # FK nulls food_entries.food_id
+    db.commit()
+    return None
+
+
+@router.post("/{food_id:int}/copy", response_model=FoodOut, status_code=status.HTTP_201_CREATED)
+def copy_food(food_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Editable private copy of any visible food (the 'this label is wrong' flow)."""
+    f = _visible_food(db, food_id, current_user.id)
+    if not f:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food not found")
+    return _insert_custom(db, current_user.id, {c: f.get(c) for c in _CUSTOM_COLS})
 
 
 def _visible_food(db: Session, food_id: int, user_id: int):

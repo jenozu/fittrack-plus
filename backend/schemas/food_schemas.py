@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Literal
 from datetime import date, datetime
 
 
@@ -58,6 +58,22 @@ class FoodOut(BaseModel):
     serving_label: Optional[str] = None
     quality: str
     portions: List[PortionOut]
+
+
+class CustomFoodIn(BaseModel):
+    name: str = Field(min_length=1)
+    brand: Optional[str] = None
+    barcode: Optional[str] = None
+    basis: Literal["100g", "serving"] = "100g"
+    serving_g: Optional[float] = Field(None, gt=0)
+    serving_label: Optional[str] = None
+    kcal: float = Field(ge=0)
+    protein: float = Field(0, ge=0)
+    carbs: float = Field(0, ge=0)
+    fat: float = Field(0, ge=0)
+    fiber: Optional[float] = Field(None, ge=0)
+    sugar: Optional[float] = Field(None, ge=0)
+    sodium_mg: Optional[float] = Field(None, ge=0)
 
 
 # Food Search Response

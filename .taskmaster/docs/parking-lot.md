@@ -15,3 +15,4 @@ task, defer, or delete on purpose.
 2026-11-08: backend/README.md is UTF-16; convert to UTF-8 sometime. /health stale startup log says 'Nutritionix + USDA'.
 - 2026-11-08: /food/search now returns bare list; frontend FoodLog.jsx:63 expects .results (fix in Phase 2). Docs still mention Nutritionix (API_SETUP_GUIDE.md, READMEs).
 - 2026-11-08: Drop the food_master table and FoodMaster model/schemas once hidden features (ai_meal, recipes, meal_plans, smart_coach) are rebuilt on food_data; food flow no longer touches it (task 7.4).
+- 2026-11-08: move custom-food write helpers from routers/food.py into food_data/service.py; test food delete nulls food_entries.food_id; copy_food loses extra portions

@@ -67,3 +67,41 @@ def test_barcode(client, monkeypatch):
         raise service.requests.RequestException("offline")
     monkeypatch.setattr(service.requests, "get", no_network)  # live OFF fetch -> None
     assert c.get("/food/barcode/000000099999").status_code == 404
+
+
+def test_custom_foods(client):
+    c, app = client
+    from utils.auth import get_current_user
+    r = c.post("/food/custom", json={"name": "Zorblat bar", "basis": "serving", "serving_g": 30,
+                                     "serving_label": "1 bar", "kcal": 120, "protein": 3,
+                                     "barcode": "5012345678900"})
+    assert r.status_code == 201
+    f = r.json()
+    assert f["kcal_100g"] == 400 and f["source"] == "custom"
+    assert {"label": "1 bar", "grams": 30.0} in f["portions"]
+    assert c.post("/food/custom", json={"name": "x", "basis": "serving", "kcal": 1}).status_code == 422
+    assert c.get("/food/barcode/5012345678900").json()["id"] == f["id"]
+
+    # user B cannot see, edit or delete it
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=2)
+    assert c.get(f"/food/{f['id']}").status_code == 404
+    assert all(x["id"] != f["id"] for x in c.get("/food/search", params={"q": "zorblat"}).json())
+    body = {"name": "hax", "kcal": 1}
+    assert c.put(f"/food/custom/{f['id']}", json=body).status_code == 404
+    assert c.delete(f"/food/custom/{f['id']}").status_code == 404
+    app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=1)
+
+    assert c.put(f"/food/custom/{f['id']}", json={"name": "Zorblat bar", "kcal": 350}).json()["kcal_100g"] == 350
+    assert c.delete(f"/food/custom/{f['id']}").status_code == 204
+    assert c.get(f"/food/{f['id']}").status_code == 404
+
+
+def test_copy_off_food(client):
+    c, _ = client
+    off = c.get("/food/barcode/068100084245").json()
+    cp = c.post(f"/food/{off['id']}/copy").json()
+    assert cp["source"] == "custom" and cp["id"] != off["id"] and cp["kcal_100g"] == off["kcal_100g"]
+    upd = {"name": off["name"], "brand": off["brand"], "barcode": off["barcode"], "kcal": 111}
+    assert c.put(f"/food/custom/{cp['id']}", json=upd).json()["kcal_100g"] == 111
+    assert c.get("/food/barcode/068100084245").json()["id"] == cp["id"]
+    assert c.get("/food/search", params={"q": off["name"]}).json()[0]["id"] == cp["id"]

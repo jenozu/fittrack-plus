@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 7/19 tasks done.**
+**Progress: 8/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -41,7 +41,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   - [x] 7.2 Nutrition maths
   - [x] 7.3 Entry endpoints
   - [x] 7.4 Stop writing food_master
-- [ ] **8. Custom foods** _(after 7)_  
+- [x] **8. Custom foods** _(after 7)_  
   Users can create, edit and delete their own private foods, including from a failed barcode scan and as a corrected copy of a bad entry.  
   _Test:_ pytest: create per-serving (30 g serving, 120 kcal -> 400 kcal/100 g); user B cannot see it in search or GET /food/{id}; scan the custom barcode as user A -> returns the custom food; copy of an OFF food is editable and ranks first for user A.
 - [ ] **9. Recent foods, frequent foods, copy a meal** _(after 7)_  

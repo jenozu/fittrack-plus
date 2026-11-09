@@ -210,12 +210,12 @@
         "id": 8,
         "title": "Custom foods",
         "description": "Users can create, edit and delete their own private foods, including from a failed barcode scan and as a corrected copy of a bad entry.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           7
         ],
-        "details": "routers/food.py:\n- POST /food/custom {name, brand?, barcode?, basis: \"100g\" | \"serving\", serving_g?, serving_label?, kcal, protein, carbs, fat,\n  fiber?, sugar?, sodium_mg?}. If basis == \"serving\", convert to per-100 g using serving_g (required then). Insert into foods with\n  source='custom', source_id=f\"u{user_id}-{uuid4().hex[:12]}\", created_by_user=user_id, barcode normalised with\n  food_data.common.normalize_barcode, plus a portion row for the serving.\n- PUT /food/custom/{id}, DELETE /food/custom/{id}: owner only (404 otherwise). Deleting sets food_entries.food_id NULL via FK.\n- POST /food/{id}/copy -> creates a custom copy the user can then edit (\"this label is wrong\" flow).\n- lookup_barcode already prefers the user's own custom food for a barcode, so a fixed copy wins next scan.",
+        "details": "routers/food.py:\n- POST /food/custom {name, brand?, barcode?, basis: \"100g\" | \"serving\", serving_g?, serving_label?, kcal, protein, carbs, fat,\n  fiber?, sugar?, sodium_mg?}. If basis == \"serving\", convert to per-100 g using serving_g (required then). Insert into foods with\n  source='custom', source_id=f\"u{user_id}-{uuid4().hex[:12]}\", created_by_user=user_id, barcode normalised with\n  food_data.common.normalize_barcode, plus a portion row for the serving.\n- PUT /food/custom/{id}, DELETE /food/custom/{id}: owner only (404 otherwise). Deleting sets food_entries.food_id NULL via FK.\n- POST /food/{id}/copy -> creates a custom copy the user can then edit (\"this label is wrong\" flow).\n- lookup_barcode already prefers the user's own custom food for a barcode, so a fixed copy wins next scan.\n\n[2026-11-08T22:08:32-05:00] sonnet: added POST/PUT/DELETE /food/custom and POST /food/{id}/copy in routers/food.py, CustomFoodIn schema, 2 tests; full suite 27 passed\n\n[2026-11-08T22:09:44-05:00] done by sonnet; verified",
         "testStrategy": "pytest: create per-serving (30 g serving, 120 kcal -> 400 kcal/100 g); user B cannot see it in search or GET /food/{id};\nscan the custom barcode as user A -> returns the custom food; copy of an OFF food is editable and ranks first for user A.",
         "complexity": 5,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T22:07:15-05:00",
+      "updated": "2026-11-08T22:09:44-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
