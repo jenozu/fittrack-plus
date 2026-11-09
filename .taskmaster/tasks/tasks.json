@@ -1,0 +1,490 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Clean up the repo",
+        "description": "Untrack the committed virtualenv and caches, remove the dead top-level mockup, archive old planning docs and deploy scripts.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "Run `bash scripts/local/cleanup_repo.sh` from a clean working tree (Windows: Git Bash).\nIt: `git rm --cached` backend/venv (2,700+ files) and every __pycache__; deletes top-level App.jsx/App.css/index.html\n(an old mockup with hard-coded \"Sarah Johnson\" data that imports components which don't exist; the real app is frontend/);\nmoves the ~20 planning .md files and old deploy-*.sh/.ps1 into docs/archive/; hardens .gitignore.\nDo NOT delete anything under frontend/ or backend/ besides caches. Commit as `task 1: repo cleanup`.",
+        "testStrategy": "`git ls-files | grep -c -E \"venv/|__pycache__\"` prints 0. `ls` at repo root shows README.md, backend, frontend, docs, scripts, .taskmaster.",
+        "complexity": 2,
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Set up local development",
+        "description": "Postgres in Docker, backend venv, frontend packages, .env, and the food tables, so the app runs on the developer's computer.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "details": "Run `bash scripts/local/dev_setup.sh` (needs Docker Desktop, Python 3.11+, Node 20+). It starts Postgres from\nscripts/local/docker-compose.dev.yml (user/password fittrack/fittrack, db fittrack_db), writes backend/.env if missing,\ncreates backend/venv, installs backend/requirements.txt (now UTF-8; it was UTF-16 before), runs `npm install` in frontend/,\nand applies backend/food_data/schema.sql.\nThen run the backend (`uvicorn main:app --reload` in backend/) and the frontend (`npm run dev` in frontend/).\nLoad a small real food set for development: `bash scripts/food/download_food_data.sh ./fooddata` then\n`bash scripts/food/import_food_data.sh ./fooddata --skip-off` (USDA + CNF only, a couple of minutes).\nIf the CNF step fails on column names, run `python -m food_data.import_cnf ./fooddata/cnf --inspect` and adjust the\ncandidate lists at the top of backend/food_data/import_cnf.py (log what you changed on task 5).",
+        "testStrategy": "`curl localhost:8000/health` returns 200. The frontend loads in the browser. In backend/:\n`TEST_DATABASE_URL=postgresql://fittrack:fittrack@localhost:5432/fittrack_test pytest food_data -q` -> 10 passed\n(create the db first: `docker compose -f scripts/local/docker-compose.dev.yml exec -T db createdb -U fittrack fittrack_test`).",
+        "complexity": 3,
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Security basics",
+        "description": "Fail fast without a real SECRET_KEY, restrict CORS, and stop strangers from registering on the public URL.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "details": "- backend/utils/security.py: remove the default `\"your-secret-key-change-in-production-please\"`. If SECRET_KEY is unset\n  or shorter than 32 chars, raise at import time with a clear message. (The default is public on GitHub, so anyone could forge login tokens.)\n- backend/main.py: replace `allow_origins=[\"*\"]` with `os.getenv(\"ALLOWED_ORIGINS\", \"http://localhost:3000,http://localhost:5173\").split(\",\")`.\n  In production the frontend is same-origin (nginx /api), so CORS barely matters, but `*` with credentials is wrong.\n- Registration lock: env `ALLOW_REGISTRATION` (default \"true\"). In routers/auth.py register endpoint, return 403\n  \"Registration is closed\" when it is \"false\". After both people have accounts (task 19), set it to false on the VPS.\n- Check token lifetime in utils/security.py: use 30 days for this personal app so nobody gets logged out weekly\n  (phones keep the PWA open for weeks); keep it configurable via ACCESS_TOKEN_EXPIRE_DAYS.\n- Add backend/tests/test_security.py using FastAPI TestClient.",
+        "testStrategy": "`pytest backend/tests/test_security.py -q`: (a) importing utils.security with SECRET_KEY unset raises; (b) POST /auth/register\nreturns 403 with ALLOW_REGISTRATION=false; (c) a request with Origin: https://evil.example gets no Access-Control-Allow-Origin header.",
+        "complexity": 3,
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Adopt Alembic migrations",
+        "description": "Replace Base.metadata.create_all with Alembic so existing tables can be changed safely (create_all never alters a table).",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "details": "- `pip install alembic` is already in requirements. In backend/: `alembic init alembic`.\n- alembic/env.py: `from dotenv import load_dotenv; load_dotenv()`; set `config.set_main_option(\"sqlalchemy.url\", os.environ[\"DATABASE_URL\"])`;\n  `from database import Base; import models; target_metadata = Base.metadata`.\n- Exclude the food tables, which food_data/schema.sql owns: add `include_object` that returns False for tables\n  `foods` and `food_portions` (and anything with `info={\"managed_by\": \"food_data\"}`). Pass it to context.configure.\n- Baseline: on an EMPTY local db run `alembic revision --autogenerate -m \"baseline\"`, review the file (it must create the\n  existing tables only), `alembic upgrade head`.\n- Existing databases that already have the tables (e.g. an old VPS install): `alembic stamp head` instead of upgrade.\n  Write this in backend/README.md.\n- Remove `Base.metadata.create_all(bind=engine)` from main.py startup. scripts/vps/deploy.sh already runs\n  `alembic upgrade head` once backend/alembic.ini exists.",
+        "testStrategy": "Drop and recreate the local db, run `alembic upgrade head`, start uvicorn, register a user and log a food via /docs.\n`alembic check` (or `alembic revision --autogenerate` producing an empty migration) shows models and db agree.",
+        "complexity": 6,
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Local food database (schema, importers, search, barcode)",
+        "description": "Free, self-hosted food data in Postgres: USDA Foundation + SR Legacy, Health Canada CNF, Open Food Facts (Canada/US), with ranked search and barcode lookup.",
+        "status": "done",
+        "priority": "high",
+        "dependencies": [],
+        "details": "Built in backend/food_data/:\n- schema.sql: tables `foods` (values per 100 g, source, barcode as EAN-13, popularity, quality ok|suspect,\n  created_by_user for custom foods, generated search_text/search_vec) and `food_portions` (label, grams);\n  function `search_foods(q, lim, for_user)` - two-stage: up to 400 prefix-match candidates (generic + custom first, then\n  most-scanned), trigram fallback for typos when too few, then ranking. ~30 ms on 500k rows.\n- common.py: connection (DATABASE_URL or backend/.env), barcode normalisation (UPC-A -> EAN-13), sanity checks\n  (reject >902 kcal/100 g, macros >105 g; flag Atwater mismatch as suspect), COPY-based upsert keyed on (source, source_id).\n- import_usda.py (folder or zip; Foundation energy falls back to Atwater 2047/2048, then 4/4/9 maths),\n  import_cnf.py (2015 and 2026 layouts, columns matched loosely, nutrients by code then name, --inspect),\n  import_off.py (DuckDB streams the 9 GB CSV, keeps --countries canada,united-states with energy data).\n- service.py: search_foods(db, q, limit, user_id), get_food(db, id), lookup_barcode(db, code, user_id)\n  (local first, else one live OFF API call per real scan, cached into foods). Each food comes with portions,\n  \"100 g\" always first.\n- tests/: fixtures shaped like the real downloads; 10 tests.\nLicences/attribution to show in the app: USDA FoodData Central (public domain), \"Canadian Nutrient File, Health Canada\"\n(Open Government Licence - Canada), \"Open Food Facts\" (ODbL).\n\n[2026-11-08T17:23:00-05:00] built and tested against fixture files shaped like the real downloads (10 tests pass, search ~30 ms on 500k synthetic rows). Not yet run on the real downloads: see 17.4. CNF 2026 column names unverified; run import_cnf --inspect first.",
+        "testStrategy": "`TEST_DATABASE_URL=... pytest backend/food_data -q` -> 10 passed. Real-data run is task 17.4.",
+        "complexity": 8,
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Schema and search function",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "backend/food_data/schema.sql",
+            "testStrategy": "covered by test_search_ranking"
+          },
+          {
+            "id": 2,
+            "title": "USDA importer",
+            "description": "",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "backend/food_data/import_usda.py",
+            "testStrategy": "test_usda_foundation, test_usda_sr_zip"
+          },
+          {
+            "id": 3,
+            "title": "CNF importer",
+            "description": "",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "backend/food_data/import_cnf.py",
+            "testStrategy": "test_cnf_2015, test_cnf_2026_style"
+          },
+          {
+            "id": 4,
+            "title": "Open Food Facts importer",
+            "description": "",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "backend/food_data/import_off.py",
+            "testStrategy": "test_off_filter_and_quality"
+          },
+          {
+            "id": 5,
+            "title": "Service: search, get, barcode with live fallback",
+            "description": "",
+            "status": "done",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "backend/food_data/service.py",
+            "testStrategy": "test_barcode_local_then_live_then_cached, test_custom_foods_are_private"
+          },
+          {
+            "id": 6,
+            "title": "Download/import shell scripts",
+            "description": "",
+            "status": "done",
+            "dependencies": [
+              5
+            ],
+            "details": "scripts/food/download_food_data.sh, scripts/food/import_food_data.sh",
+            "testStrategy": "import_food_data.sh run end to end on fixture files"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Serve the food database from the API",
+        "description": "Point /food/search and /food/barcode at food_data.service and delete the mock and paid-API services.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          4,
+          5
+        ],
+        "details": "- models.py: add SQLAlchemy models `Food` and `FoodPortion` mapping onto the existing `foods`/`food_portions` tables\n  (`__table_args__ = {\"info\": {\"managed_by\": \"food_data\"}}` so Alembic ignores them; don't declare the generated columns).\n- schemas/food_schemas.py: `PortionOut {label, grams}`, `FoodOut {id, source, name, brand, barcode, kcal_100g,\n  protein_100g, carbs_100g, fat_100g, fiber_100g, sugar_100g, sodium_mg_100g, serving_g, serving_label, quality, portions}`.\n- routers/food.py:\n  GET /food/search?q=&limit= -> `service.search_foods(db, q, limit, current_user.id)` (require auth: Depends(get_current_user)).\n  GET /food/barcode/{code} -> `service.lookup_barcode(db, code, current_user.id)`; 404 if None.\n  GET /food/{food_id} -> `service.get_food`; 404 if None or a custom food of another user.\n- Delete services/food_aggregator.py, nutritionix_service.py, usda_service.py (they return made-up mock data - the real\n  calls were commented out), openfoodfacts_service.py (superseded). First `grep -rn` for imports (recipes_router,\n  ai_meal router, meal_plan_service may import them) and switch those to food_data.service or leave the hidden feature\n  importing nothing broken. Remove NUTRITIONIX_* env usage.\n- Keep the food_master table for now (FoodEntry.food_master_id references it); task 7 stops using it.\n- Set OFF_USER_AGENT in .env to \"FitTrackPlus/1.0 (your-email)\" - Open Food Facts asks apps to identify themselves.",
+        "testStrategy": "backend/tests/test_food_api.py with TestClient + a logged-in test user against the test db loaded from the food_data fixtures:\nsearch \"banana\" -> first result \"Bananas, raw\" with portions[0]=={\"label\":\"100 g\",\"grams\":100}; unauthenticated search -> 401;\nbarcode 068100084245 -> Kraft Dinner; unknown barcode with the live fetch monkeypatched to None -> 404. Locally with real\nUSDA/CNF data: `curl -H \"Authorization: Bearer $T\" \"localhost:8000/food/search?q=chicken%20breast\"` looks sensible.",
+        "complexity": 6,
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Diary entries store grams and a nutrition snapshot",
+        "description": "Log food by grams or portion; the server computes calories/macros from per-100 g data and stores them on the entry.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "details": "Why snapshot: re-importing food data or editing a custom food must never change past days.",
+        "testStrategy": "`pytest backend/tests/test_diary.py -q` passes (see subtasks). Old rows created before the migration still list correctly.",
+        "complexity": 7,
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Migration: new food_entries columns",
+            "description": "Alembic revision adding food_id, grams, portion_label, fiber_g, sugar_g, sodium_mg.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "`alembic revision -m \"food entries by grams\"`: add food_entries.food_id BIGINT NULL REFERENCES foods(id) ON DELETE SET NULL,\ngrams REAL NULL, portion_label TEXT NULL, fiber_g REAL NULL, sugar_g REAL NULL, sodium_mg REAL NULL; index on food_id.\nUpdate the FoodEntry model. Leave quantity/unit/food_master_id in place for old rows.",
+            "testStrategy": "`alembic upgrade head` then `alembic downgrade -1` then `upgrade head` all succeed on a db with data."
+          },
+          {
+            "id": 2,
+            "title": "Nutrition maths",
+            "description": "Pure function scale(food, grams) -> kcal/protein/carbs/fat/fiber/sugar/sodium, rounded sensibly.",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "backend/services/nutrition.py: `def scale(food: dict, grams: float) -> dict` = value_100g * grams / 100 for each nutrient,\nNone stays None; kcal rounded to 1 decimal, others to 2. `def grams_for(food, portion_label, quantity)` looks up the portion\n(case-insensitive) and returns grams * quantity; \"100 g\" and \"g\" are always valid (1 g each for \"g\").",
+            "testStrategy": "Unit tests: 150 g of a 89 kcal/100 g food = 133.5 kcal; 2 x '1 cup (240 g)' = 480 g; unknown portion raises ValueError."
+          },
+          {
+            "id": 3,
+            "title": "Entry endpoints",
+            "description": "Create/update/list/delete entries by grams or portion; keep manual quick-add.",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "POST /food/entries body: {food_id, grams? | (portion_label, quantity)?, meal_type, entry_date} -> server fetches the food\n(service.get_food, respecting custom-food privacy), computes grams + snapshot, stores food_name/brand_name too.\nAlso accept quick-add {food_name, calories, protein_g?, carbs_g?, fat_g?, meal_type, entry_date} with no food_id.\nPUT /food/entries/{id} with new grams/portion recomputes from the food (if food_id still exists) else scales the snapshot.\nGET /food/entries?entry_date= returns entries + per-meal and day totals. All endpoints: only the owner's entries.\nKeep the streak update that already happens on create.",
+            "testStrategy": "test_diary.py: create by grams, by portion, quick-add; update grams recomputes; another user gets 404 on GET/PUT/DELETE."
+          },
+          {
+            "id": 4,
+            "title": "Stop writing food_master",
+            "description": "Remove remaining writes/reads of food_master in the food flow.",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "grep for FoodMaster usage; the food flow must not touch it any more. Leave the table and model (hidden features may read it);\nadd a parking-lot line to drop it later.",
+            "testStrategy": "`grep -rn FoodMaster backend/routers/food.py backend/food_data` returns nothing; full pytest suite passes."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Custom foods",
+        "description": "Users can create, edit and delete their own private foods, including from a failed barcode scan and as a corrected copy of a bad entry.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "details": "routers/food.py:\n- POST /food/custom {name, brand?, barcode?, basis: \"100g\" | \"serving\", serving_g?, serving_label?, kcal, protein, carbs, fat,\n  fiber?, sugar?, sodium_mg?}. If basis == \"serving\", convert to per-100 g using serving_g (required then). Insert into foods with\n  source='custom', source_id=f\"u{user_id}-{uuid4().hex[:12]}\", created_by_user=user_id, barcode normalised with\n  food_data.common.normalize_barcode, plus a portion row for the serving.\n- PUT /food/custom/{id}, DELETE /food/custom/{id}: owner only (404 otherwise). Deleting sets food_entries.food_id NULL via FK.\n- POST /food/{id}/copy -> creates a custom copy the user can then edit (\"this label is wrong\" flow).\n- lookup_barcode already prefers the user's own custom food for a barcode, so a fixed copy wins next scan.",
+        "testStrategy": "pytest: create per-serving (30 g serving, 120 kcal -> 400 kcal/100 g); user B cannot see it in search or GET /food/{id};\nscan the custom barcode as user A -> returns the custom food; copy of an OFF food is editable and ranks first for user A.",
+        "complexity": 5,
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Recent foods, frequent foods, copy a meal",
+        "description": "One-tap re-logging, which is most of daily use.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "details": "- GET /food/recent?limit=20: the user's distinct foods by most recent entry (DISTINCT ON food_id ORDER BY food_id, created_at DESC,\n  then order by created_at DESC), each with last grams/portion used and the full FoodOut.\n- GET /food/frequent?limit=20&days=60: most-logged foods in the window.\n- POST /food/entries/copy {from_date, to_date, meal_type?}: duplicates entries (snapshot included) to another day/meal.\nMake sure there is an index on food_entries(user_id, entry_date) (exists: idx_user_date) and add (user_id, created_at) if slow.",
+        "testStrategy": "pytest: log A, B, A -> recent = [A, B] with A's last grams; copy yesterday's breakfast creates identical rows on today.",
+        "complexity": 4,
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Frontend: food search and portion picker",
+        "description": "Fast, phone-friendly search-as-you-type and a portion sheet with a live macro preview.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          6,
+          7
+        ],
+        "details": "The app is used one-handed on a phone; design at 390 px wide first. Keep the existing pastel theme (frontend/src/config/theme.js).",
+        "testStrategy": "Manual at 390x844 in Chrome devtools device mode: type \"chick bre\" -> results within ~0.5 s; pick \"1 cup, chopped\" x 1.5 -> preview\nupdates; Add -> appears in the right meal. `npm run build` and `npm run lint` pass.",
+        "complexity": 7,
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "API client",
+            "description": "frontend/src/services/api.js food functions for the new endpoints.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "foodAPI.search(q, {signal}), byBarcode(code), get(id), recent(), frequent(), createEntry(body), updateEntry(id, body),\ndeleteEntry(id), createCustom(body), copyFood(id). Encode q with encodeURIComponent (the current code doesn't).\nSet axios baseURL from VITE_API_URL (deploy builds with /api).",
+            "testStrategy": "In the browser console, `await foodAPI.search('banana')` returns results with portions."
+          },
+          {
+            "id": 2,
+            "title": "Search component",
+            "description": "FoodSearch.jsx with debounce + request cancellation.",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "frontend/src/components/FoodSearch.jsx: input autofocus; 200 ms debounce; AbortController cancels the previous request;\nshow recent foods while the box is empty; each row: name, brand (muted), kcal for the default portion (serving_label or 100 g),\nsmall source tag (USDA / Health Canada / Open Food Facts / Mine); \"suspect\" quality shows a subtle warning icon.\nEmpty state: \"Can't find it? Create a food\" -> custom food form (task 8 endpoint).",
+            "testStrategy": "Typing fast 'g','gr','gre','greek' sends at most 2 requests (Network tab); stale results never overwrite newer ones."
+          },
+          {
+            "id": 3,
+            "title": "Portion picker sheet",
+            "description": "PortionPicker.jsx bottom sheet: portion select, quantity, live totals, meal select.",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Bottom sheet (fixed, rounded top, large tap targets >= 44 px). Portion <select> from food.portions plus \"g\" (free grams);\nquantity numeric input (inputMode=\"decimal\", accepts 0.5, 1/2 is optional); live preview kcal/P/C/F computed client-side with the\nsame maths as backend/services/nutrition.py; meal selector defaulting by time of day (before 10:30 breakfast, before 15:00 lunch,\nbefore 21:00 dinner, else snack). \"Add\" calls createEntry with {food_id, portion_label, quantity} or {grams}.",
+            "testStrategy": "150 g of Bananas, raw shows 145.5 kcal (97/100 g); changing meal and adding stores the right meal_type."
+          },
+          {
+            "id": 4,
+            "title": "Wire into FoodLog page",
+            "description": "Replace the old search UI in pages/FoodLog.jsx.",
+            "status": "pending",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "FoodLog becomes: search on top, results, PortionPicker on tap. Remove references to the old aggregator response shape\n(per-serving fields). Footer attribution: \"Food data: USDA FoodData Central, Canadian Nutrient File (Health Canada), Open Food Facts (ODbL)\".",
+            "testStrategy": "Full flow works end to end against the local backend; no console errors."
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Barcode scanner that works on iPhone and Android",
+        "description": "Replace quagga with the BarcodeDetector API plus the barcode-detector (ZXing WebAssembly) polyfill; misses lead to 'add this food'.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          10
+        ],
+        "details": "- `npm rm quagga && npm i barcode-detector` (v3.x). iPhone Safari has no native BarcodeDetector, so use the package's\n  ponyfill: `import { BarcodeDetector, prepareZXingModule } from \"barcode-detector/ponyfill\"`, only when\n  `!(\"BarcodeDetector\" in window)`; otherwise use the native one.\n- Self-host the .wasm (the package fetches it from jsDelivr by default, which breaks offline/PWA): import\n  `zxing_reader.wasm?url` from node_modules/zxing-wasm/dist/reader/ and pass it via prepareZXingModule({overrides: {locateFile}}).\n  Check the package README for the exact current path before coding.\n- components/BarcodeScanner.jsx: getUserMedia({video: {facingMode: {ideal: \"environment\"}}}); <video playsInline muted autoPlay>\n  (playsInline is required on iOS); detect every ~150 ms with formats [\"ean_13\",\"ean_8\",\"upc_a\",\"upc_e\"]; require the same code\n  twice in a row before accepting; vibrate(50) if available; torch toggle when track.getCapabilities().torch; always stop tracks on close.\n- On a code: foodAPI.byBarcode(code) -> PortionPicker. On 404: \"Not found - add it\" opens the custom food form with the barcode filled.\n- Manual fallback: a \"type the number\" field.\n- Camera needs HTTPS (localhost is fine). To test on a phone before task 17, use `npm i -D @vitejs/plugin-basic-ssl` +\n  `vite --host` and accept the warning, or test on the deployed VPS.",
+        "testStrategy": "On a real iPhone (Safari) and Android (Chrome): scan 5 packaged foods; each opens the right product or the add form. Closing the\nscanner turns the camera light off. Works after \"Add to Home Screen\" too (re-check in task 16).",
+        "complexity": 6,
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Today screen (diary dashboard)",
+        "description": "The home screen: today's meals, totals vs targets, quick add, day navigation.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          9,
+          10
+        ],
+        "details": "pages/Dashboard.jsx (route \"/\"):\n- Header: date with < > arrows and \"Today\" button (dates in the user's local timezone, sent as YYYY-MM-DD).\n- Summary: calories remaining big number (target - eaten), bars for protein/carbs/fat vs targets (from the user profile).\n- Four meal sections with entries (name, portion, kcal). Tap an entry -> PortionPicker in edit mode (update/delete).\n  \"+ Add\" per meal opens FoodLog with that meal preselected. Scan button opens BarcodeScanner directly.\n- \"Copy yesterday's <meal>\" action per meal (task 9 endpoint). Recent foods row for one-tap add with last portion.\n- Loading and empty states; no layout shift on 390 px.",
+        "testStrategy": "Manual at 390x844: log breakfast/lunch/dinner/snack, edit one entry's grams, delete one, navigate to yesterday and back,\ncopy yesterday's breakfast. Totals match the sum of the entries.",
+        "complexity": 5,
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Hide non-core features",
+        "description": "Feature flags hide AI scan, coach, badges, meal planning, recipes, water, measurements, export, exercise from navigation and routes.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "details": "frontend/src/config/features.js: `export const features = { aiScan: false, coach: false, gamification: false, mealPlanning: false,\nrecipes: false, water: false, measurements: false, export: false, exercise: false }`.\nApp.jsx: only register routes whose flag is on. Navbar/Layout: mobile bottom navigation with 4 items: Today, Add (search),\nProgress, Profile. Dashboard must not render WaterWidget, BadgeDisplay, LevelProgress, SmartCoach when their flags are off.\nBackend routers stay as they are.",
+        "testStrategy": "Every visible link works; no hidden page is reachable by URL (redirects to /); `npm run build` passes.",
+        "complexity": 2,
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Check onboarding and targets",
+        "description": "Make sure calorie and macro targets are computed correctly and can be edited.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "details": "frontend/src/utils/nutritionCalculator.js already implements Mifflin-St Jeor. Verify: BMR = 10*kg + 6.25*cm - 5*age + 5 (male)\nor -161 (female); activity multipliers 1.2/1.375/1.55/1.725/1.9; goal adjustments (e.g. lose -500 kcal, lean bulk +250) and a\nfloor (never below 1200 kcal female / 1500 male); protein default ~1.8 g/kg bodyweight. Add vitest (`npm i -D vitest`,\nscript \"test\": \"vitest run\") with tests for the formula. Onboarding saves targets to the user profile (PUT /users/me or existing\nendpoint); Profile page lets the user override calories and macros manually.",
+        "testStrategy": "`npm test`: 30 y, 165 cm, 60 kg, female, moderate -> BMR 1320.25, TDEE ~2046. Manual: edit targets in Profile, Today screen updates.",
+        "complexity": 3,
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Weight log and trend",
+        "description": "Log weight quickly and see a smoothed trend.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "details": "Check the existing WeightLog model/endpoints (grep \"weight\" in routers/users.py and dashboard.py) and the Progress page.\nAdd: quick \"log weight\" on Progress (and optionally Today), kg/lb toggle stored on the profile, chart of daily weights\nwith a 7-day moving average line (Recharts), last 30/90 days. One entry per day (logging again replaces that day's value).",
+        "testStrategy": "Log 5 weights on different days; chart shows points and the average line; logging twice on one day keeps one value.",
+        "complexity": 3,
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Make it an installable PWA",
+        "description": "Manifest, icons, service worker and iOS tags so it installs from the browser and opens full-screen.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          13
+        ],
+        "details": "- `npm i -D vite-plugin-pwa` (v1.x supports Vite 5). vite.config.js: VitePWA({ registerType: \"autoUpdate\",\n  manifest: { name: \"FitTrack+\", short_name: \"FitTrack\", start_url: \"/\", scope: \"/\", display: \"standalone\",\n  background_color: \"#ffffff\", theme_color: \"#F0A7D9\", icons: [192, 512, and a 512 maskable] },\n  workbox: { navigateFallback: \"/index.html\", navigateFallbackDenylist: [/^\\/api\\//],\n  runtimeCaching: [{ urlPattern: /^\\/api\\//, handler: \"NetworkOnly\" }] } }).\n  Never cache API responses: diaries must always be fresh.\n- Icons: frontend/public/icons/ (192, 512, maskable-512, apple-touch-icon 180x180). Generate from one square logo\n  (e.g. `npx @vite-pwa/assets-generator`).\n- frontend/index.html: <meta name=\"apple-mobile-web-app-capable\" content=\"yes\">, apple-mobile-web-app-status-bar-style,\n  <link rel=\"apple-touch-icon\" href=\"/icons/apple-touch-icon.png\">, viewport with viewport-fit=cover; use\n  env(safe-area-inset-bottom) padding for the bottom nav.\n- An \"Install the app\" page/modal: iPhone = Safari > Share > Add to Home Screen; Android = Chrome menu > Install app.\n  Show it once after first login if not running standalone (matchMedia('(display-mode: standalone)')).\n- nginx already serves sw.js and the manifest with no-cache (scripts/vps/setup_server.sh).",
+        "testStrategy": "`npm run build` emits dist/sw.js and dist/manifest.webmanifest. Chrome devtools > Application > Manifest shows no errors and\n\"installable\". After deploy (task 17), installing on both phones opens full-screen with the icon, and the scanner still works.",
+        "complexity": 5,
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Server setup, first deploy, real food data",
+        "description": "Put the app on the VPS with HTTPS and load the real food databases.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          6,
+          16
+        ],
+        "details": "All scripts are idempotent; read their header comments first.",
+        "testStrategy": "https://<domain> loads with a valid certificate; /api/health returns 200; the 5 searches in PRD success criterion 1 return sensible\ntop-3 results in under 300 ms (check the browser Network tab).",
+        "complexity": 7,
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "DNS and server setup",
+            "description": "Point the domain at the VPS and run setup_server.sh.",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create a DNS A record (e.g. fit.yourdomain.com) -> VPS IP; wait until `dig +short fit.yourdomain.com` shows it.\nOn the VPS: `sudo DOMAIN=fit.yourdomain.com EMAIL=you@example.com bash scripts/vps/setup_server.sh` (download the script with\ncurl first if the repo isn't cloned yet; see its header). It installs Postgres/nginx/certbot/Node 22, creates the fittrack user,\ndatabase and backend/.env with random secrets, systemd unit fittrack-backend, nginx site, firewall, HTTPS and the nightly backup cron.\nIf an OLD FitTrack+ install exists at /var/www/fittrack-plus: first `sudo -u postgres pg_dump -Fc <olddb> > ~/old.dump`.",
+            "testStrategy": "`systemctl status fittrack-backend nginx postgresql` all active (backend may fail until 17.3); `curl -I https://<domain>` -> 200."
+          },
+          {
+            "id": 2,
+            "title": "Existing data (only if an old install had real data)",
+            "description": "Bring the old database under Alembic.",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "If the old database has data worth keeping: point DATABASE_URL at it, run `alembic stamp <baseline revision>` then\n`alembic upgrade head`. If it only has test data, skip and use the fresh database.",
+            "testStrategy": "`alembic current` on the VPS shows head."
+          },
+          {
+            "id": 3,
+            "title": "First deploy",
+            "description": "Run deploy.sh.",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "`sudo bash /var/www/fittrack-plus/scripts/vps/deploy.sh` - pulls main, installs Python deps, runs migrations and the food schema,\nbuilds the frontend with VITE_API_URL=/api, restarts the API and checks /health.",
+            "testStrategy": "Script ends with 'Deployed <sha>. API healthy.'; registering a user on https://<domain> works."
+          },
+          {
+            "id": 4,
+            "title": "Download and import food data",
+            "description": "Real USDA, CNF and Open Food Facts data.",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "`sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/download_food_data.sh` (~1.5 GB to /var/lib/fittrack/fooddata).\nThen FIRST `cd /var/www/fittrack-plus/backend && sudo -u fittrack venv/bin/python -m food_data.import_cnf /var/lib/fittrack/fooddata/cnf --inspect`\n- the CNF 2026 layout was not verifiable when the importer was written; if it reports missing columns, fix the candidate lists\nin import_cnf.py locally, test, push, deploy.\nThen `sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/import_food_data.sh` (10-30 min). If the VPS has <2 GB RAM add\n`--memory-limit 512MB`. If USDA has published a newer Foundation release, set USDA_FOUNDATION_URL (see the download script).",
+            "testStrategy": "The summary prints counts for usda_foundation, usda_sr, cnf, off (expect off in the hundreds of thousands) and sensible top results."
+          },
+          {
+            "id": 5,
+            "title": "Speed and sanity check",
+            "description": "Measure search speed on the real data.",
+            "status": "pending",
+            "dependencies": [
+              4
+            ],
+            "details": "In the app: search banana, chicken breast, greek yogurt, kraft dinner, shreddies. If any search takes >300 ms server-side\n(check `journalctl -u fittrack-backend` timing or EXPLAIN ANALYZE SELECT * FROM search_foods('greek yog', 20)), log it on this task\nand consider: `VACUUM ANALYZE foods;`, raising work_mem, or --min-scans 1 on the OFF import to drop never-scanned products.",
+            "testStrategy": "All five searches under 300 ms; results recorded in the task log."
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Backups and a restore drill",
+        "description": "Prove the nightly backup works and can be restored.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          17
+        ],
+        "details": "- The morning after setup: `ls -lh /var/backups/fittrack` shows a .dump; `tail /var/log/fittrack-backup.log` shows no errors.\n- Restore drill without touching production: `sudo -u postgres createdb fittrack_restore_test &&\n  sudo -u postgres pg_restore -d fittrack_restore_test /var/backups/fittrack/<latest>.dump`, compare\n  `SELECT count(*) FROM users; ... food_entries;` with production, then `dropdb fittrack_restore_test`.\n- Off-server copy from your computer: `scp you@vps:/var/backups/fittrack/<latest>.dump .` (automate later: parking lot).\n- scripts/vps/restore_db.sh is the real (destructive) restore; don't run it as part of the drill.",
+        "testStrategy": "Row counts in the restored test db match production; the drill is logged on this task with the date.",
+        "complexity": 3,
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Phone install and 7-day trial",
+        "description": "Both people install it, log for a week, and the top friction gets fixed.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          11,
+          12,
+          14,
+          15,
+          18
+        ],
+        "details": "- Install on both phones (task 16 instructions); register both accounts; then set ALLOW_REGISTRATION=false in backend/.env on the VPS\n  and `sudo systemctl restart fittrack-backend`.\n- Barcode test: 10 random packaged foods from the kitchen; record found/missed. Add misses as custom foods (timed: < 1 min each).\n- Log every meal for 7 days. Keep a friction list in .taskmaster/docs/parking-lot.md (date, what was annoying, how often).\n- At the end: promote the top 3 friction items to new tasks (tasks.py add) and fix them; mark the PRD success criteria in the\n  decision log.",
+        "testStrategy": "PRD success criteria 1-5 checked off in the decision log with dates. Both users have 7 consecutive days with entries:\n`SELECT user_id, count(DISTINCT entry_date) FROM food_entries WHERE entry_date > now() - interval '8 days' GROUP BY 1;` -> 7 each.",
+        "complexity": 4,
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2026-11-08T17:30:00-05:00",
+      "updated": "2026-11-08T17:23:00-05:00",
+      "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
+    }
+  }
+}
