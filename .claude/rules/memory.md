@@ -20,10 +20,10 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 0 - Foundation. Last done: task 5 (food database layer, built before Claude Code setup).
-- Next: task 1 (repo cleanup) -> 2 (local dev) -> 3 (security) -> 4 (Alembic).
-- In progress: none. Blocked: none.
-- Last session: 2026-11-08, plan and Claude Code setup created; no code run in Claude Code yet.
+- Phase 0 - Foundation. Done: 1 (repo cleanup), 5 (earlier).
+- Next: task 2 (local dev) is in-progress and BLOCKED: Docker Desktop not installed on dev machine.
+- Local PostgreSQL 17 is running on :5432 (not Docker); options: install Docker, or approve using it.
+- Last session: 2026-11-08, phase 0 run stopped at task 2.
 - Manual checks waiting: 0 (`.taskmaster/docs/manual-checks.md`).
 
 ## Facts (stable, max 15 lines)
@@ -48,7 +48,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ## Model routing record (update counts at each close-out)
 | Tier | Done first try | Escalated up | Notes |
 |---|---|---|---|
-| haiku | 0 | 0 | |
+| haiku | 1 | 0 | task 1 |
 | sonnet | 0 | 0 | |
 | opus | 0 | 0 | |
 <!-- If one tier escalates on 3 tasks in a row, the phase-runner escalates to the lead, who may raise that tier's

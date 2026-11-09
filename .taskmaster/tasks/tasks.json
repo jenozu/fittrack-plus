@@ -17,12 +17,12 @@
         "id": 2,
         "title": "Set up local development",
         "description": "Postgres in Docker, backend venv, frontend packages, .env, and the food tables, so the app runs on the developer's computer.",
-        "status": "pending",
+        "status": "in-progress",
         "priority": "high",
         "dependencies": [
           1
         ],
-        "details": "Run `bash scripts/local/dev_setup.sh` (needs Docker Desktop, Python 3.11+, Node 20+). It starts Postgres from\nscripts/local/docker-compose.dev.yml (user/password fittrack/fittrack, db fittrack_db), writes backend/.env if missing,\ncreates backend/venv, installs backend/requirements.txt (now UTF-8; it was UTF-16 before), runs `npm install` in frontend/,\nand applies backend/food_data/schema.sql.\nThen run the backend (`uvicorn main:app --reload` in backend/) and the frontend (`npm run dev` in frontend/).\nLoad a small real food set for development: `bash scripts/food/download_food_data.sh ./fooddata` then\n`bash scripts/food/import_food_data.sh ./fooddata --skip-off` (USDA + CNF only, a couple of minutes).\nIf the CNF step fails on column names, run `python -m food_data.import_cnf ./fooddata/cnf --inspect` and adjust the\ncandidate lists at the top of backend/food_data/import_cnf.py (log what you changed on task 5).",
+        "details": "Run `bash scripts/local/dev_setup.sh` (needs Docker Desktop, Python 3.11+, Node 20+). It starts Postgres from\nscripts/local/docker-compose.dev.yml (user/password fittrack/fittrack, db fittrack_db), writes backend/.env if missing,\ncreates backend/venv, installs backend/requirements.txt (now UTF-8; it was UTF-16 before), runs `npm install` in frontend/,\nand applies backend/food_data/schema.sql.\nThen run the backend (`uvicorn main:app --reload` in backend/) and the frontend (`npm run dev` in frontend/).\nLoad a small real food set for development: `bash scripts/food/download_food_data.sh ./fooddata` then\n`bash scripts/food/import_food_data.sh ./fooddata --skip-off` (USDA + CNF only, a couple of minutes).\nIf the CNF step fails on column names, run `python -m food_data.import_cnf ./fooddata/cnf --inspect` and adjust the\ncandidate lists at the top of backend/food_data/import_cnf.py (log what you changed on task 5).\n\n[2026-11-08T21:29:47-05:00] plan (haiku-5.5): scripts/local/dev_setup.sh, scripts/local/docker-compose.dev.yml, backend/requirements.txt, backend/food_data/schema.sql - run dev_setup.sh (docker db, venv, npm install, schema), start backend+frontend, run health check and food_data pytest per testStrategy\n\n[2026-11-08T21:30:08-05:00] BLOCKED: bash scripts/local/dev_setup.sh stops at step 1 with 'docker: command not found'. Docker Desktop is not installed (C:/Program Files/Docker/Docker does not exist; PATH points to it). A local PostgreSQL 17 is running on localhost:5432 (accepting connections), but task 2 specifies Docker Postgres via scripts/local/docker-compose.dev.yml. Nothing was changed: no backend/.env, no venv, no npm install, no schema applied. Needs human: install Docker Desktop, or decide to use the local PG17 instead (would be a plan deviation).\n\n[2026-11-08T21:30:20-05:00] BLOCKED: Docker not installed (docker: command not found). Local PostgreSQL 17 runs on :5432. Needs human: install Docker Desktop, or approve using local PG17 (deviation).",
         "testStrategy": "`curl localhost:8000/health` returns 200. The frontend loads in the browser. In backend/:\n`TEST_DATABASE_URL=postgresql://fittrack:fittrack@localhost:5432/fittrack_test pytest food_data -q` -> 10 passed\n(create the db first: `docker compose -f scripts/local/docker-compose.dev.yml exec -T db createdb -U fittrack fittrack_test`).",
         "complexity": 3,
         "subtasks": []
@@ -483,7 +483,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-08T21:29:25-05:00",
+      "updated": "2026-11-08T21:30:20-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
