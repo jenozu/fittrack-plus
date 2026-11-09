@@ -20,20 +20,11 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 3 - Ship. Done: 16 (PWA, manual check pending). Next: 17 (server setup/deploy) then 18 (backups).
-- 2026-11-09 human answered: no domain (IP/HTTP), fresh install, ssh root@2.25.108.3. Scripts in scripts/vps/.
-- Last session: 2026-11-08, phase 3 stopped at HUMAN NEEDED.
-- Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (includes task 16).
-
- (stable, max 15 lines)
-- Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
-- Local db: native PG17 (no Docker; superuser `postgres` needs no password locally), `postgresql://fittrack:fittrack@localhost:5432/fittrack_db`; tests use `.../fittrack_test`.
-- VPS: Ubuntu, app at `/var/www/fittrack-plus`, user `fittrack`, service `fittrack-backend`, nginx `/api/` -> :8000.
-- Domain: none yet, serve on the IP over HTTP (camera scan + PWA install need HTTPS later) · SSH target: root@2.25.108.3 (also in `.claude/deploy-target`)
-- Food data: local Postgres (`foods`, `food_portions`, `search_foods()`), per 100 g. Live Open Food Facts calls only on barcode misses.
-- Diary entries store a nutrition snapshot; never recompute past days.
-- Hidden (non-goal) features stay hidden: AI scan, coach, badges, meal plans, recipes, water, measurements, export, exercise.
-- Users: the owner + his girlfriend. Registration gets closed after both sign up (task 19).
+- Phase 3 - Ship. Done: 16. Next: 17.1 (server setup) then 18. Deploy target root@2.25.108.3, HTTP-only on IP, no certbot until a domain exists.
+- Blocked: ssh root@2.25.108.3 -> Permission denied (publickey,password); local keys in ~/.ssh not accepted. Human must add key.
+- setup_server.sh requires DOMAIN/EMAIL and runs certbot: needs an IP/HTTP-only mode (small script change) before use.
+- Last session: 2026-11-09, phase 3 stopped at HUMAN NEEDED (ssh auth).
+- Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (task 16; camera/PWA install need HTTPS).
 
 ## Decisions since the PRD (max 8 lines, newest first; full text in prd.md decision log)
 - 2026-11-08: Local dev on native PG17, not Docker. dev_setup.sh skips docker if missing.
