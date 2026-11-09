@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date, Text, Index, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date, Text, Index, Boolean, BigInteger
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -117,7 +117,15 @@ class FoodEntry(Base):
     
     # Reference to food master (if applicable)
     food_master_id = Column(Integer, ForeignKey("food_master.id"), nullable=True)
-    
+
+    # Local food database link (foods is defined in food_data)
+    food_id = Column(BigInteger, ForeignKey("foods.id", ondelete="SET NULL"), nullable=True, index=True)
+    grams = Column(Float, nullable=True)
+    portion_label = Column(Text, nullable=True)
+    fiber_g = Column(Float, nullable=True)
+    sugar_g = Column(Float, nullable=True)
+    sodium_mg = Column(Float, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
