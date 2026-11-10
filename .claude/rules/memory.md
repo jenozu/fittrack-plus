@@ -30,7 +30,8 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
 - Local db: native PG17 (no Docker; superuser `postgres` needs no password locally), `postgresql://fittrack:fittrack@localhost:5432/fittrack_db`; tests use `.../fittrack_test`.
 - VPS: Ubuntu, app at `/var/www/fittrack-plus`, user `fittrack`, service `fittrack-backend`, nginx `/api/` -> :8000.
-- Domain: none yet, serve on the IP over HTTP (camera scan + PWA install need HTTPS later) · SSH target: root@2.25.108.3 (also in `.claude/deploy-target`). Fresh install, no old data.
+- Domain: none yet, serve on the IP over HTTP (camera scan + PWA install need HTTPS later) · SSH target: root@2.25.108.3 (also in `.claude/deploy-target`). No old FitTrack data.
+- VPS is SHARED: Docker Traefik (traefik-traefik-1) owns :80/:443 for other apps (rf-scanner, twd-*, arova, ebaybay). Never touch them without asking.
 - Food data: local Postgres (`foods`, `food_portions`, `search_foods()`), per 100 g. Live Open Food Facts calls only on barcode misses.
 - Diary entries store a nutrition snapshot; never recompute past days.
 - Hidden (non-goal) features stay hidden: AI scan, coach, badges, meal plans, recipes, water, measurements, export, exercise.
