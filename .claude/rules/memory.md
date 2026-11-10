@@ -20,11 +20,12 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 3 - Ship. Done: 16, 17.1 (setup_server.sh ran, IP mode), 17.2 cancelled (n/a). 17.3 deploy.sh ran OK on VPS (API healthy on 127.0.0.1:8000).
-- BLOCKER: VPS is shared; Docker Traefik owns :80/:443 (other apps: rf-scanner, twd, arova, ebaybay). http://2.25.108.3 -> Traefik 308 to https. FitTrack nginx not reachable.
-- Needs human decision: domain + Traefik route, or nginx on a free alt port (8082 taken). Then 17.3 register test, 17.4 food import, 17.5, 18.
-- Last session: 2026-11-10, phase 3 stopped at HUMAN NEEDED (port conflict).
-- Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (task 16).
+- Phase 3 - Ship COMPLETE (16, 17, 18 done). Next: phase 4, task 19 (human phone install + 7-day trial).
+- Live: https://fittrack.2-25-108-3.sslip.io. Prod foods: 957k (off 943k, cnf 6k, usda 8k). Nightly backup cron 03:15; first cron run unchecked.
+- Before 19: delete test user deploycheck@example.com (id 1) from prod; then set ALLOW_REGISTRATION=false after both sign up.
+- Search top-3 for generic queries are mostly OFF branded duplicates; human judges (see manual-checks 17.5).
+- Last session: 2026-11-10, phase 3 complete.
+- Manual checks waiting: `.taskmaster/docs/manual-checks.md` (16, 17.5, 18).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
@@ -44,6 +45,8 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 
 ## Learned / gotchas (max 15 lines, newest first)
+- duckdb OOMs reading openfoodfacts .csv.gz on the VPS: gunzip to plain .tsv first, import_off uses threads=1 (task 17.4).
+- tasks.py set-status needs --force when a dependency is cancelled (17.2).
 - vite-plugin-pwa resolved to 2.0.0 (task said 1.x); works on Vite 5. `npm run lint` has ~98 pre-existing errors (React unused import).
 - Repo-wide `npm run lint` is red (~86 pre-existing errors in untouched pages); check touched files with `npx eslint <files>` instead.
 - zxing-wasm exports map blocks dist/ paths: use `zxing-wasm/reader/zxing_reader.wasm?url` (task 11).
@@ -53,7 +56,6 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 - Run pytest/alembic with backend/venv/Scripts/python.exe (system python lacks duckdb); add --basetemp in a writable dir if WinError 5. Agents can't read .env files; pass DATABASE_URL via env.
 - Old-install DBs: `alembic stamp bf60e849d28a && alembic upgrade head` (not `stamp head`). bcrypt pinned 4.0.1 for passlib.
 - ALLOW_REGISTRATION closes only on exact "false"; set it exactly so at task 19.
-- CNF 2026 column names are unverified: run `python -m food_data.import_cnf <dir> --inspect` before importing (task 17.4).
 - `backend/requirements.txt` was UTF-16; it's now UTF-8. Keep it UTF-8 (Windows editors can silently switch it back).
 - `search_foods()` must stay two-stage (prefix candidates, then ranking); a single-pass version took ~600 ms on 500k rows.
 
@@ -61,7 +63,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 | Tier | Done first try | Escalated up | Notes |
 |---|---|---|---|
 | haiku | 3 | 0 | tasks 1, 13, 14 |
-| sonnet | 9 | 0 | task 11 needed one same-tier fix round (spec gap) |
+| sonnet | 11 | 0 | task 11 needed one same-tier fix round (spec gap) |
 | opus | 0 | 0 | |
 <!-- If one tier escalates on 3 tasks in a row, the phase-runner escalates to the lead, who may raise that tier's
      starting complexity in .claude/skills/next-task/SKILL.md. If haiku passes everything, give it complexity 4 too. -->
