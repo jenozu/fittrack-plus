@@ -1,4 +1,4 @@
-// FitTrack+ Pastel Pink & Blue Theme Configuration
+// Fit Boo Pastel Pink & Blue Theme Configuration
 
 export const colors = {
   primary: {

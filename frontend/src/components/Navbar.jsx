@@ -38,7 +38,7 @@ const Navbar = () => {
                 <span className="text-white font-bold text-xl">F+</span>
               </div>
               <span className="text-2xl font-bold text-neutral-800">
-                FitTrack<span className="text-primary-pink">+</span>
+                Fit Boo
               </span>
             </Link>
 

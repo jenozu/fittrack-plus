@@ -45,7 +45,7 @@ const Login = () => {
             <span className="text-white font-bold text-3xl">F+</span>
           </div>
           <h1 className="text-3xl font-bold text-neutral-800">
-            Welcome to FitTrack<span className="text-primary-pink">+</span>
+            Welcome to Fit Boo
           </h1>
           <p className="text-neutral-600 mt-2">Track your fitness journey with ease</p>
         </div>

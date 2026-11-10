@@ -71,7 +71,7 @@ const Register = () => {
             <span className="text-white font-bold text-3xl">F+</span>
           </div>
           <h1 className="text-3xl font-bold text-neutral-800">
-            Join FitTrack<span className="text-primary-pink">+</span>
+            Join Fit Boo
           </h1>
           <p className="text-neutral-600 mt-2">Start your fitness journey today</p>
         </div>

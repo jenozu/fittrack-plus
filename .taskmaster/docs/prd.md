@@ -111,6 +111,9 @@ rate-limited and not meant for typeahead; USDA lacks Canadian products).
 - Small VPS RAM: setup adds swap; OFF import uses `--memory-limit 1GB` by default.
 
 ## Decision log
+- 2026-11-10: App renamed to "Fit Boo" (user-visible name: title, navbar, login/register, PWA manifest, API title).
+  Internal names (fittrack-backend service, /var/www/fittrack-plus, db fittrack_db) stay. Live host is
+  https://fit-boo.andel-vps.space (wildcard DNS on andel-vps.space, Traefik route). Owner's choice; personal use only.
 - 2026-11-08: Local dev uses the PostgreSQL 17 already installed on the dev machine (no Docker Desktop).
   Role fittrack/fittrack owns fittrack_db (pre-existing old-schema db, 1 user row, kept) and fittrack_test.
   dev_setup.sh skips the Docker step when docker is missing. Owner's choice.

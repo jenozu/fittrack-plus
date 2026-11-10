@@ -21,8 +21,8 @@ from routers import gamification as gamification_router
 
 # --- Initialize the FastAPI app ---
 app = FastAPI(
-    title="FitTrack+ API",
-    description="Backend API for FitTrack+ fitness and nutrition tracker with food aggregation layer",
+    title="Fit Boo API",
+    description="Backend API for Fit Boo fitness and nutrition tracker with food aggregation layer",
     version="1.0.0",
 )
 
@@ -69,7 +69,7 @@ def root():
     Root route for quick status checks.
     """
     return {
-        "message": "FitTrack+ API is running!",
+        "message": "Fit Boo API is running!",
         "version": "1.0.0",
         "docs": "/docs",
         "features": [
@@ -105,10 +105,10 @@ def health_check():
 # --- Lifecycle Events ---
 @app.on_event("startup")
 async def startup_event():
-    print("[STARTUP] FitTrack+ API starting up...")
+    print("[STARTUP] Fit Boo API starting up...")
     print("[INFO] API Documentation available at: /docs")
     print("[INFO] Food Aggregation Layer: Active (Nutritionix + USDA)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    print("[SHUTDOWN] FitTrack+ API shutting down...")
+    print("[SHUTDOWN] Fit Boo API shutting down...")

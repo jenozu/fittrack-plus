@@ -9,8 +9,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'FitTrack+',
-        short_name: 'FitTrack',
+        name: 'Fit Boo',
+        short_name: 'Fit Boo',
         start_url: '/',
         scope: '/',
         display: 'standalone',
@@ -33,7 +33,7 @@ export default defineConfig({
     port: 3000,
     host: true,
     allowedHosts: [
-      'fittrack.andel-vps.space',
+      'fit-boo.andel-vps.space',
       '72.60.170.192',
       'localhost'
     ],

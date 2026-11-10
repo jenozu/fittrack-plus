@@ -33,7 +33,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 - VPS: Ubuntu, app at `/var/www/fittrack-plus`, user `fittrack`, service `fittrack-backend`, nginx `/api/` -> :8000.
 - SSH target: root@2.25.108.3 (also in `.claude/deploy-target`). No old FitTrack data.
 - VPS is SHARED: Docker Traefik (traefik-traefik-1) owns :80/:443 for other apps (rf-scanner, twd-*, arova, ebaybay). Never touch them without asking.
-- FitTrack live at https://fittrack.2-25-108-3.sslip.io: Traefik route /docker/traefik/dynamic/fittrack.yml -> nginx 127.0.0.1:8090 (setup_server.sh LISTEN=127.0.0.1:8090 ORIGIN_OVERRIDE=https://fittrack.2-25-108-3.sslip.io). Traefik backup: /root/traefik-backup-20261110-194419.
+- App is "Fit Boo" (rename 2026-11-10, internal names unchanged). Live at https://fit-boo.andel-vps.space (sslip name also routed): Traefik route /docker/traefik/dynamic/fittrack.yml -> nginx 127.0.0.1:8090 (setup_server.sh LISTEN=127.0.0.1:8090 ORIGIN_OVERRIDE=https://fit-boo.andel-vps.space). Traefik backup: /root/traefik-backup-20261110-194419.
 - Food data: local Postgres (`foods`, `food_portions`, `search_foods()`), per 100 g. Live Open Food Facts calls only on barcode misses.
 - Diary entries store a nutrition snapshot; never recompute past days.
 - Hidden (non-goal) features stay hidden: AI scan, coach, badges, meal plans, recipes, water, measurements, export, exercise.
