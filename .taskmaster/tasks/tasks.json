@@ -432,7 +432,7 @@
             "dependencies": [
               3
             ],
-            "details": "`sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/download_food_data.sh` (~1.5 GB to /var/lib/fittrack/fooddata).\nThen FIRST `cd /var/www/fittrack-plus/backend && sudo -u fittrack venv/bin/python -m food_data.import_cnf /var/lib/fittrack/fooddata/cnf --inspect`\n- the CNF 2026 layout was not verifiable when the importer was written; if it reports missing columns, fix the candidate lists\nin import_cnf.py locally, test, push, deploy.\nThen `sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/import_food_data.sh` (10-30 min). If the VPS has <2 GB RAM add\n`--memory-limit 512MB`. If USDA has published a newer Foundation release, set USDA_FOUNDATION_URL (see the download script).\n\n[2026-11-10T14:51:59-05:00] plan (sonnet): fix USDA foundation URL in download script, redownload, inspect CNF, run import on VPS",
+            "details": "`sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/download_food_data.sh` (~1.5 GB to /var/lib/fittrack/fooddata).\nThen FIRST `cd /var/www/fittrack-plus/backend && sudo -u fittrack venv/bin/python -m food_data.import_cnf /var/lib/fittrack/fooddata/cnf --inspect`\n- the CNF 2026 layout was not verifiable when the importer was written; if it reports missing columns, fix the candidate lists\nin import_cnf.py locally, test, push, deploy.\nThen `sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/import_food_data.sh` (10-30 min). If the VPS has <2 GB RAM add\n`--memory-limit 512MB`. If USDA has published a newer Foundation release, set USDA_FOUNDATION_URL (see the download script).\n\n[2026-11-10T14:51:59-05:00] plan (sonnet): fix USDA foundation URL in download script, redownload, inspect CNF, run import on VPS\n\n[2026-11-10T15:20:12-05:00] human: no downloading this session. Fixes committed (USDA URL, CNF columns, OFF import mem/NUL). OFF import killed mid-run (foods ~774k rows). Remaining import is a manual step, see manual-checks.md\n\n[2026-11-10T15:20:38-05:00] human correction: only OFF download/import banned. 17.4 reopened. USDA/CNF ok to fetch; import with --skip-off; don't import OFF until lead says\n\n[2026-11-10T15:23:56-05:00] human: ban lifted fully; do full import incl OFF",
             "testStrategy": "The summary prints counts for usda_foundation, usda_sr, cnf, off (expect off in the hundreds of thousands) and sensible top results."
           },
           {
@@ -443,7 +443,7 @@
             "dependencies": [
               4
             ],
-            "details": "In the app: search banana, chicken breast, greek yogurt, kraft dinner, shreddies. If any search takes >300 ms server-side\n(check `journalctl -u fittrack-backend` timing or EXPLAIN ANALYZE SELECT * FROM search_foods('greek yog', 20)), log it on this task\nand consider: `VACUUM ANALYZE foods;`, raising work_mem, or --min-scans 1 on the OFF import to drop never-scanned products.",
+            "details": "In the app: search banana, chicken breast, greek yogurt, kraft dinner, shreddies. If any search takes >300 ms server-side\n(check `journalctl -u fittrack-backend` timing or EXPLAIN ANALYZE SELECT * FROM search_foods('greek yog', 20)), log it on this task\nand consider: `VACUUM ANALYZE foods;`, raising work_mem, or --min-scans 1 on the OFF import to drop never-scanned products.\n\n[2026-11-10T15:20:12-05:00] blocked on 17.4 food data (manual)",
             "testStrategy": "All five searches under 300 ms; results recorded in the task log."
           },
           {
@@ -493,7 +493,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-10T14:52:10-05:00",
+      "updated": "2026-11-10T15:23:56-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
