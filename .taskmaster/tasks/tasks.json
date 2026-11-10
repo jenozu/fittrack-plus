@@ -382,7 +382,7 @@
         "id": 17,
         "title": "Server setup, first deploy, real food data",
         "description": "Put the app on the VPS with HTTPS and load the real food databases.",
-        "status": "pending",
+        "status": "in-progress",
         "priority": "high",
         "dependencies": [
           6,
@@ -396,20 +396,20 @@
             "id": 1,
             "title": "DNS and server setup",
             "description": "Point the domain at the VPS and run setup_server.sh.",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
-            "details": "Create a DNS A record (e.g. fit.yourdomain.com) -> VPS IP; wait until `dig +short fit.yourdomain.com` shows it.\nOn the VPS: `sudo DOMAIN=fit.yourdomain.com EMAIL=you@example.com bash scripts/vps/setup_server.sh` (download the script with\ncurl first if the repo isn't cloned yet; see its header). It installs Postgres/nginx/certbot/Node 22, creates the fittrack user,\ndatabase and backend/.env with random secrets, systemd unit fittrack-backend, nginx site, firewall, HTTPS and the nightly backup cron.\nIf an OLD FitTrack+ install exists at /var/www/fittrack-plus: first `sudo -u postgres pg_dump -Fc <olddb> > ~/old.dump`.\n\n[2026-11-09T07:48:55-05:00] ssh root@2.25.108.3 (BatchMode) -> Permission denied (publickey,password). Blocked: need human to add ssh key or run setup manually. IP-only HTTP, no certbot (deferred until domain).\n\n[2026-11-10T12:20:20-05:00] 2026-11-10: re-tried ssh root@2.25.108.3 (default keys and ~/.ssh/claude_vps, BatchMode) -> Permission denied (publickey,password). ~/.ssh/config 'vps' alias (user deploy, claude_vps key) goes through a restricted vps-agent wrapper, not a root shell; not used. Human claim of working key not reproducible from this environment.",
+            "details": "Create a DNS A record (e.g. fit.yourdomain.com) -> VPS IP; wait until `dig +short fit.yourdomain.com` shows it.\nOn the VPS: `sudo DOMAIN=fit.yourdomain.com EMAIL=you@example.com bash scripts/vps/setup_server.sh` (download the script with\ncurl first if the repo isn't cloned yet; see its header). It installs Postgres/nginx/certbot/Node 22, creates the fittrack user,\ndatabase and backend/.env with random secrets, systemd unit fittrack-backend, nginx site, firewall, HTTPS and the nightly backup cron.\nIf an OLD FitTrack+ install exists at /var/www/fittrack-plus: first `sudo -u postgres pg_dump -Fc <olddb> > ~/old.dump`.\n\n[2026-11-09T07:48:55-05:00] ssh root@2.25.108.3 (BatchMode) -> Permission denied (publickey,password). Blocked: need human to add ssh key or run setup manually. IP-only HTTP, no certbot (deferred until domain).\n\n[2026-11-10T12:20:20-05:00] 2026-11-10: re-tried ssh root@2.25.108.3 (default keys and ~/.ssh/claude_vps, BatchMode) -> Permission denied (publickey,password). ~/.ssh/config 'vps' alias (user deploy, claude_vps key) goes through a restricted vps-agent wrapper, not a root shell; not used. Human claim of working key not reproducible from this environment.\n\n[2026-11-10T13:59:04-05:00] 2026-11-10: ran setup_server.sh over ssh root (IP/HTTP-only), success. postgresql/nginx active; backend expected to fail until 17.3.",
             "testStrategy": "`systemctl status fittrack-backend nginx postgresql` all active (backend may fail until 17.3); `curl -I https://<domain>` -> 200."
           },
           {
             "id": 2,
             "title": "Existing data (only if an old install had real data)",
             "description": "Bring the old database under Alembic.",
-            "status": "pending",
+            "status": "cancelled",
             "dependencies": [
               1
             ],
-            "details": "If the old database has data worth keeping: point DATABASE_URL at it, run `alembic stamp <baseline revision>` then\n`alembic upgrade head`. If it only has test data, skip and use the fresh database.\n\n[2026-11-09T07:49:30-05:00] human 2026-11-09: fresh install, no old data to keep; cancel or make a no-op",
+            "details": "If the old database has data worth keeping: point DATABASE_URL at it, run `alembic stamp <baseline revision>` then\n`alembic upgrade head`. If it only has test data, skip and use the fresh database.\n\n[2026-11-09T07:49:30-05:00] human 2026-11-09: fresh install, no old data to keep; cancel or make a no-op\n\n[2026-11-10T13:59:24-05:00] not applicable: fresh install, no old data",
             "testStrategy": "`alembic current` on the VPS shows head."
           },
           {
@@ -493,7 +493,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-10T12:20:20-05:00",
+      "updated": "2026-11-10T13:59:24-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
