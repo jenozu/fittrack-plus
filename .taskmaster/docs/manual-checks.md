@@ -69,3 +69,7 @@ Note: icons are placeholder "F+"; vite-plugin-pwa resolved to 2.0.0 (spec said 1
 
 ## Task 17.5 - Search sanity on live data (2026-11-10)
 Automatic: all 5 PRD searches return in 170-275 ms end to end over the public API. Judge by hand: top-3 for chicken breast, greek yogurt, kraft dinner, shreddies are all OFF branded entries (duplicates like "Chicken Breast" x3), generic CNF/USDA items are not ranked first. If that is not "sensible", add a ranking task (prefer cnf/usda for generic queries, dedupe names). Kraft dinner 273 ms is near the 300 ms limit; retest from the phone.
+
+## Task 18 - Backups (2026-11-10)
+Tomorrow: `ssh root@2.25.108.3 'ls -lh /var/backups/fittrack; tail /var/log/fittrack-backup.log'` should show a new dump from the 03:15 cron and no errors. Optionally scp a dump to your computer (off-server copy).
+Also before task 19: delete test user deploycheck@example.com (id 1) from prod.

@@ -462,12 +462,12 @@
         "id": 18,
         "title": "Backups and a restore drill",
         "description": "Prove the nightly backup works and can be restored.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           17
         ],
-        "details": "- The morning after setup: `ls -lh /var/backups/fittrack` shows a .dump; `tail /var/log/fittrack-backup.log` shows no errors.\n- Restore drill without touching production: `sudo -u postgres createdb fittrack_restore_test &&\n  sudo -u postgres pg_restore -d fittrack_restore_test /var/backups/fittrack/<latest>.dump`, compare\n  `SELECT count(*) FROM users; ... food_entries;` with production, then `dropdb fittrack_restore_test`.\n- Off-server copy from your computer: `scp you@vps:/var/backups/fittrack/<latest>.dump .` (automate later: parking lot).\n- scripts/vps/restore_db.sh is the real (destructive) restore; don't run it as part of the drill.",
+        "details": "- The morning after setup: `ls -lh /var/backups/fittrack` shows a .dump; `tail /var/log/fittrack-backup.log` shows no errors.\n- Restore drill without touching production: `sudo -u postgres createdb fittrack_restore_test &&\n  sudo -u postgres pg_restore -d fittrack_restore_test /var/backups/fittrack/<latest>.dump`, compare\n  `SELECT count(*) FROM users; ... food_entries;` with production, then `dropdb fittrack_restore_test`.\n- Off-server copy from your computer: `scp you@vps:/var/backups/fittrack/<latest>.dump .` (automate later: parking lot).\n- scripts/vps/restore_db.sh is the real (destructive) restore; don't run it as part of the drill.\n\n[2026-11-10T15:50:16-05:00] plan (sonnet): no file changes expected; run backup_db.sh by hand on VPS, restore drill into fittrack_restore_test, compare counts, drop test db\n\n[2026-11-10T15:54:25-05:00] 2026-11-10 drill OK: manual backup_db.sh -> fittrack_db-2026-11-10_2050.dump 49M (1GB db). Restored into fittrack_restore_test, counts match prod: users 1, foods 957075, food_portions 711880, food_entries 0, streaks 1; test db dropped. Note: script exits 1 if cwd unreadable (find warning, only when run from /root); cron cwd is fine, script not changed. No off-server copy made (per instruction).\n\n[2026-11-10T15:54:55-05:00] done by sonnet; verified (dump 49M, restore drill counts match, test db dropped); cron check next morning is manual",
         "testStrategy": "Row counts in the restored test db match production; the drill is logged on this task with the date.",
         "complexity": 3,
         "subtasks": []
@@ -493,7 +493,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-10T15:48:03-05:00",
+      "updated": "2026-11-10T15:54:55-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
