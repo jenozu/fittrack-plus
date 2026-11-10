@@ -51,10 +51,10 @@ COLS = {
     "nutrient_name": ["nutrientname", "nutrientnamee", "nutrientnameen", "nutrientnameenglish", "name"],
     "nutrient_unit": ["nutrientunit", "unit", "unitofmeasure"],
     "nutrient_code": ["nutrientcode", "tagname"],
-    "measure_id": ["measureid"],
-    "measure_desc": ["measuredescription", "measuredescriptione", "measuredescriptionen",
+    "measure_id": ["measureid", "measurecode"],
+    "measure_desc": ["measuredescriptionandunit", "measuredescriptionanduniten", "measuredescription", "measuredescriptione", "measuredescriptionen",
                      "measurenameenglish", "measurename", "description"],
-    "conversion_value": ["conversionfactorvalue", "conversionfactor", "measureweight",
+    "conversion_value": ["measureweightconversion", "conversionfactorvalue", "conversionfactor", "measureweight",
                          "weightingrams", "gramweight", "weight", "conversionvalue", "value"],
 }
 
