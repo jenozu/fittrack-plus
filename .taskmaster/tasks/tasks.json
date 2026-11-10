@@ -449,9 +449,9 @@
           {
             "title": "IP/HTTP-only mode for setup_server.sh",
             "description": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
-            "details": "No domain yet (human, 2026-11-09). Make DOMAIN and EMAIL optional in scripts/vps/setup_server.sh: when DOMAIN is empty, nginx uses server_name _ and certbot is skipped (log a message saying HTTPS is deferred until a domain exists). Behaviour with DOMAIN set stays unchanged. Do this before 17.1 runs on the server.",
+            "details": "No domain yet (human, 2026-11-09). Make DOMAIN and EMAIL optional in scripts/vps/setup_server.sh: when DOMAIN is empty, nginx uses server_name _ and certbot is skipped (log a message saying HTTPS is deferred until a domain exists). Behaviour with DOMAIN set stays unchanged. Do this before 17.1 runs on the server.\n\n[2026-11-10T12:17:12-05:00] lead: setup_server.sh DOMAIN/EMAIL optional; empty DOMAIN = HTTP on detected IP, server_name _, certbot skipped. bash -n ok.",
             "testStrategy": "shellcheck -S warning scripts/vps/setup_server.sh if available; bash -n passes; read through both branches (DOMAIN empty / set) and confirm certbot only runs when DOMAIN is set.",
             "complexity": 3,
             "id": 6
@@ -493,7 +493,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-09T07:49:30-05:00",
+      "updated": "2026-11-10T12:17:12-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

@@ -86,7 +86,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   - [ ] 17.3 First deploy
   - [ ] 17.4 Download and import food data
   - [ ] 17.5 Speed and sanity check
-  - [ ] 17.6 IP/HTTP-only mode for setup_server.sh
+  - [x] 17.6 IP/HTTP-only mode for setup_server.sh
 - [ ] **18. Backups and a restore drill** _(after 17)_  
   Prove the nightly backup works and can be restored.  
   _Test:_ Row counts in the restored test db match production; the drill is logged on this task with the date.
