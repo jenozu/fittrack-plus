@@ -155,7 +155,7 @@ def _copy_value(v) -> str:
     if isinstance(v, float):
         return repr(round(v, 4)) if v == v else r"\N"
     s = str(v)
-    return s.replace("\\", "\\\\").replace("\t", " ").replace("\n", " ").replace("\r", " ")
+    return s.replace("\x00", "").replace("\\", "\\\\").replace("\t", " ").replace("\n", " ").replace("\r", " ")
 
 
 def _write_batch(conn, batch: list[FoodRow], stats: dict) -> None:
