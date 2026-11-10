@@ -66,3 +66,6 @@ tell the lead which failed, then delete the sections that passed.
 3. After login the Install modal shows once; "Got it" then reload: not shown again.
 4. After deploy (task 17): iPhone (Safari > Share > Add to Home Screen) and Android (Chrome > Install app) open full-screen with icon; scanner still works.
 Note: icons are placeholder "F+"; vite-plugin-pwa resolved to 2.0.0 (spec said 1.x), builds fine on Vite 5.
+
+## Task 17.5 - Search sanity on live data (2026-11-10)
+Automatic: all 5 PRD searches return in 170-275 ms end to end over the public API. Judge by hand: top-3 for chicken breast, greek yogurt, kraft dinner, shreddies are all OFF branded entries (duplicates like "Chicken Breast" x3), generic CNF/USDA items are not ranked first. If that is not "sensible", add a ranking task (prefer cnf/usda for generic queries, dedupe names). Kraft dinner 273 ms is near the 300 ms limit; retest from the phone.
