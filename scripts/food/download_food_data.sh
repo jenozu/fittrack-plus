@@ -9,7 +9,7 @@
 set -euo pipefail
 
 DIR="${1:-/var/lib/fittrack/fooddata}"
-USDA_FOUNDATION_URL="${USDA_FOUNDATION_URL:-https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-10-29.zip}"
+USDA_FOUNDATION_URL="${USDA_FOUNDATION_URL:-https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2026-04-30.zip}"
 USDA_SR_URL="${USDA_SR_URL:-https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip}"
 CNF_URL="${CNF_URL:-https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/019f2a90-e3a9-489d-b6e1-f74f4ba1d006/download/cnf_fcen_all-files-data_2026.zip}"
 OFF_URL="${OFF_URL:-https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz}"
