@@ -22,6 +22,9 @@ APP_DIR="${APP_DIR:-/var/www/fittrack-plus}"
 APP_USER="${APP_USER:-fittrack}"
 DB_NAME="${DB_NAME:-fittrack_db}"
 DB_USER="${DB_USER:-fittrack}"
+# nginx listen address. Behind another proxy (e.g. Traefik owning :80/:443) use LISTEN=127.0.0.1:8090
+# and route the hostname to it, plus ORIGIN_OVERRIDE=https://<host> for CORS.
+LISTEN="${LISTEN:-80}"
 FOOD_DIR="/var/lib/fittrack/fooddata"
 
 [[ $EUID -eq 0 ]] || { echo "Run with sudo." >&2; exit 1; }
@@ -35,6 +38,7 @@ else
   [[ -n "$SITE_HOST" ]] || { echo "Could not detect the server IP; set DOMAIN or SITE_HOST." >&2; exit 1; }
   ORIGIN="http://$SITE_HOST"
 fi
+ORIGIN="${ORIGIN_OVERRIDE:-$ORIGIN}"
 
 say() { echo; echo "==> $*"; }
 backup_file() { [[ -f "$1" ]] && cp -f "$1" "$1.bak" || true; }
@@ -137,8 +141,8 @@ SITE=/etc/nginx/sites-available/fittrack
 backup_file "$SITE"
 cat > "$SITE" <<NGINX
 server {
-    listen 80;
-    listen [::]:80;
+    listen $LISTEN;
+$([[ "$LISTEN" == 80 ]] && echo "    listen [::]:80;")
     server_name ${DOMAIN:-_};
 
     root $APP_DIR/frontend/dist;
