@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 16/19 tasks done.**
+**Progress: 17/19 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -78,14 +78,14 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **16. Make it an installable PWA** _(after 13)_  
   Manifest, icons, service worker and iOS tags so it installs from the browser and opens full-screen.  
   _Test:_ `npm run build` emits dist/sw.js and dist/manifest.webmanifest. Chrome devtools > Application > Manifest shows no errors and "installable". After deploy (task 17), installing on both phones opens full-screen with the icon, and the scanner still works.
-- [ ] **17. Server setup, first deploy, real food data** _(after 6, 16)_  
+- [x] **17. Server setup, first deploy, real food data** _(after 6, 16)_  
   Put the app on the VPS with HTTPS and load the real food databases.  
   _Test:_ https://<domain> loads with a valid certificate; /api/health returns 200; the 5 searches in PRD success criterion 1 return sensible top-3 results in under 300 ms (check the browser Network tab).
   - [x] 17.1 DNS and server setup
   - [~] 17.2 Existing data (only if an old install had real data)
   - [x] 17.3 First deploy
-  - [ ] 17.4 Download and import food data
-  - [ ] 17.5 Speed and sanity check
+  - [x] 17.4 Download and import food data
+  - [x] 17.5 Speed and sanity check
   - [x] 17.6 IP/HTTP-only mode for setup_server.sh
 - [ ] **18. Backups and a restore drill** _(after 17)_  
   Prove the nightly backup works and can be restored.  
