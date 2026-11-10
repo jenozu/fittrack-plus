@@ -416,23 +416,23 @@
             "id": 3,
             "title": "First deploy",
             "description": "Run deploy.sh.",
-            "status": "in-progress",
+            "status": "done",
             "dependencies": [
               1,
               2
             ],
-            "details": "`sudo bash /var/www/fittrack-plus/scripts/vps/deploy.sh` - pulls main, installs Python deps, runs migrations and the food schema,\nbuilds the frontend with VITE_API_URL=/api, restarts the API and checks /health.\n\n[2026-11-10T14:09:24-05:00] 2026-11-10: deploy.sh ran OK on VPS ('Deployed 4f05e56. API healthy.'; 127.0.0.1:8000/health ok). BUT ports 80/443 on the VPS are owned by a Docker Traefik (traefik-traefik-1) that serves other apps (rf-scanner, twd-*, arova, ebaybay); http://2.25.108.3/ returns Traefik 308 -> https. FitTrack nginx on :80 is not reachable. Not 'fresh': shared host. Need human decision on how to expose the app (Traefik route/domain, or nginx on another port). Registration test + 17.4 pending.",
+            "details": "`sudo bash /var/www/fittrack-plus/scripts/vps/deploy.sh` - pulls main, installs Python deps, runs migrations and the food schema,\nbuilds the frontend with VITE_API_URL=/api, restarts the API and checks /health.\n\n[2026-11-10T14:09:24-05:00] 2026-11-10: deploy.sh ran OK on VPS ('Deployed 4f05e56. API healthy.'; 127.0.0.1:8000/health ok). BUT ports 80/443 on the VPS are owned by a Docker Traefik (traefik-traefik-1) that serves other apps (rf-scanner, twd-*, arova, ebaybay); http://2.25.108.3/ returns Traefik 308 -> https. FitTrack nginx on :80 is not reachable. Not 'fresh': shared host. Need human decision on how to expose the app (Traefik route/domain, or nginx on another port). Registration test + 17.4 pending.\n\n[2026-11-10T14:52:04-05:00] verified over https://fittrack.2-25-108-3.sslip.io: / 200, /api/health ok, register 201 (test user deploycheck@example.com id 1 left in prod db; delete before task 19)",
             "testStrategy": "Script ends with 'Deployed <sha>. API healthy.'; registering a user on https://<domain> works."
           },
           {
             "id": 4,
             "title": "Download and import food data",
             "description": "Real USDA, CNF and Open Food Facts data.",
-            "status": "pending",
+            "status": "in-progress",
             "dependencies": [
               3
             ],
-            "details": "`sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/download_food_data.sh` (~1.5 GB to /var/lib/fittrack/fooddata).\nThen FIRST `cd /var/www/fittrack-plus/backend && sudo -u fittrack venv/bin/python -m food_data.import_cnf /var/lib/fittrack/fooddata/cnf --inspect`\n- the CNF 2026 layout was not verifiable when the importer was written; if it reports missing columns, fix the candidate lists\nin import_cnf.py locally, test, push, deploy.\nThen `sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/import_food_data.sh` (10-30 min). If the VPS has <2 GB RAM add\n`--memory-limit 512MB`. If USDA has published a newer Foundation release, set USDA_FOUNDATION_URL (see the download script).",
+            "details": "`sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/download_food_data.sh` (~1.5 GB to /var/lib/fittrack/fooddata).\nThen FIRST `cd /var/www/fittrack-plus/backend && sudo -u fittrack venv/bin/python -m food_data.import_cnf /var/lib/fittrack/fooddata/cnf --inspect`\n- the CNF 2026 layout was not verifiable when the importer was written; if it reports missing columns, fix the candidate lists\nin import_cnf.py locally, test, push, deploy.\nThen `sudo -u fittrack bash /var/www/fittrack-plus/scripts/food/import_food_data.sh` (10-30 min). If the VPS has <2 GB RAM add\n`--memory-limit 512MB`. If USDA has published a newer Foundation release, set USDA_FOUNDATION_URL (see the download script).\n\n[2026-11-10T14:51:59-05:00] plan (sonnet): fix USDA foundation URL in download script, redownload, inspect CNF, run import on VPS",
             "testStrategy": "The summary prints counts for usda_foundation, usda_sr, cnf, off (expect off in the hundreds of thousands) and sensible top results."
           },
           {
@@ -493,7 +493,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-10T14:09:24-05:00",
+      "updated": "2026-11-10T14:52:10-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

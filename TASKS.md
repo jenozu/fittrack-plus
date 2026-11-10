@@ -83,7 +83,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   _Test:_ https://<domain> loads with a valid certificate; /api/health returns 200; the 5 searches in PRD success criterion 1 return sensible top-3 results in under 300 ms (check the browser Network tab).
   - [x] 17.1 DNS and server setup
   - [~] 17.2 Existing data (only if an old install had real data)
-  - [ ] 17.3 First deploy
+  - [x] 17.3 First deploy
   - [ ] 17.4 Download and import food data
   - [ ] 17.5 Speed and sanity check
   - [x] 17.6 IP/HTTP-only mode for setup_server.sh
