@@ -20,10 +20,9 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 3 - Ship. Done: 16. Next: 17.1 (server setup) then 18. Deploy target root@2.25.108.3, HTTP-only on IP, no certbot until a domain exists.
-- Blocked: ssh root@2.25.108.3 -> Permission denied (publickey,password); local keys in ~/.ssh not accepted. Human must add key.
-- setup_server.sh requires DOMAIN/EMAIL and runs certbot: needs an IP/HTTP-only mode (small script change) before use.
-- Last session: 2026-11-09, phase 3 stopped at HUMAN NEEDED (ssh auth).
+- Phase 3 - Ship. Done: 16, 17.6. Next: 17.1 (run setup_server.sh w/o DOMAIN/EMAIL on VPS) then 17.3-17.5, 18.
+- Blocked (2026-11-10 retry): ssh root@2.25.108.3 still Permission denied from the agent env (default keys + ~/.ssh/claude_vps). `ssh vps` alias is user deploy via a restricted vps-agent wrapper.
+- Human must: add the agent's pubkey (~/.ssh/id_ed25519.pub or claude_vps.pub) to root's authorized_keys, or run setup/deploy themselves.
 - Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (task 16; camera/PWA install need HTTPS).
 
 ## Facts (stable, max 15 lines)
