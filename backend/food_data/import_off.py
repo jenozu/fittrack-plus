@@ -45,6 +45,7 @@ def load(csv_path: Path, countries: list[str], min_scans: int, memory_limit: str
     con = duckdb.connect()
     con.execute(f"SET memory_limit = '{memory_limit}'")
     con.execute("SET preserve_insertion_order = false")
+    con.execute("SET threads = 1")  # big CSV lines x threads blew a 2 GB limit
     country_filter = " OR ".join(
         f"countries_tags LIKE '%en:{c.strip()}%'" for c in countries if c.strip()
     ) or "TRUE"
