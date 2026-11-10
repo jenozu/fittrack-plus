@@ -416,12 +416,12 @@
             "id": 3,
             "title": "First deploy",
             "description": "Run deploy.sh.",
-            "status": "pending",
+            "status": "in-progress",
             "dependencies": [
               1,
               2
             ],
-            "details": "`sudo bash /var/www/fittrack-plus/scripts/vps/deploy.sh` - pulls main, installs Python deps, runs migrations and the food schema,\nbuilds the frontend with VITE_API_URL=/api, restarts the API and checks /health.",
+            "details": "`sudo bash /var/www/fittrack-plus/scripts/vps/deploy.sh` - pulls main, installs Python deps, runs migrations and the food schema,\nbuilds the frontend with VITE_API_URL=/api, restarts the API and checks /health.\n\n[2026-11-10T14:09:24-05:00] 2026-11-10: deploy.sh ran OK on VPS ('Deployed 4f05e56. API healthy.'; 127.0.0.1:8000/health ok). BUT ports 80/443 on the VPS are owned by a Docker Traefik (traefik-traefik-1) that serves other apps (rf-scanner, twd-*, arova, ebaybay); http://2.25.108.3/ returns Traefik 308 -> https. FitTrack nginx on :80 is not reachable. Not 'fresh': shared host. Need human decision on how to expose the app (Traefik route/domain, or nginx on another port). Registration test + 17.4 pending.",
             "testStrategy": "Script ends with 'Deployed <sha>. API healthy.'; registering a user on https://<domain> works."
           },
           {
@@ -493,7 +493,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-10T13:59:24-05:00",
+      "updated": "2026-11-10T14:09:24-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

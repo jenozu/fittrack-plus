@@ -20,10 +20,11 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 3 - Ship. Done: 16, 17.6. Next: 17.1 (run setup_server.sh w/o DOMAIN/EMAIL on VPS) then 17.3-17.5, 18.
-- Blocked (2026-11-10 retry): ssh root@2.25.108.3 still Permission denied from the agent env (default keys + ~/.ssh/claude_vps). `ssh vps` alias is user deploy via a restricted vps-agent wrapper.
-- Human must: add the agent's pubkey (~/.ssh/id_ed25519.pub or claude_vps.pub) to root's authorized_keys, or run setup/deploy themselves.
-- Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (task 16; camera/PWA install need HTTPS).
+- Phase 3 - Ship. Done: 16, 17.1 (setup_server.sh ran, IP mode), 17.2 cancelled (n/a). 17.3 deploy.sh ran OK on VPS (API healthy on 127.0.0.1:8000).
+- BLOCKER: VPS is shared; Docker Traefik owns :80/:443 (other apps: rf-scanner, twd, arova, ebaybay). http://2.25.108.3 -> Traefik 308 to https. FitTrack nginx not reachable.
+- Needs human decision: domain + Traefik route, or nginx on a free alt port (8082 taken). Then 17.3 register test, 17.4 food import, 17.5, 18.
+- Last session: 2026-11-10, phase 3 stopped at HUMAN NEEDED (port conflict).
+- Manual checks waiting: see `.taskmaster/docs/manual-checks.md` (task 16).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
