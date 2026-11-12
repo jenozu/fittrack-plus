@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 25/27 tasks done.**
+**Progress: 26/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -120,6 +120,6 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **26. Search ranking: verified and common foods first**  
   Generic searches show OFF branded duplicates in the top 3 (see 17.5); put USDA/CNF generic entries and well-filled common products first.  
   _Test:_ pytest ranking tests: 'banana', 'chicken breast', 'greek yogurt' top-3 contain a usda/cnf entry; 'kraft dinner', 'shreddies' still return the branded product in the top 3. EXPLAIN ANALYZE on 500k+ rows < 300 ms locally (or on the VPS at deploy). Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
-- [ ] **27. Recent and Favourites per meal** _(after 22)_  
+- [x] **27. Recent and Favourites per meal** _(after 22)_  
   On the Add screen for a meal: the foods you usually log at that meal plus starred favourites, one tap to re-log.  
   _Test:_ pytest: favourites CRUD, user isolation, recent?meal_type=breakfast returns only breakfast foods; alembic upgrade head on a fresh test db. Manual at 375: star a food, it shows under Favourites for every meal. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Star } from 'lucide-react';
 import { foodAPI } from '../services/api';
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -24,6 +25,15 @@ export default function PortionPicker({ food, date, meal: mealProp, entry, onAdd
   const [meal, setMeal] = useState(entry?.meal_type || mealProp || defaultMeal());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [fav, setFav] = useState(false);
+  useEffect(() => {
+    foodAPI.favourites().then((r) => setFav(r.data.some((f) => f.id === food.id))).catch(() => {});
+  }, [food.id]);
+  function toggleFav() {
+    const on = fav;
+    setFav(!on);
+    (on ? foodAPI.removeFavourite(food.id) : foodAPI.addFavourite(food.id)).catch(() => setFav(on));
+  }
 
   const q = parseFloat(qty);
   const valid = q > 0;
@@ -58,7 +68,13 @@ export default function PortionPicker({ food, date, meal: mealProp, entry, onAdd
     <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
       <div role="dialog" aria-label={food.name} onClick={(e) => e.stopPropagation()}
         className="w-full rounded-t-2xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex flex-col gap-3">
-        <h2 className="truncate text-lg font-semibold">{food.name}</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="truncate text-lg font-semibold">{food.name}</h2>
+          <button type="button" onClick={toggleFav} aria-pressed={fav} aria-label={fav ? 'Remove from favourites' : 'Add to favourites'}
+            className="flex h-11 w-11 shrink-0 items-center justify-center">
+            <Star size={22} className={fav ? 'fill-amber-400 text-amber-500' : 'text-neutral-400'} />
+          </button>
+        </div>
         <div className="flex gap-2">
           <input type="text" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)}
             aria-label="Quantity" className={`${field} w-24`} />

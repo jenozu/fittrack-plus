@@ -24,3 +24,4 @@ task, defer, or delete on purpose.
 - 2026-11-10: backup_db.sh could start with 'cd /' (find cwd warning exits 1 when run via ssh from /root; fine under cron)
 - 2026-11-10: import_food_data.sh passes openfoodfacts.csv.gz to import_off, which OOMs duckdb on the VPS; gunzip to a temp .tsv first (17.4 builder ran it by hand). Also search_foods EXPLAIN 57 ms cold on 950k rows vs 50 ms target.
 - 2026-11-11: search_foods pfx should btrim/rtrim punctuation-normalised prefix (query 'banana!' misses prefix bonus); minor, from task 26 review. Also: user recent/frequent boost in search skipped.
+- 2026-11-11: FoodSearch.toggleFav rollback uses stale closure (fast double-tap); Favourites one-tap re-log with last amount (task 27 ideas).

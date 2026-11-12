@@ -123,3 +123,25 @@ def test_copy_whole_day_and_isolation(diary):
     who["id"] = ids[1]  # another user copying the same date gets nothing
     assert c.post("/food/entries/copy", json={"from_date": src, "to_date": TODAY}).json() == []
     who["id"] = ids[0]
+
+
+def test_recent_by_meal_and_favourites(diary):
+    c, who, ids, db = diary
+    a = _banana(c)
+    b = c.get("/food/barcode/068100084245").json()
+    for f, m in [(a, "breakfast"), (b, "lunch")]:
+        assert c.post("/food/entries", json={"food_id": f["id"], "grams": 100, "meal_type": m, "entry_date": TODAY}).status_code == 201
+    assert [x["food"]["id"] for x in c.get("/food/recent", params={"meal_type": "breakfast"}).json()] == [a["id"]]
+    assert [x["food"]["id"] for x in c.get("/food/frequent", params={"meal_type": "lunch"}).json()] == [b["id"]]
+
+    assert c.put(f"/food/favourites/{a['id']}").status_code == 204
+    assert c.put(f"/food/favourites/{a['id']}").status_code == 204  # idempotent
+    assert c.put("/food/favourites/999999999").status_code == 404
+    assert [f["id"] for f in c.get("/food/favourites").json()] == [a["id"]]
+    who["id"] = ids[1]  # isolation
+    assert c.get("/food/favourites").json() == []
+    assert c.delete(f"/food/favourites/{a['id']}").status_code == 204  # no-op for another user
+    who["id"] = ids[0]
+    assert len(c.get("/food/favourites").json()) == 1
+    assert c.delete(f"/food/favourites/{a['id']}").status_code == 204
+    assert c.get("/food/favourites").json() == []

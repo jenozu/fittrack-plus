@@ -622,12 +622,12 @@
       {
         "title": "Recent and Favourites per meal",
         "description": "On the Add screen for a meal: the foods you usually log at that meal plus starred favourites, one tap to re-log.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           22
         ],
-        "details": "Recent per meal: optional meal_type filter on GET /food/recent and /food/frequent. Favourites: new app table favourite_foods (user_id, food_id, created_at, unique pair) via the db-migration skill, forward-only; list/add/remove endpoints with Depends(get_current_user), filtered by user_id. Star toggle on search results and the Add screen. Favourites are a small PRD addition (decision log line), not a non-goal.",
+        "details": "Recent per meal: optional meal_type filter on GET /food/recent and /food/frequent. Favourites: new app table favourite_foods (user_id, food_id, created_at, unique pair) via the db-migration skill, forward-only; list/add/remove endpoints with Depends(get_current_user), filtered by user_id. Star toggle on search results and the Add screen. Favourites are a small PRD addition (decision log line), not a non-goal.\n\n[2026-11-11T22:33:51-05:00] built (sonnet): migration c3e5a7b9d1f2 favourite_foods (FK to foods only if exists), model FavouriteFood, GET/PUT/DELETE /food/favourites, meal_type filter on recent/frequent, star in FoodSearch+PortionPicker, Recent/Favourites tabs. pytest 32 pass, fresh-db alembic up/down/up/check ok, eslint+build ok. 375px screenshot not run (could not probe dev servers) -> manual.\n\n[2026-11-11T22:37:05-05:00] done by sonnet; verified, reviewer APPROVE; done pending manual check (375px)",
         "testStrategy": "pytest: favourites CRUD, user isolation, recent?meal_type=breakfast returns only breakfast foods; alembic upgrade head on a fresh test db. Manual at 375: star a food, it shows under Favourites for every meal. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 6,
         "id": 27,
@@ -636,7 +636,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T22:29:17-05:00",
+      "updated": "2026-11-11T22:37:05-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

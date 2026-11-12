@@ -122,7 +122,7 @@ const FoodLog = () => {
         </Card>
       )}
 
-      <FoodSearch onSelect={setPicked} onCreate={() => setCustomForm({ barcode: '' })} />
+      <FoodSearch meal={meal} onSelect={setPicked} onCreate={() => setCustomForm({ barcode: '' })} />
 
       <Modal
         isOpen={showQuick}

@@ -118,3 +118,6 @@ At 375px: on an empty day tap "Copy yesterday's whole day" (same kcal/grams as y
 
 ## Task 26 - Search ranking (2026-11-11)
 After deploy: apply backend/food_data/schema.sql on the VPS (psql -f), then EXPLAIN ANALYZE SELECT * FROM search_foods('chicken breast', 10) (match signature) plus 'greek yog' and 'a' on the ~957k-row table; each must be < 300 ms. If slower, fix stage 1, not ranking. Then search chicken breast / greek yogurt / kraft dinner / shreddies in the app and judge the top 3.
+
+## Task 27 - Recent and Favourites per meal (2026-11-11)
+At 375px on /food?meal=breakfast: Recent/Favourites tabs show under search (tap targets >=44px). Star a food in search: star fills. Switch to Lunch and Dinner: it shows under Favourites each time. Unstar: it disappears. Open from Favourites: PortionPicker star matches; log it to the chosen meal. Recent changes per meal. No horizontal overflow, long names truncate. On deploy: alembic upgrade head applies c3e5a7b9d1f2.
