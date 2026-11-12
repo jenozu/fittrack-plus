@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 18/27 tasks done.**
+**Progress: 19/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -96,7 +96,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [ ] **19. Phone install and 7-day trial** _(after 11, 12, 14, 15, 18)_  
   Both people install it, log for a week, and the top friction gets fixed.  
   _Test:_ PRD success criteria 1-5 checked off in the decision log with dates. Both users have 7 consecutive days with entries: `SELECT user_id, count(DISTINCT entry_date) FROM food_entries WHERE entry_date > now() - interval '8 days' GROUP BY 1;` -> 7 each.
-- [ ] **20. Remove dead exercise data from Progress**  
+- [x] **20. Remove dead exercise data from Progress**  
   Progress still shows a calories-burned bar series and a Total Burned card that always read 0 (hidden exercise feature).  
   _Test:_ Progress at 375 and 1280: no 'Burned' legend, bar or card; dashed Target line visible on the calorie chart. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
 - [ ] **21. Design foundation: type scale, colour roles, buttons**  

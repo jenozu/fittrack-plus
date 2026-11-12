@@ -493,10 +493,10 @@
       {
         "title": "Remove dead exercise data from Progress",
         "description": "Progress still shows a calories-burned bar series and a Total Burned card that always read 0 (hidden exercise feature).",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [],
-        "details": "frontend/src/pages/Progress.jsx only: drop the calories_burned <Bar> and the Total Burned stat card. Do not touch backend or the exercise code behind the feature flag. While there: the Target <Line> inside <BarChart> never draws (needs ComposedChart); switch to ComposedChart so the target line shows.",
+        "details": "frontend/src/pages/Progress.jsx only: drop the calories_burned <Bar> and the Total Burned stat card. Do not touch backend or the exercise code behind the feature flag. While there: the Target <Line> inside <BarChart> never draws (needs ComposedChart); switch to ComposedChart so the target line shows.\n\n[2026-11-11T19:36:52-05:00] plan (haiku-5.5): frontend/src/pages/Progress.jsx - drop calories_burned Bar and Total Burned card; BarChart->ComposedChart so Target Line draws\n\n[2026-11-11T19:38:03-05:00] done (haiku-5.5): removed calories_burned Bar, Total Burned card; BarChart->ComposedChart (Target Line now draws); stats grid md:grid-cols-3 -> md:grid-cols-2 for the 2 remaining cards. Gates: npx eslint Progress.jsx -> only pre-existing React-unused-import error (line 1, untouched) + 2 pre-existing exhaustive-deps warnings; npm run build pass; backend pytest 29 passed. Visual 375/1280 checks not run (no browser): manual.\n\n[2026-11-11T19:39:23-05:00] done by haiku; verified (pending manual visual check)",
         "testStrategy": "Progress at 375 and 1280: no 'Burned' legend, bar or card; dashed Target line visible on the calorie chart. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 2,
         "id": 20,
@@ -600,7 +600,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T19:25:20-05:00",
+      "updated": "2026-11-11T19:39:23-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

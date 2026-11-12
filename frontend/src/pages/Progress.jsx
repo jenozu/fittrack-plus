@@ -5,7 +5,7 @@ import { TrendingUp } from 'lucide-react';
 import {
   LineChart,
   Line,
-  BarChart,
+  ComposedChart,
   Bar,
   XAxis,
   YAxis,
@@ -165,7 +165,7 @@ const Progress = () => {
       {/* Calorie Trends */}
       <Card title="Calorie Trends">
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={calorieData}>
+          <ComposedChart data={calorieData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
             <XAxis
               dataKey="date"
@@ -183,7 +183,6 @@ const Progress = () => {
             />
             <Legend />
             <Bar dataKey="calories_consumed" fill="#F0A7D9" name="Consumed" radius={[8, 8, 0, 0]} />
-            <Bar dataKey="calories_burned" fill="#A7D9F0" name="Burned" radius={[8, 8, 0, 0]} />
             <Line
               type="monotone"
               dataKey="target_calories"
@@ -193,7 +192,7 @@ const Progress = () => {
               name="Target"
               dot={false}
             />
-          </BarChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </Card>
 
@@ -246,7 +245,7 @@ const Progress = () => {
       </Card>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="bg-gradient-to-br from-primary-pink/10 to-primary-pink/5">
           <div className="text-center">
             <div className="text-4xl mb-2">📊</div>
@@ -254,18 +253,6 @@ const Progress = () => {
             <p className="text-3xl font-bold text-neutral-800">
               {Math.round(
                 calorieData.reduce((sum, day) => sum + day.calories_consumed, 0) / calorieData.length || 0
-              )}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-primary-blue/10 to-primary-blue/5">
-          <div className="text-center">
-            <div className="text-4xl mb-2">🔥</div>
-            <p className="text-sm text-neutral-600">Total Burned</p>
-            <p className="text-3xl font-bold text-neutral-800">
-              {Math.round(
-                calorieData.reduce((sum, day) => sum + day.calories_burned, 0)
               )}
             </p>
           </div>

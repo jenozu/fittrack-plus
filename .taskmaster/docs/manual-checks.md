@@ -73,3 +73,9 @@ Automatic: all 5 PRD searches return in 170-275 ms end to end over the public AP
 ## Task 18 - Backups (2026-11-10)
 Tomorrow: `ssh root@2.25.108.3 'ls -lh /var/backups/fittrack; tail /var/log/fittrack-backup.log'` should show a new dump from the 03:15 cron and no errors. Optionally scp a dump to your computer (off-server copy).
 Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
+
+## Task 20 - Remove dead exercise data from Progress (2026-11-11)
+1. Open Progress at 375px and 1280px.
+2. No "Burned" legend entry, burned bar or Total Burned card.
+3. Dashed Target line is visible across the Calorie Trends chart.
+4. Two remaining stat cards: 2 columns at 1280, stacked at 375.
