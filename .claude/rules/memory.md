@@ -20,12 +20,12 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 5 (polish, branch `polish`) COMPLETE: 20-24 done, unpushed. Phase 6 (features) and task 19 (human phone trial) remain.
-- Live: https://fit-boo.andel-vps.space. Polish not deployed yet; prod needs a deploy after merge.
-- Before 19: delete test user deploycheck@example.com (id 1) from prod; set ALLOW_REGISTRATION=false after both sign up.
-- Owner to OK Progress hit thresholds (kcal within 10%, protein >=90%, carbs/fat <=110%) - see manual-checks 23.
-- Last session: 2026-11-11, phase 5 complete.
-- Manual checks waiting: `.taskmaster/docs/manual-checks.md` (16, 17.5, 18, 20-24).
+- Phase 6 COMPLETE on branch `polish` (25, 26, 27 done; not pushed, not merged). Next: human runs manual checks, deploys polish (apply food_data/schema.sql, alembic upgrade head), then task 19.
+- Live: https://fit-boo.andel-vps.space. Prod foods: 957k. Nightly backup cron 03:15; first cron run unchecked.
+- Before 19: delete test user deploycheck@example.com (id 1) from prod; then set ALLOW_REGISTRATION=false after both sign up.
+- Task 26 500k EXPLAIN ANALYZE (<300 ms) still to run on VPS after deploy (manual-checks 26).
+- Last session: 2026-11-11, phase 6 complete.
+- Manual checks waiting: `.taskmaster/docs/manual-checks.md` (16, 17.5, 18, 25, 26, 27).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
@@ -45,6 +45,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 
 ## Learned / gotchas (max 15 lines, newest first)
+- Subagents launch async here: wait on their output file with a bash until-loop; builders can't reach dev servers (classifier denies), so 375px checks end up manual.
 - Restart vite after tailwind.config.js changes (stale config = blank page). Keep screenshots out of the repo (use scratchpad).
 - duckdb OOMs reading openfoodfacts .csv.gz on the VPS: gunzip to plain .tsv first, import_off uses threads=1 (task 17.4).
 - tasks.py set-status needs --force when a dependency is cancelled (17.2).
