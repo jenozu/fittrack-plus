@@ -78,6 +78,8 @@ scripts/
 - Phase 2 — Core loop on a phone screen. Exit: log a full day of meals locally at 390 px width, by search and by barcode.
 - Phase 3 — Ship. Exit: https://<domain> installed on both phones, nightly backup present, restore tested.
 - Phase 4 — Live with it. Exit: success criteria 1–5 met after a 7-day trial.
+- Phase 5 — Design polish (tasks 20–24). Exit: Today/Add/Progress/Profile pass the audit at 375 and 1280 px.
+- Phase 6 — Features (tasks 25–27): copy day/meal, search ranking, Recent + Favourites per meal.
 
 ## Test strategy
 - Backend: `pytest` under `backend/` against a throwaway Postgres
@@ -111,6 +113,9 @@ rate-limited and not meant for typeahead; USDA lacks Canadian products).
 - Small VPS RAM: setup adds swap; OFF import uses `--memory-limit 1GB` by default.
 
 ## Decision log
+- 2026-11-11: Owner approved design polish (phase 5, tasks 20–24) and features (phase 6, tasks 25–27); see
+  docs/polish-proposal.md. Adds Favourites per meal (new table). Shared custom foods NOT approved (still private).
+  Free, no ads, no tiers, no tracking. Work happens on branch `polish`, not pushed to main.
 - 2026-11-10: App renamed to "Fit Boo" (user-visible name: title, navbar, login/register, PWA manifest, API title).
   Internal names (fittrack-backend service, /var/www/fittrack-plus, db fittrack_db) stay. Live host is
   https://fit-boo.andel-vps.space (wildcard DNS on andel-vps.space, Traefik route). Owner's choice; personal use only.

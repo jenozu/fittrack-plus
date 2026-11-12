@@ -12,7 +12,7 @@ logs, diffs or source files while the phase-runner works, and don't relay its pr
 ## 1. Launch
 - Phase = `$ARGUMENTS`. If empty, use the phase named in memory.md "Now". If that's unclear, run
   `python .taskmaster/tasks.py status` once and take the phase of the next pending task
-  (Phase 0: 1-4 · 1: 5-9 · 2: 10-15 · 3: 16-18 · 4: 19).
+  (Phase 0: 1-4 · 1: 5-9 · 2: 10-15 · 3: 16-18 · 4: 19 · 5: 20-24 · 6: 25-27).
 - Tell the human in one line: "Running phase <n> with the phase-runner; I'll come back when it's done or stuck."
 - Dispatch the Agent tool with `subagent_type: phase-runner` and wait for it (don't background it):
   `Run phase <n> to completion.` (or `Run tasks <ids> to completion.`)
