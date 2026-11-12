@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 20/27 tasks done.**
+**Progress: 21/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -102,12 +102,12 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **21. Design foundation: type scale, colour roles, buttons**  
   One type scale, one accent with clear roles, one button system and contrast-safe colours, used by every page.  
   _Test:_ All text/background pairs used by ui components >= 4.5:1 (list them with ratios in the log). Screenshots of Today/Add/Progress/Profile at 375+1280 show one primary button style. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
-- [ ] **22. Today and Add Food: one diary, search-first Add** _(after 21)_  
+- [x] **22. Today and Add Food: one diary, search-first Add** _(after 21)_  
   Today (Dashboard) and Add (FoodLog) are two competing diary screens with different styles. Make Today the only diary and Add a search-first screen.  
   _Test:_ Log, edit and delete an entry end to end at 375px from Today; Add opens with the search field focused; no duplicated diary list on /food. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
   - [x] 22.1 Today summary: distinct macro bars, over-target state, ?date param
   - [x] 22.2 Today meal sections: empty state, one-line copy, amount under name
-  - [ ] 22.3 Add screen: search-first FoodLog, no diary list
+  - [x] 22.3 Add screen: search-first FoodLog, no diary list
 - [ ] **23. Progress polish: weight trend and macros by day** _(after 20, 21)_  
   Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.  
   _Test:_ Seeded user with 10 days of entries and weights: last bar/point carries today's date; 7-day average matches a hand calculation for one day (logged); empty states render for a fresh user. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.

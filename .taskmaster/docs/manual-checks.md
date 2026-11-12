@@ -95,3 +95,10 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 1. 375px: empty meal shows "No <meal> logged yet."; "Add food" and "Copy yesterday" on one line.
 2. Logged row shows amount under name ("1 slice · 28 g"); quick add shows "Quick add".
 3. Tap row, edit amount, Save; tap row, Delete.
+
+## Task 22.3 / 22 - Search-first Add (2026-11-11)
+1. 375px: Today > Add food under Lunch: "Add to Lunch", search focused, no diary list.
+2. Search "banana", pick, Add: back on Today with entry and amount. Edit amount, Save; Delete.
+3. Bottom nav Add > Quick add logs to the time-of-day meal.
+4. Barcode miss: "No food found" with Dismiss and "Add it" opens custom food form.
+5. 1280px: /food single column looks right.

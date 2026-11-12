@@ -57,7 +57,7 @@ export default function FoodSearch({ onSelect, onCreate }) {
         className="w-full rounded-lg border border-neutral-300 px-3 py-3 text-base"
       />
       {!q.trim() && recent.length > 0 && <p className="text-xs text-neutral-500">Recent</p>}
-      {error && <p className="text-sm text-red-500">Search failed. Try again.</p>}
+      {error && <p className="text-sm text-danger-600">Search failed. Try again.</p>}
       <ul>
         {list.map((f) => (
           <li key={f.id}>
@@ -71,7 +71,7 @@ export default function FoodSearch({ onSelect, onCreate }) {
               </span>
               <span className="shrink-0 text-right text-sm">
                 {kcalFor(f)}
-                <span className="block text-xs text-neutral-400">{SOURCES[f.source] || f.source}</span>
+                <span className="block text-xs text-neutral-500">{SOURCES[f.source] || f.source}</span>
               </span>
             </button>
           </li>
