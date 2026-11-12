@@ -73,12 +73,12 @@ export default function PortionPicker({ food, date, meal: mealProp, entry, onAdd
         <p className="text-sm" data-testid="preview">
           <strong>{show('kcal_100g', 1)} kcal</strong> · P {show('protein_100g', 1)} · C {show('carbs_100g', 1)} · F {show('fat_100g', 1)}
         </p>
-        {error && <p className="text-sm text-red-500">Couldn&apos;t add. Try again.</p>}
+        {error && <p className="text-sm text-danger-600">Couldn&apos;t add. Try again.</p>}
         <button type="button" disabled={!valid || busy} onClick={add}
-          className="min-h-[44px] rounded-lg bg-neutral-900 text-base text-white disabled:opacity-50">{entry ? 'Save' : 'Add'}</button>
+          className="min-h-[44px] rounded-lg bg-brand-600 hover:bg-brand-700 text-base text-white disabled:opacity-50">{entry ? 'Save' : 'Add'}</button>
         {entry && (
           <button type="button" disabled={busy} onClick={del}
-            className="min-h-[44px] rounded-lg border border-red-300 text-base text-red-600 disabled:opacity-50">Delete</button>
+            className="min-h-[44px] rounded-lg border border-danger-600 text-base text-danger-600 disabled:opacity-50">Delete</button>
         )}
       </div>
     </div>

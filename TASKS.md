@@ -106,7 +106,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   Today (Dashboard) and Add (FoodLog) are two competing diary screens with different styles. Make Today the only diary and Add a search-first screen.  
   _Test:_ Log, edit and delete an entry end to end at 375px from Today; Add opens with the search field focused; no duplicated diary list on /food. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
   - [x] 22.1 Today summary: distinct macro bars, over-target state, ?date param
-  - [ ] 22.2 Today meal sections: empty state, one-line copy, amount under name
+  - [x] 22.2 Today meal sections: empty state, one-line copy, amount under name
   - [ ] 22.3 Add screen: search-first FoodLog, no diary list
 - [ ] **23. Progress polish: weight trend and macros by day** _(after 20, 21)_  
   Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.  

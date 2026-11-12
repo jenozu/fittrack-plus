@@ -90,3 +90,8 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 1. /?date=<yesterday> shows yesterday and a Today link; /?date=not-a-date falls back to today.
 2. 375 and 1280: P/C/F bars in three distinct colours.
 3. Over protein target: right-hand text red, bar stays full. Over kcal: red number with "kcal over".
+
+## Task 22.2 - Today meal sections (2026-11-11)
+1. 375px: empty meal shows "No <meal> logged yet."; "Add food" and "Copy yesterday" on one line.
+2. Logged row shows amount under name ("1 slice · 28 g"); quick add shows "Quick add".
+3. Tap row, edit amount, Save; tap row, Delete.

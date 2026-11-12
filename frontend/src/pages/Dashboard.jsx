@@ -14,8 +14,11 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const num = (v) => Math.round(v || 0);
 
 function portionText(e) {
-  if (e.portion_label === 'g' || (!e.portion_label && e.grams)) return `${num(e.grams)} g`;
-  return e.portion_label ? `${Math.round((e.quantity || 1) * 10) / 10} ${e.portion_label}` : '';
+  if (e.portion_label && e.portion_label !== 'g') {
+    const qty = `${Math.round((e.quantity || 1) * 10) / 10} ${e.portion_label}`;
+    return e.grams ? `${qty} · ${num(e.grams)} g` : qty;
+  }
+  return e.grams ? `${num(e.grams)} g` : 'Quick add';
 }
 
 function Bar({ label, value, target, color }) {
@@ -184,22 +187,22 @@ const Dashboard = () => {
               <h2 className="font-semibold">{cap(m)}</h2>
               <span className="text-sm text-neutral-500">{num(kcal)} kcal</span>
             </div>
-            {items.length === 0 && <p className="py-2 text-sm text-neutral-400">Nothing yet</p>}
+            {items.length === 0 && <p className="py-2 text-small text-neutral-600">No {m} logged yet.</p>}
             {items.map((e) => (
               <button key={e.id} type="button" onClick={() => openEdit(e)}
                 className="flex min-h-[44px] w-full items-center justify-between gap-2 border-b border-neutral-100 text-left last:border-0">
                 <span className="min-w-0"><span className="block truncate">{e.food_name}</span>
-                  <span className="block text-xs text-neutral-500">{portionText(e)}</span></span>
-                <span className="shrink-0 text-sm">{num(e.calories)}</span>
+                  <span className="block text-caption text-neutral-600">{portionText(e)}</span></span>
+                <span className="shrink-0 text-sm tabular-nums">{num(e.calories)} kcal</span>
               </button>
             ))}
             <div className="mt-1 flex gap-2">
-              <button type="button" onClick={() => navigate(`/food?meal=${m}&date=${date}`)}
-                className="flex min-h-[44px] flex-1 items-center justify-center gap-1 rounded-lg bg-pink-100 text-sm">
-                <Plus size={16} /> Add
+              <button type="button" onClick={() => navigate(`/food?meal=${m}&date=${date}`)} aria-label={`Add food to ${m}`}
+                className="flex min-h-[44px] flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-50 text-sm font-medium">
+                <Plus size={16} /> Add food
               </button>
-              <button type="button" onClick={() => copyYesterday(m)}
-                className="min-h-[44px] flex-1 rounded-lg border border-neutral-300 text-sm">Copy yesterday&apos;s {m}</button>
+              <button type="button" onClick={() => copyYesterday(m)} aria-label={`Copy yesterday's ${m}`}
+                className="min-h-[44px] flex-1 whitespace-nowrap rounded-lg border border-neutral-300 text-sm">Copy yesterday</button>
             </div>
           </section>
         );
@@ -213,7 +216,7 @@ const Dashboard = () => {
           <p className="text-sm">No food found for {missing}.</p>
           <div className="flex gap-2">
             <button type="button" className="min-h-[44px] px-2 text-sm" onClick={() => setMissing(null)}>Dismiss</button>
-            <button type="button" className="min-h-[44px] rounded-lg bg-pink-100 px-3 text-sm" onClick={() => setCustomForm(true)}>Add it</button>
+            <button type="button" className="min-h-[44px] rounded-lg bg-brand-100 px-3 text-sm text-brand-700" onClick={() => setCustomForm(true)}>Add it</button>
           </div>
         </div>
       )}
