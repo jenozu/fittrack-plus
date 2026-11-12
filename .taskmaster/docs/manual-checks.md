@@ -85,3 +85,8 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 2. Active nav item reads clearly (brand-700 on brand-100), mobile and desktop.
 3. Tab through a form: visible focus ring.
 4. Fit Boo SVG mark replaces F+; Login/Register background flat pale pink.
+
+## Task 22.1 - Today summary (2026-11-11)
+1. /?date=<yesterday> shows yesterday and a Today link; /?date=not-a-date falls back to today.
+2. 375 and 1280: P/C/F bars in three distinct colours.
+3. Over protein target: right-hand text red, bar stays full. Over kcal: red number with "kcal over".

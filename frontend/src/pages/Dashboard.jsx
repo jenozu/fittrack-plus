@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { addDays, format, parseISO } from 'date-fns';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { addDays, format, isValid, parseISO } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, ScanLine } from 'lucide-react';
 import { dashboardAPI, foodAPI } from '../services/api';
 import { LoadingSpinner } from '../components/ui';
@@ -18,12 +18,16 @@ function portionText(e) {
   return e.portion_label ? `${Math.round((e.quantity || 1) * 10) / 10} ${e.portion_label}` : '';
 }
 
-function Bar({ label, value, target }) {
+function Bar({ label, value, target, color }) {
   const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
+  const over = target > 0 && value > target;
   return (
     <div>
-      <div className="flex justify-between text-sm"><span>{label}</span><span>{num(value)} / {num(target)} g</span></div>
-      <div className="h-2 rounded-full bg-neutral-200"><div className="h-2 rounded-full bg-pink-300" style={{ width: `${pct}%` }} /></div>
+      <div className="flex justify-between text-small">
+        <span>{label}</span>
+        <span className={`tabular-nums ${over ? 'text-danger-600' : ''}`}>{num(value)} / {num(target)} g</span>
+      </div>
+      <div className="h-2 rounded-full bg-neutral-100"><div className={`h-2 rounded-full ${color}`} style={{ width: `${pct}%` }} /></div>
     </div>
   );
 }
@@ -31,7 +35,11 @@ function Bar({ label, value, target }) {
 const Dashboard = () => {
   const navigate = useNavigate();
   const today = ymd(new Date());
-  const [date, setDate] = useState(today);
+  const [params] = useSearchParams();
+  const [date, setDate] = useState(() => {
+    const q = params.get('date');
+    return q && /^\d{4}-\d{2}-\d{2}$/.test(q) && isValid(parseISO(q)) ? q : today;
+  });
   const [data, setData] = useState(null); // {entries, totals, target}
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,12 +123,12 @@ const Dashboard = () => {
         <button type="button" aria-label="Previous day" onClick={() => shift(-1)} className={iconBtn}><ChevronLeft /></button>
         <div className="text-center">
           <h1 className="text-lg font-semibold">{date === today ? 'Today' : format(parseISO(date), 'EEE, MMM d')}</h1>
-          {date !== today && <button type="button" onClick={() => setDate(today)} className="min-h-[44px] text-sm text-blue-600">Today</button>}
+          {date !== today && <button type="button" onClick={() => setDate(today)} className="min-h-[44px] text-sm text-brand-700">Today</button>}
         </div>
         <button type="button" aria-label="Next day" onClick={() => shift(1)} className={iconBtn}><ChevronRight /></button>
       </div>
 
-      {error && <p className="text-sm text-red-500">Couldn&apos;t load. <button type="button" className="underline" onClick={() => load(date)}>Retry</button></p>}
+      {error && <p className="text-sm text-danger-600">Couldn&apos;t load. <button type="button" className="underline" onClick={() => load(date)}>Retry</button></p>}
       {note && <p className="text-sm text-neutral-600">{note}</p>}
 
       <div className="min-h-[170px] space-y-3 rounded-2xl bg-white p-4 shadow-sm">
@@ -129,12 +137,24 @@ const Dashboard = () => {
         ) : (
           <>
             <div className="text-center">
-              <div className="text-5xl font-bold" data-testid="remaining">{num(t.target_calories - tot.calories)}</div>
-              <div className="text-sm text-neutral-500">kcal remaining · {num(tot.calories)} of {num(t.target_calories)}</div>
+              {(() => {
+                const left = num(t.target_calories - tot.calories);
+                return left < 0 ? (
+                  <>
+                    <div className="text-5xl font-bold tabular-nums text-danger-600" data-testid="remaining">{-left}</div>
+                    <div className="text-small text-neutral-500">kcal over · {num(tot.calories)} of {num(t.target_calories)}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-5xl font-bold tabular-nums" data-testid="remaining">{left}</div>
+                    <div className="text-small text-neutral-500">kcal remaining · {num(tot.calories)} of {num(t.target_calories)}</div>
+                  </>
+                );
+              })()}
             </div>
-            <Bar label="Protein" value={tot.protein_g} target={t.target_protein_g} />
-            <Bar label="Carbs" value={tot.carbs_g} target={t.target_carbs_g} />
-            <Bar label="Fat" value={tot.fat_g} target={t.target_fat_g} />
+            <Bar label="Protein" value={tot.protein_g} target={t.target_protein_g} color="bg-brand-600" />
+            <Bar label="Carbs" value={tot.carbs_g} target={t.target_carbs_g} color="bg-amber-600" />
+            <Bar label="Fat" value={tot.fat_g} target={t.target_fat_g} color="bg-sky-700" />
           </>
         )}
       </div>

@@ -517,16 +517,52 @@
       {
         "title": "Today and Add Food: one diary, search-first Add",
         "description": "Today (Dashboard) and Add (FoodLog) are two competing diary screens with different styles. Make Today the only diary and Add a search-first screen.",
-        "status": "pending",
+        "status": "in-progress",
         "priority": "high",
         "dependencies": [
           21
         ],
-        "details": "FoodLog.jsx repeats the day summary and meal lists in a different look (gradient card, three rainbow buttons, '1 serving' meta, P/C/F wrapping, red trash per row). Make /food open straight to search (FoodSearch, barcode, quick-add) for a chosen meal/date; diary rows and edit/delete live on Today. Today: differentiate macro bars, keep the copy button on one line at 375, a real empty state per meal, entry row shows amount (grams/portion) under the name. Split into 3-5 subtasks before building (complexity 7). No backend changes. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "FoodLog.jsx repeats the day summary and meal lists in a different look (gradient card, three rainbow buttons, '1 serving' meta, P/C/F wrapping, red trash per row). Make /food open straight to search (FoodSearch, barcode, quick-add) for a chosen meal/date; diary rows and edit/delete live on Today. Today: differentiate macro bars, keep the copy button on one line at 375, a real empty state per meal, entry row shows amount (grams/portion) under the name. Split into 3-5 subtasks before building (complexity 7). No backend changes. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T19:54:20-05:00] split (opus): 22.1 Today summary/bars/?date (c3), 22.2 Today meal sections + PortionPicker tokens (c3), 22.3 search-first Add screen (c5, runs full gates incl. pytest). Screenshots need a browser; builders report steps, phase-runner files them in manual-checks.",
         "testStrategy": "Log, edit and delete an entry end to end at 375px from Today; Add opens with the search field focused; no duplicated diary list on /food. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 7,
         "id": 22,
-        "subtasks": []
+        "subtasks": [
+          {
+            "title": "Today summary: distinct macro bars, over-target state, ?date param",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "File: frontend/src/pages/Dashboard.jsx only. No backend changes, no new deps. (1) Initial date from the URL: import useSearchParams from react-router-dom; const [params] = useSearchParams(); initial date = params.get('date') if it matches /^\\d{4}-\\d{2}-\\d{2}$/, else today. Task 22.3 navigates to /?date=YYYY-MM-DD after adding a food, so this must work. (2) Bar component: add a colour prop; Protein bg-brand-600, Carbs bg-amber-600, Fat bg-sky-700; track bg-neutral-100 h-2 rounded-full. Label row: text-small, numbers in tabular-nums, '{value} / {target} g'. When value > target the right-hand text is text-danger-600 and the bar stays full (no extra colour). (3) Remaining kcal: if target - eaten < 0 show the absolute number in text-danger-600 with caption '{n} kcal over · {eaten} of {target}'; keep data-testid=\"remaining\" on the number; add tabular-nums. (4) Token colours in the header/status lines: 'Today' jump link text-blue-600 -> text-brand-700; error line text-red-500 -> text-danger-600. Do NOT touch the meal sections (22.2) or FoodLog.jsx (22.3).\n\n[2026-11-11T19:54:48-05:00] plan (haiku-5.5): frontend/src/pages/Dashboard.jsx only - ?date init via useSearchParams, Bar colour prop, over-target danger text, remaining kcal over state, token colour swaps. No backend, no deps.\n\n[2026-11-11T19:55:52-05:00] done (haiku-5.5): Dashboard.jsx only. useSearchParams date init (regex + isValid guard), Bar takes color prop (brand-600/amber-600/sky-700), track bg-neutral-100, text-small + tabular-nums labels, over-target right text text-danger-600, kcal over state with abs number + caption, Today link text-brand-700, error line text-danger-600. eslint exit 0, vite build passes, grep for old tokens empty. Screenshots not taken (manual).\n\n[2026-11-11T19:56:55-05:00] done by haiku; verified",
+            "testStrategy": "cd frontend && npx eslint src/pages/Dashboard.jsx (no new errors) && npm run build passes. grep -n 'bg-pink-300\\|text-blue-600\\|text-red-500' src/pages/Dashboard.jsx returns nothing; grep -n useSearchParams src/pages/Dashboard.jsx matches. Manual (report steps; phase-runner files them): open /?date=<yesterday> -> header shows yesterday; three bars in three colours at 375 and 1280; over-target protein shows danger text.",
+            "complexity": 3,
+            "id": 1
+          },
+          {
+            "title": "Today meal sections: empty state, one-line copy, amount under name",
+            "description": "",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Files: frontend/src/pages/Dashboard.jsx (meal section block + portionText) and frontend/src/components/PortionPicker.jsx (button/error colours only). No backend changes. (1) portionText(e): portion entry -> '{qty} {label} · {grams} g' (qty rounded to 1 dp, grams rounded); grams-only entry (portion_label 'g', or no label but grams) -> '{grams} g'; no grams and no label (quick-add) -> 'Quick add'. Row: name on line 1 (truncate), this text on line 2 as text-caption text-neutral-600; kcal on the right gets tabular-nums and ' kcal'. (2) Empty state per meal: replace 'Nothing yet' (text-neutral-400 fails contrast) with <p className=\"py-2 text-small text-neutral-600\">No {meal} logged yet.</p>. (3) Buttons row: Add button -> bg-brand-100 text-brand-700 hover:bg-brand-50 font-medium, label 'Add food', aria-label 'Add food to {meal}'. Copy button -> label 'Copy yesterday', aria-label \"Copy yesterday's {meal}\", whitespace-nowrap, keep border-neutral-300 and min-h-[44px]; both buttons stay flex-1 on one line at 375px. (4) PortionPicker.jsx: Add/Save button bg-neutral-900 -> bg-brand-600 hover:bg-brand-700 text-white; Delete button -> border-danger-600 text-danger-600; error text-red-500 -> text-danger-600. Keep edit/delete behaviour (tap row -> PortionPicker Save/Delete; quick-add rows -> confirm delete). Do NOT touch FoodLog.jsx or the summary card (22.1).",
+            "testStrategy": "cd frontend && npx eslint src/pages/Dashboard.jsx src/components/PortionPicker.jsx (no new errors) && npm run build passes. grep -n 'Nothing yet\\|bg-pink-100\\|bg-neutral-900\\|text-red-500' src/pages/Dashboard.jsx src/components/PortionPicker.jsx returns nothing. Manual (report steps): at 375px an empty meal shows 'No <meal> logged yet'; 'Add food' and 'Copy yesterday' sit side by side on one line; a logged row shows e.g. '1 slice · 28 g' under the name; tap row -> change amount -> Save updates; tap row -> Delete removes it.",
+            "complexity": 3,
+            "id": 2
+          },
+          {
+            "title": "Add screen: search-first FoodLog, no diary list",
+            "description": "",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Files: frontend/src/pages/FoodLog.jsx (rewrite), frontend/src/components/FoodSearch.jsx (colour tokens only). No backend changes, no new deps. Route /food stays; Navbar 'Add' -> /food and Today's Add -> /food?meal=X&date=Y both land here. REMOVE from FoodLog: gradient summary card, the three action buttons row, the grouped entries list, handleDelete, the date <Input>, dashboardAPI/getEntries/deleteEntry calls, the Search Modal, unused lucide icons. NEW layout (one column, max-w-xl mx-auto at 1280): (a) header: h1 text-title 'Add to {Meal}' plus a caption with the date ('Today' or format(parseISO(date),'EEE, MMM d')). date = params.get('date') || today; meal state = params.get('meal') || defaultMeal() (import { defaultMeal } from components/PortionPicker). (b) meal switcher: 4 buttons, grid-cols-4 gap-1, min-h-[44px] text-small, aria-pressed; active bg-brand-100 text-brand-700 font-medium, inactive bg-white border border-neutral-300 text-neutral-700. (c) grid-cols-2 gap-2 row of ui Button variant=secondary: 'Scan barcode' (ScanLine icon) and 'Quick add' (Plus icon). (d) <FoodSearch onSelect={setPicked} onCreate={() => setCustomForm({barcode: ''})} /> inline, not in a Modal; its input already has autoFocus, so the field is focused on open. (e) keep the data attribution footer (ODbL requires it) as text-caption text-neutral-600. FLOWS: picked -> <PortionPicker food date meal={meal} onAdded={() => navigate('/?date=' + date)} onClose>. Barcode: same lookup as now; 404 -> inline card 'No food found for {code}' with Dismiss / 'Add it' -> CustomFoodForm(barcode) -> onCreated sets picked; other errors -> inline note text-danger-600 (no alert()). Quick add: ui Modal with ui Input fields Name (required), Calories (required), Protein/Carbs/Fat g (optional); numeric inputs type=text inputMode=decimal; Add disabled until name is non-empty and calories parses to a number >= 0; POST foodAPI.createEntry({food_name, calories, protein_g, carbs_g, fat_g, meal_type: meal, entry_date: date}) (backend quick-add path, see FoodEntryCreate in backend/schemas/food_schemas.py); success -> navigate('/?date=' + date); failure -> inline error in the modal. FoodSearch.jsx: error text-red-500 -> text-danger-600; source label text-neutral-400 -> text-neutral-500. Depends on 22.1 (Today reads ?date).",
+            "testStrategy": "cd frontend && npx eslint src/pages/FoodLog.jsx src/components/FoodSearch.jsx (no errors) && npm run build passes. grep -n 'getEntries\\|deleteEntry\\|dashboardAPI\\|Trash2\\|gradient' src/pages/FoodLog.jsx returns nothing (no diary list on /food). cd backend && TEST_DATABASE_URL=postgresql://fittrack:fittrack@localhost:5432/fittrack_test venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --basetemp=<scratch dir> passes. Manual (report steps for manual-checks, incl. screenshots of Today and Add at 375 and 1280): Today -> Lunch 'Add food' -> /food shows 'Add to Lunch' with the search field focused -> search 'banana' -> pick -> Add -> back on Today with the entry under Lunch showing its amount -> tap it, change amount, Save -> tap it, Delete. Quick add from the nav 'Add' logs to the time-of-day meal on today. A barcode miss shows 'Add it'.",
+            "complexity": 5,
+            "id": 3
+          }
+        ]
       },
       {
         "title": "Progress polish: weight trend and macros by day",
@@ -600,7 +636,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T19:51:24-05:00",
+      "updated": "2026-11-11T19:56:55-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
