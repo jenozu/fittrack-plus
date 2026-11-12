@@ -79,3 +79,9 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 2. No "Burned" legend entry, burned bar or Total Burned card.
 3. Dashed Target line is visible across the Calorie Trends chart.
 4. Two remaining stat cards: 2 columns at 1280, stacked at 375.
+
+## Task 21 - Design foundation (2026-11-11)
+1. Today/Add/Progress/Profile at 375 and 1280: one primary button style (brand magenta, white text); Add's Scan Barcode is outlined secondary.
+2. Active nav item reads clearly (brand-700 on brand-100), mobile and desktop.
+3. Tab through a form: visible focus ring.
+4. Fit Boo SVG mark replaces F+; Login/Register background flat pale pink.

@@ -140,7 +140,7 @@ const Dashboard = () => {
       </div>
 
       <button type="button" onClick={() => setScanning(true)}
-        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 text-base text-white">
+        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-base text-white">
         <ScanLine size={20} /> Scan barcode
       </button>
 

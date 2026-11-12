@@ -12,7 +12,7 @@ const LoadingSpinner = ({ size = 'md', className = '' }) => {
       <div
         className={`
           ${sizes[size]}
-          border-primary-blue border-t-transparent
+          border-brand-600 border-t-transparent
           rounded-full animate-spin
         `}
       />

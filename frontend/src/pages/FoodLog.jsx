@@ -201,7 +201,6 @@ const FoodLog = () => {
         <Button
           variant="secondary"
           onClick={() => setShowBarcodeScanner(true)}
-          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-none"
         >
           <Camera size={18} className="mr-2" />
           Scan Barcode

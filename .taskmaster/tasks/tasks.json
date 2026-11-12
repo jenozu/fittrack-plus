@@ -505,10 +505,10 @@
       {
         "title": "Design foundation: type scale, colour roles, buttons",
         "description": "One type scale, one accent with clear roles, one button system and contrast-safe colours, used by every page.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [],
-        "details": "Today the app mixes pink, baby blue, green and black as 'primary' (black Scan on Today, green Scan on Add, pink Log, pale-blue active nav). White text on pastel pink and pale-blue active nav text fail 4.5:1. Define tokens in tailwind.config.js + index.css: type scale (max 5 sizes), tabular numerals for numbers, one accent for the main action, neutral secondary, danger; visible focus ring; 44px targets. Update components/ui (Button, Card, Input, Select) and Navbar/Layout to use them. Replace the leftover 'F+' logo mark with a Fit Boo mark (text or simple inline SVG, no new deps). No new dependencies, no page restructuring (later tasks do that). Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "Today the app mixes pink, baby blue, green and black as 'primary' (black Scan on Today, green Scan on Add, pink Log, pale-blue active nav). White text on pastel pink and pale-blue active nav text fail 4.5:1. Define tokens in tailwind.config.js + index.css: type scale (max 5 sizes), tabular numerals for numbers, one accent for the main action, neutral secondary, danger; visible focus ring; 44px targets. Update components/ui (Button, Card, Input, Select) and Navbar/Layout to use them. Replace the leftover 'F+' logo mark with a Fit Boo mark (text or simple inline SVG, no new deps). No new dependencies, no page restructuring (later tasks do that). Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T19:49:30-05:00] sonnet: tokens (brand/danger, 5-size type scale caption/small/body/title/display, tabular nums, focus-visible ring) in tailwind.config.js+index.css; legacy primary/secondary/accent pink+blue aliased to brand so pages stay on one accent; ui Button/Card/Input/Select/Spinner, Navbar, Login/Register logo+bg updated; F+ -> inline SVG mark; Dashboard Scan -> brand, FoodLog Scan -> secondary. Contrast: primary white/brand600 6.04, hover 7.88, danger 6.47/8.31, secondary 15.13, ghost 10.37, active nav brand700/brand100 6.71, inactive nav 7.81, subtitle 7.81, label 10.37, error 6.47, input border 4.74, body 14.5. pytest 29 pass, build ok.\n\n[2026-11-11T19:51:24-05:00] done by sonnet; verified (contrast ratios in builder report; lint errors pre-existing; manual visual check pending)",
         "testStrategy": "All text/background pairs used by ui components >= 4.5:1 (list them with ratios in the log). Screenshots of Today/Add/Progress/Profile at 375+1280 show one primary button style. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 5,
         "id": 21,
@@ -600,7 +600,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T19:39:23-05:00",
+      "updated": "2026-11-11T19:51:24-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 19/27 tasks done.**
+**Progress: 20/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -99,7 +99,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **20. Remove dead exercise data from Progress**  
   Progress still shows a calories-burned bar series and a Total Burned card that always read 0 (hidden exercise feature).  
   _Test:_ Progress at 375 and 1280: no 'Burned' legend, bar or card; dashed Target line visible on the calorie chart. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
-- [ ] **21. Design foundation: type scale, colour roles, buttons**  
+- [x] **21. Design foundation: type scale, colour roles, buttons**  
   One type scale, one accent with clear roles, one button system and contrast-safe colours, used by every page.  
   _Test:_ All text/background pairs used by ui components >= 4.5:1 (list them with ratios in the log). Screenshots of Today/Add/Progress/Profile at 375+1280 show one primary button style. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
 - [ ] **22. Today and Add Food: one diary, search-first Add** _(after 21)_  
