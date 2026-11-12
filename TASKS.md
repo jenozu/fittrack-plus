@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 23/27 tasks done.**
+**Progress: 24/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -114,7 +114,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **24. Profile polish: readable targets and editing** _(after 21)_  
   Profile shows raw floats (167.92499999999998), every field greyed out until 'Edit Profile', and generic filler.  
   _Test:_ Profile at 375+1280: no number shows more than 1 decimal; change target calories, save, reload, value persists. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
-- [ ] **25. Copy a whole day or a meal from any past day** _(after 22)_  
+- [x] **25. Copy a whole day or a meal from any past day** _(after 22)_  
   One tap to copy yesterday's whole day, or pick a past date to copy one meal from.  
   _Test:_ pytest: whole-day copy creates one entry per source entry with identical snapshot values; user isolation holds. Manual at 375: copy yesterday's whole day into an empty day, copy one meal from 3 days ago. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
 - [ ] **26. Search ranking: verified and common foods first**  

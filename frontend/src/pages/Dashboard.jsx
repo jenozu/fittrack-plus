@@ -98,14 +98,17 @@ const Dashboard = () => {
     try { await foodAPI.createEntry(body); load(date); } catch { setNote("Couldn't add that food."); }
   }
 
-  async function copyYesterday(meal) {
-    const from_date = ymd(addDays(parseISO(date), -1));
+  async function copyFrom(meal, from_date) {
+    if (!from_date || from_date === date) return;
+    const what = meal || 'day';
     try {
-      const r = await foodAPI.copyEntries({ from_date, to_date: date, meal_type: meal });
-      setNote(r.data.length ? '' : `Nothing logged for ${meal} yesterday.`);
+      const r = await foodAPI.copyEntries({ from_date, to_date: date, ...(meal ? { meal_type: meal } : {}) });
+      setNote(r.data.length ? '' : `Nothing logged for the ${what} on ${from_date}.`);
       load(date);
     } catch { setNote("Couldn't copy."); }
   }
+
+  const yesterday = () => ymd(addDays(parseISO(date), -1));
 
   async function onScan(code) {
     setScanning(false);
@@ -178,6 +181,11 @@ const Dashboard = () => {
         </div>
       )}
 
+      {data && data.entries.length === 0 && (
+        <button type="button" onClick={() => copyFrom(null, yesterday())}
+          className="min-h-[44px] w-full rounded-lg border border-neutral-300 bg-white text-sm">Copy yesterday&apos;s whole day</button>
+      )}
+
       {data && MEALS.map((m) => {
         const items = data.entries.filter((e) => e.meal_type === m);
         const kcal = items.reduce((s, e) => s + e.calories, 0);
@@ -196,13 +204,18 @@ const Dashboard = () => {
                 <span className="shrink-0 text-sm tabular-nums">{num(e.calories)} kcal</span>
               </button>
             ))}
-            <div className="mt-1 flex gap-2">
+            <div className="mt-1 flex flex-wrap gap-2">
               <button type="button" onClick={() => navigate(`/food?meal=${m}&date=${date}`)} aria-label={`Add food to ${m}`}
                 className="flex min-h-[44px] flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-50 text-sm font-medium">
                 <Plus size={16} /> Add food
               </button>
-              <button type="button" onClick={() => copyYesterday(m)} aria-label={`Copy yesterday's ${m}`}
+              <button type="button" onClick={() => copyFrom(m, yesterday())} aria-label={`Copy yesterday's ${m}`}
                 className="min-h-[44px] flex-1 whitespace-nowrap rounded-lg border border-neutral-300 text-sm">Copy yesterday</button>
+              <label className="flex min-h-[44px] w-full items-center justify-between gap-2 text-sm text-neutral-600">
+                Copy {m} from
+                <input type="date" max={date} value="" onChange={(e) => copyFrom(m, e.target.value)}
+                  className="min-h-[44px] rounded-lg border border-neutral-300 px-2" />
+              </label>
             </div>
           </section>
         );

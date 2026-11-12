@@ -596,12 +596,12 @@
       {
         "title": "Copy a whole day or a meal from any past day",
         "description": "One tap to copy yesterday's whole day, or pick a past date to copy one meal from.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           22
         ],
-        "details": "Backend POST /food/entries/copy already takes any from_date and an optional meal_type (whole day when omitted); add a backend test for whole-day copy if missing. Frontend on Today: 'Copy yesterday' for the whole day when the day is empty; per-meal copy offers yesterday plus a native date input. Snapshot values are copied as-is (never recompute).",
+        "details": "Backend POST /food/entries/copy already takes any from_date and an optional meal_type (whole day when omitted); add a backend test for whole-day copy if missing. Frontend on Today: 'Copy yesterday' for the whole day when the day is empty; per-meal copy offers yesterday plus a native date input. Snapshot values are copied as-is (never recompute).\n\n[2026-11-11T22:09:02-05:00] sonnet: Dashboard copyFrom(meal, from_date), whole-day button when day empty, per-meal native date input; added test_copy_whole_day_and_isolation. pytest 30 pass, eslint+build ok. 375 screenshot not run.\n\n[2026-11-11T22:12:21-05:00] done by sonnet; verified, done pending manual check (375px)",
         "testStrategy": "pytest: whole-day copy creates one entry per source entry with identical snapshot values; user isolation holds. Manual at 375: copy yesterday's whole day into an empty day, copy one meal from 3 days ago. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 3,
         "id": 25,
@@ -636,7 +636,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T20:12:55-05:00",
+      "updated": "2026-11-11T22:12:21-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

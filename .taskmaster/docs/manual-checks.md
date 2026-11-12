@@ -112,3 +112,6 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 ## Task 24 - Profile polish (2026-11-11)
 1. 375 and 1280: no number over 1 decimal, no greyed fields, one Save, sections Account/Body/Goal/Daily targets.
 2. Change Target Calories, Save, reload: persists.
+
+## Task 25 - Copy a whole day or a meal (2026-11-11)
+At 375px: on an empty day tap "Copy yesterday's whole day" (same kcal/grams as yesterday). On a day with entries pick a date 3 days ago in a meal's "Copy <meal> from" input; only that meal copies, row doesn't overflow, buttons >=44px.

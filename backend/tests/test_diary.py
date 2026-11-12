@@ -106,3 +106,20 @@ def test_recent_frequent_copy(diary):
     assert len(got) == 2
     for e in got:
         assert e["calories"] == src[e["food_id"]]["calories"] and e["grams"] == src[e["food_id"]]["grams"]
+
+
+def test_copy_whole_day_and_isolation(diary):
+    from datetime import timedelta
+    c, who, ids, _ = diary
+    a = _banana(c)
+    src = (date.today() - timedelta(days=3)).isoformat()
+    for g, m in [(100, "breakfast"), (150, "lunch")]:
+        assert c.post("/food/entries", json={"food_id": a["id"], "grams": g, "meal_type": m, "entry_date": src}).status_code == 201
+    r = c.post("/food/entries/copy", json={"from_date": src, "to_date": TODAY})
+    assert r.status_code == 201 and len(r.json()) == 2
+    key = lambda e: (e["meal_type"], e["calories"], e["protein_g"], e["carbs_g"], e["fat_g"], e["grams"], e["food_name"])
+    want = sorted(key(e) for e in c.get("/food/entries", params={"entry_date": src}).json()["entries"])
+    assert sorted(key(e) for e in r.json()) == want
+    who["id"] = ids[1]  # another user copying the same date gets nothing
+    assert c.post("/food/entries/copy", json={"from_date": src, "to_date": TODAY}).json() == []
+    who["id"] = ids[0]
