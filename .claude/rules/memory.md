@@ -20,12 +20,12 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ---
 
 ## Now (overwrite each time, max 6 lines)
-- Phase 3 - Ship COMPLETE (16, 17, 18 done). Next: phase 4, task 19 (human phone install + 7-day trial).
-- Live: https://fittrack.2-25-108-3.sslip.io. Prod foods: 957k (off 943k, cnf 6k, usda 8k). Nightly backup cron 03:15; first cron run unchecked.
-- Before 19: delete test user deploycheck@example.com (id 1) from prod; then set ALLOW_REGISTRATION=false after both sign up.
-- Search top-3 for generic queries are mostly OFF branded duplicates; human judges (see manual-checks 17.5).
-- Last session: 2026-11-10, phase 3 complete.
-- Manual checks waiting: `.taskmaster/docs/manual-checks.md` (16, 17.5, 18).
+- Phase 5 (polish, branch `polish`) COMPLETE: 20-24 done, unpushed. Phase 6 (features) and task 19 (human phone trial) remain.
+- Live: https://fit-boo.andel-vps.space. Polish not deployed yet; prod needs a deploy after merge.
+- Before 19: delete test user deploycheck@example.com (id 1) from prod; set ALLOW_REGISTRATION=false after both sign up.
+- Owner to OK Progress hit thresholds (kcal within 10%, protein >=90%, carbs/fat <=110%) - see manual-checks 23.
+- Last session: 2026-11-11, phase 5 complete.
+- Manual checks waiting: `.taskmaster/docs/manual-checks.md` (16, 17.5, 18, 20-24).
 
 ## Facts (stable, max 15 lines)
 - Dev machine: Windows; shell scripts run in Git Bash; venv python at `backend/venv/Scripts/python.exe`.
@@ -45,6 +45,7 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
   haiku -> sonnet -> opus and escalates to the lead only when stuck. Manual checks are batched per phase.
 
 ## Learned / gotchas (max 15 lines, newest first)
+- Restart vite after tailwind.config.js changes (stale config = blank page). Keep screenshots out of the repo (use scratchpad).
 - duckdb OOMs reading openfoodfacts .csv.gz on the VPS: gunzip to plain .tsv first, import_off uses threads=1 (task 17.4).
 - tasks.py set-status needs --force when a dependency is cancelled (17.2).
 - vite-plugin-pwa resolved to 2.0.0 (task said 1.x); works on Vite 5. `npm run lint` has ~98 pre-existing errors (React unused import).
@@ -62,9 +63,9 @@ Builders, the verifier and the reviewer only read it. Never update it per task.
 ## Model routing record (update counts at each close-out)
 | Tier | Done first try | Escalated up | Notes |
 |---|---|---|---|
-| haiku | 3 | 0 | tasks 1, 13, 14 |
-| sonnet | 11 | 0 | task 11 needed one same-tier fix round (spec gap) |
-| opus | 0 | 0 | |
+| haiku | 6 | 0 | tasks 1, 13, 14, 20, 22.1, 22.2 |
+| sonnet | 15 | 0 | task 11 needed one same-tier fix round (spec gap) |
+| opus | 1 | 0 | split of task 22 |
 <!-- If one tier escalates on 3 tasks in a row, the phase-runner escalates to the lead, who may raise that tier's
      starting complexity in .claude/skills/next-task/SKILL.md. If haiku passes everything, give it complexity 4 too. -->
 
