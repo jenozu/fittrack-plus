@@ -489,11 +489,118 @@
         "testStrategy": "PRD success criteria 1-5 checked off in the decision log with dates. Both users have 7 consecutive days with entries:\n`SELECT user_id, count(DISTINCT entry_date) FROM food_entries WHERE entry_date > now() - interval '8 days' GROUP BY 1;` -> 7 each.",
         "complexity": 4,
         "subtasks": []
+      },
+      {
+        "title": "Remove dead exercise data from Progress",
+        "description": "Progress still shows a calories-burned bar series and a Total Burned card that always read 0 (hidden exercise feature).",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "frontend/src/pages/Progress.jsx only: drop the calories_burned <Bar> and the Total Burned stat card. Do not touch backend or the exercise code behind the feature flag. While there: the Target <Line> inside <BarChart> never draws (needs ComposedChart); switch to ComposedChart so the target line shows.",
+        "testStrategy": "Progress at 375 and 1280: no 'Burned' legend, bar or card; dashed Target line visible on the calorie chart. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 2,
+        "id": 20,
+        "subtasks": []
+      },
+      {
+        "title": "Design foundation: type scale, colour roles, buttons",
+        "description": "One type scale, one accent with clear roles, one button system and contrast-safe colours, used by every page.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "Today the app mixes pink, baby blue, green and black as 'primary' (black Scan on Today, green Scan on Add, pink Log, pale-blue active nav). White text on pastel pink and pale-blue active nav text fail 4.5:1. Define tokens in tailwind.config.js + index.css: type scale (max 5 sizes), tabular numerals for numbers, one accent for the main action, neutral secondary, danger; visible focus ring; 44px targets. Update components/ui (Button, Card, Input, Select) and Navbar/Layout to use them. Replace the leftover 'F+' logo mark with a Fit Boo mark (text or simple inline SVG, no new deps). No new dependencies, no page restructuring (later tasks do that). Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "testStrategy": "All text/background pairs used by ui components >= 4.5:1 (list them with ratios in the log). Screenshots of Today/Add/Progress/Profile at 375+1280 show one primary button style. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 5,
+        "id": 21,
+        "subtasks": []
+      },
+      {
+        "title": "Today and Add Food: one diary, search-first Add",
+        "description": "Today (Dashboard) and Add (FoodLog) are two competing diary screens with different styles. Make Today the only diary and Add a search-first screen.",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          21
+        ],
+        "details": "FoodLog.jsx repeats the day summary and meal lists in a different look (gradient card, three rainbow buttons, '1 serving' meta, P/C/F wrapping, red trash per row). Make /food open straight to search (FoodSearch, barcode, quick-add) for a chosen meal/date; diary rows and edit/delete live on Today. Today: differentiate macro bars, keep the copy button on one line at 375, a real empty state per meal, entry row shows amount (grams/portion) under the name. Split into 3-5 subtasks before building (complexity 7). No backend changes. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "testStrategy": "Log, edit and delete an entry end to end at 375px from Today; Add opens with the search field focused; no duplicated diary list on /food. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 7,
+        "id": 22,
+        "subtasks": []
+      },
+      {
+        "title": "Progress polish: weight trend and macros by day",
+        "description": "Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          20,
+          21
+        ],
+        "details": "Fix chart dates shown one day early (new Date('YYYY-MM-DD') parses as UTC; parse as local). Header: plain 'Progress', one period control instead of two (7/14/30/90 at top plus a 30-day select inside Weight). Weight: form fits at 375 (placeholder truncates to 'Toda', select to '30 c'); headline = current 7-day average and change over the period; raw points faint, average line strong. Replace the macro line chart with a macros-by-day summary (per day: kcal and P/C/F vs target, hit/miss). Drop the emoji hero-metric cards (Avg calories / Tracking days) or fold them into the summary. Empty states for no weights / no entries. Uses existing dashboard endpoints; no schema change. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "testStrategy": "Seeded user with 10 days of entries and weights: last bar/point carries today's date; 7-day average matches a hand calculation for one day (logged); empty states render for a fresh user. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 5,
+        "id": 23,
+        "subtasks": []
+      },
+      {
+        "title": "Profile polish: readable targets and editing",
+        "description": "Profile shows raw floats (167.92499999999998), every field greyed out until 'Edit Profile', and generic filler.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          21
+        ],
+        "details": "Round displayed targets and weights (if the save path stores long floats, round on save; no migration). Fields editable in place with one Save, or a clear read view; no all-grey disabled form. Remove the one-off coloured left borders on Physical Stats / Fitness Goals. Replace the 'Data Management / We never sell your data. Period.' filler with something true and useful, or remove it. Plain section names. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "testStrategy": "Profile at 375+1280: no number shows more than 1 decimal; change target calories, save, reload, value persists. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 4,
+        "id": 24,
+        "subtasks": []
+      },
+      {
+        "title": "Copy a whole day or a meal from any past day",
+        "description": "One tap to copy yesterday's whole day, or pick a past date to copy one meal from.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          22
+        ],
+        "details": "Backend POST /food/entries/copy already takes any from_date and an optional meal_type (whole day when omitted); add a backend test for whole-day copy if missing. Frontend on Today: 'Copy yesterday' for the whole day when the day is empty; per-meal copy offers yesterday plus a native date input. Snapshot values are copied as-is (never recompute).",
+        "testStrategy": "pytest: whole-day copy creates one entry per source entry with identical snapshot values; user isolation holds. Manual at 375: copy yesterday's whole day into an empty day, copy one meal from 3 days ago. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 3,
+        "id": 25,
+        "subtasks": []
+      },
+      {
+        "title": "Search ranking: verified and common foods first",
+        "description": "Generic searches show OFF branded duplicates in the top 3 (see 17.5); put USDA/CNF generic entries and well-filled common products first.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [],
+        "details": "Change ranking inside backend/food_data/schema.sql search_foods() (owned by schema.sql, not Alembic). Keep it two-stage (prefix candidates, then ranking): single-pass was ~600 ms. Signals: source (usda/cnf = verified), nutrient completeness, collapse near-identical OFF name+brand rows, the user's own recent/frequent foods as a boost if cheap. Optional small 'verified' marker in FoodSearch results. No paid APIs, no OFF search API.",
+        "testStrategy": "pytest ranking tests: 'banana', 'chicken breast', 'greek yogurt' top-3 contain a usda/cnf entry; 'kraft dinner', 'shreddies' still return the branded product in the top 3. EXPLAIN ANALYZE on 500k+ rows < 300 ms locally (or on the VPS at deploy). Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 6,
+        "id": 26,
+        "subtasks": []
+      },
+      {
+        "title": "Recent and Favourites per meal",
+        "description": "On the Add screen for a meal: the foods you usually log at that meal plus starred favourites, one tap to re-log.",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          22
+        ],
+        "details": "Recent per meal: optional meal_type filter on GET /food/recent and /food/frequent. Favourites: new app table favourite_foods (user_id, food_id, created_at, unique pair) via the db-migration skill, forward-only; list/add/remove endpoints with Depends(get_current_user), filtered by user_id. Star toggle on search results and the Add screen. Favourites are a small PRD addition (decision log line), not a non-goal.",
+        "testStrategy": "pytest: favourites CRUD, user isolation, recent?meal_type=breakfast returns only breakfast foods; alembic upgrade head on a fresh test db. Manual at 375: star a food, it shows under Favourites for every meal. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
+        "complexity": 6,
+        "id": 27,
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-10T15:54:55-05:00",
+      "updated": "2026-11-11T19:25:20-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

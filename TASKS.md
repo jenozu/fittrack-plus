@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 18/19 tasks done.**
+**Progress: 18/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -96,3 +96,27 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [ ] **19. Phone install and 7-day trial** _(after 11, 12, 14, 15, 18)_  
   Both people install it, log for a week, and the top friction gets fixed.  
   _Test:_ PRD success criteria 1-5 checked off in the decision log with dates. Both users have 7 consecutive days with entries: `SELECT user_id, count(DISTINCT entry_date) FROM food_entries WHERE entry_date > now() - interval '8 days' GROUP BY 1;` -> 7 each.
+- [ ] **20. Remove dead exercise data from Progress**  
+  Progress still shows a calories-burned bar series and a Total Burned card that always read 0 (hidden exercise feature).  
+  _Test:_ Progress at 375 and 1280: no 'Burned' legend, bar or card; dashed Target line visible on the calorie chart. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
+- [ ] **21. Design foundation: type scale, colour roles, buttons**  
+  One type scale, one accent with clear roles, one button system and contrast-safe colours, used by every page.  
+  _Test:_ All text/background pairs used by ui components >= 4.5:1 (list them with ratios in the log). Screenshots of Today/Add/Progress/Profile at 375+1280 show one primary button style. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
+- [ ] **22. Today and Add Food: one diary, search-first Add** _(after 21)_  
+  Today (Dashboard) and Add (FoodLog) are two competing diary screens with different styles. Make Today the only diary and Add a search-first screen.  
+  _Test:_ Log, edit and delete an entry end to end at 375px from Today; Add opens with the search field focused; no duplicated diary list on /food. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
+- [ ] **23. Progress polish: weight trend and macros by day** _(after 20, 21)_  
+  Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.  
+  _Test:_ Seeded user with 10 days of entries and weights: last bar/point carries today's date; 7-day average matches a hand calculation for one day (logged); empty states render for a fresh user. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
+- [ ] **24. Profile polish: readable targets and editing** _(after 21)_  
+  Profile shows raw floats (167.92499999999998), every field greyed out until 'Edit Profile', and generic filler.  
+  _Test:_ Profile at 375+1280: no number shows more than 1 decimal; change target calories, save, reload, value persists. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
+- [ ] **25. Copy a whole day or a meal from any past day** _(after 22)_  
+  One tap to copy yesterday's whole day, or pick a past date to copy one meal from.  
+  _Test:_ pytest: whole-day copy creates one entry per source entry with identical snapshot values; user isolation holds. Manual at 375: copy yesterday's whole day into an empty day, copy one meal from 3 days ago. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
+- [ ] **26. Search ranking: verified and common foods first**  
+  Generic searches show OFF branded duplicates in the top 3 (see 17.5); put USDA/CNF generic entries and well-filled common products first.  
+  _Test:_ pytest ranking tests: 'banana', 'chicken breast', 'greek yogurt' top-3 contain a usda/cnf entry; 'kraft dinner', 'shreddies' still return the branded product in the top 3. EXPLAIN ANALYZE on 500k+ rows < 300 ms locally (or on the VPS at deploy). Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
+- [ ] **27. Recent and Favourites per meal** _(after 22)_  
+  On the Add screen for a meal: the foods you usually log at that meal plus starred favourites, one tap to re-log.  
+  _Test:_ pytest: favourites CRUD, user isolation, recent?meal_type=breakfast returns only breakfast foods; alembic upgrade head on a fresh test db. Manual at 375: star a food, it shows under Favourites for every meal. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
