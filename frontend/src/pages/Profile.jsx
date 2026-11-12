@@ -3,14 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usersAPI } from '../services/api';
 import { Card, Button, Input, Select, LoadingSpinner } from '../components/ui';
-import { User, Target, Activity, Save, Calculator, Download, Database, Award } from 'lucide-react';
+import { User, Save, Calculator, Download, Award } from 'lucide-react';
 import { calculateNutritionTargets, getGoalTypeOptions } from '../utils/nutritionCalculator';
 import { features } from '../config/features';
+
+const r1 = (v) => (v === '' || v == null || isNaN(Number(v)) ? '' : String(Math.round(Number(v) * 10) / 10));
+const NUMERIC = ['height_cm', 'current_weight_kg', 'goal_weight_kg', 'target_calories', 'target_protein_g', 'target_carbs_g', 'target_fat_g'];
+const fromUser = (u) => ({
+  first_name: u?.first_name || '',
+  last_name: u?.last_name || '',
+  gender: u?.gender || '',
+  height_cm: r1(u?.height_cm),
+  current_weight_kg: r1(u?.current_weight_kg),
+  goal_weight_kg: r1(u?.goal_weight_kg),
+  activity_level: u?.activity_level || '',
+  goal_type: u?.goal_type || '',
+  target_calories: r1(u?.target_calories),
+  target_protein_g: r1(u?.target_protein_g),
+  target_carbs_g: r1(u?.target_carbs_g),
+  target_fat_g: r1(u?.target_fat_g),
+});
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
-  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [useMetric, setUseMetric] = useState(false); // Default to imperial
   
@@ -22,20 +39,7 @@ const Profile = () => {
     goalWeightLbs: '',
   });
   
-  const [formData, setFormData] = useState({
-    first_name: user?.first_name || '',
-    last_name: user?.last_name || '',
-    gender: user?.gender || '',
-    height_cm: user?.height_cm || '',
-    current_weight_kg: user?.current_weight_kg || '',
-    goal_weight_kg: user?.goal_weight_kg || '',
-    activity_level: user?.activity_level || '',
-    goal_type: user?.goal_type || '',
-    target_calories: user?.target_calories || '',
-    target_protein_g: user?.target_protein_g || '',
-    target_carbs_g: user?.target_carbs_g || '',
-    target_fat_g: user?.target_fat_g || '',
-  });
+  const [formData, setFormData] = useState(fromUser(user));
 
   // Conversion functions
   const cmToFeetInches = (cm) => {
@@ -85,6 +89,7 @@ const Profile = () => {
   }, [user, useMetric, formData.height_cm]);
 
   const handleChange = (e) => {
+    setSaved(false);
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -94,33 +99,21 @@ const Profile = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await usersAPI.updateProfile(formData);
+      const payload = { ...formData };
+      NUMERIC.forEach((k) => {
+        if (payload[k] === '') delete payload[k];
+        else payload[k] = Math.round(Number(payload[k]) * 10) / 10;
+      });
+      const response = await usersAPI.updateProfile(payload);
       updateUser(response.data);
-      setEditing(false);
+      setFormData(fromUser(response.data));
+      setSaved(true);
     } catch (error) {
       console.error('Failed to update profile:', error);
       alert('Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      first_name: user?.first_name || '',
-      last_name: user?.last_name || '',
-      gender: user?.gender || '',
-      height_cm: user?.height_cm || '',
-      current_weight_kg: user?.current_weight_kg || '',
-      goal_weight_kg: user?.goal_weight_kg || '',
-      activity_level: user?.activity_level || '',
-      goal_type: user?.goal_type || '',
-      target_calories: user?.target_calories || '',
-      target_protein_g: user?.target_protein_g || '',
-      target_carbs_g: user?.target_carbs_g || '',
-      target_fat_g: user?.target_fat_g || '',
-    });
-    setEditing(false);
   };
 
   const handleCalculateNutrition = () => {
@@ -168,7 +161,7 @@ const Profile = () => {
         `• ${nutritionTargets.target_protein_g}g protein\n` +
         `• ${nutritionTargets.target_carbs_g}g carbs\n` +
         `• ${nutritionTargets.target_fat_g}g fat\n\n` +
-        `These targets will help you achieve your goal! Click "Save Changes" to keep them.`
+        `These targets will help you achieve your goal! Click "Save" to keep them.`
       );
     }
   };
@@ -182,9 +175,9 @@ const Profile = () => {
             <User className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-neutral-800">Profile Settings</h1>
+            <h1 className="text-display font-bold text-neutral-800">Profile</h1>
             {features.gamification && user?.level && (
-              <p className="text-sm text-neutral-600">
+              <p className="text-small text-neutral-600">
                 Level {user.level} • {user.xp?.toLocaleString() || 0} XP
               </p>
             )}
@@ -203,14 +196,7 @@ const Profile = () => {
 
       {/* Account Info */}
       <Card
-        title="Account Information"
-        headerActions={
-          !editing && (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              Edit Profile
-            </Button>
-          )
-        }
+        title="Account"
       >
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -219,14 +205,12 @@ const Profile = () => {
               name="first_name"
               value={formData.first_name}
               onChange={handleChange}
-              disabled={!editing}
             />
             <Input
               label="Last Name"
               name="last_name"
               value={formData.last_name}
               onChange={handleChange}
-              disabled={!editing}
             />
           </div>
 
@@ -241,7 +225,6 @@ const Profile = () => {
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            disabled={!editing}
             options={[
               { value: 'male', label: 'Male' },
               { value: 'female', label: 'Female' },
@@ -253,11 +236,10 @@ const Profile = () => {
 
       {/* Physical Stats */}
       <Card 
-        title="Physical Stats" 
-        className="border-l-4 border-primary-blue"
+        title="Body"
         headerActions={
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-medium ${!useMetric ? 'text-primary-blue' : 'text-neutral-400'}`}>
+            <span className={`text-small font-medium ${!useMetric ? 'text-primary-blue' : 'text-neutral-400'}`}>
               Imperial
             </span>
             <button
@@ -286,7 +268,7 @@ const Profile = () => {
                 }`}
               />
             </button>
-            <span className={`text-sm font-medium ${useMetric ? 'text-primary-blue' : 'text-neutral-400'}`}>
+            <span className={`text-small font-medium ${useMetric ? 'text-primary-blue' : 'text-neutral-400'}`}>
               Metric
             </span>
           </div>
@@ -300,7 +282,6 @@ const Profile = () => {
               type="number"
               value={formData.height_cm}
               onChange={handleChange}
-              disabled={!editing}
             />
             <Input
               label="Current Weight (kg)"
@@ -309,7 +290,6 @@ const Profile = () => {
               step="0.1"
               value={formData.current_weight_kg}
               onChange={handleChange}
-              disabled={!editing}
             />
             <Input
               label="Goal Weight (kg)"
@@ -318,14 +298,13 @@ const Profile = () => {
               step="0.1"
               value={formData.goal_weight_kg}
               onChange={handleChange}
-              disabled={!editing}
             />
           </div>
         ) : (
           <div className="space-y-4">
             {/* Imperial Height - Feet and Inches */}
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
+              <label className="block text-small font-medium text-neutral-700 mb-2">
                 Height
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -343,7 +322,6 @@ const Profile = () => {
                     }
                   }}
                   label="Feet"
-                  disabled={!editing}
                 />
                 <Input
                   type="number"
@@ -359,7 +337,6 @@ const Profile = () => {
                     }
                   }}
                   label="Inches"
-                  disabled={!editing}
                 />
               </div>
             </div>
@@ -382,7 +359,6 @@ const Profile = () => {
                   }
                 }}
                 step="0.1"
-                disabled={!editing}
               />
               <Input
                 label="Goal Weight (lbs)"
@@ -401,7 +377,6 @@ const Profile = () => {
                   }
                 }}
                 step="0.1"
-                disabled={!editing}
               />
             </div>
           </div>
@@ -409,14 +384,13 @@ const Profile = () => {
       </Card>
 
       {/* Fitness Goals */}
-      <Card title="Fitness Goals" className="border-l-4 border-primary-pink">
+      <Card title="Goal">
         <div className="space-y-4">
           <Select
             label="Activity Level"
             name="activity_level"
             value={formData.activity_level}
             onChange={handleChange}
-            disabled={!editing}
             options={[
               { value: 'sedentary', label: 'Sedentary (little or no exercise)' },
               { value: 'light', label: 'Light (exercise 1-3 days/week)' },
@@ -431,7 +405,6 @@ const Profile = () => {
             name="goal_type"
             value={formData.goal_type}
             onChange={handleChange}
-            disabled={!editing}
             options={getGoalTypeOptions()}
           />
         </div>
@@ -439,28 +412,21 @@ const Profile = () => {
 
       {/* Nutrition Targets */}
       <Card 
-        title="Nutrition Targets" 
-        className="border-l-4 border-green-400"
+        title="Daily targets"
         headerActions={
-          editing && (
+          (
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleCalculateNutrition}
             >
               <Calculator size={16} className="mr-2" />
-              Calculate for Me
+              Calculate for me
             </Button>
           )
         }
       >
         <div className="space-y-4">
-          {editing && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-              💡 <strong>Don't know what your macros should be?</strong> Just fill in your Physical Stats and Fitness Goals above, then click "Calculate for Me" — we'll figure out the perfect calorie and macro targets for your body and goals!
-            </div>
-          )}
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Target Calories"
@@ -468,7 +434,6 @@ const Profile = () => {
               type="number"
               value={formData.target_calories}
               onChange={handleChange}
-              disabled={!editing}
             />
             <div />
             <Input
@@ -478,7 +443,6 @@ const Profile = () => {
               step="0.1"
               value={formData.target_protein_g}
               onChange={handleChange}
-              disabled={!editing}
             />
             <Input
               label="Target Carbs (g)"
@@ -487,7 +451,6 @@ const Profile = () => {
               step="0.1"
               value={formData.target_carbs_g}
               onChange={handleChange}
-              disabled={!editing}
             />
             <Input
               label="Target Fat (g)"
@@ -496,68 +459,27 @@ const Profile = () => {
               step="0.1"
               value={formData.target_fat_g}
               onChange={handleChange}
-              disabled={!editing}
             />
           </div>
         </div>
       </Card>
 
-      {/* Data Management */}
-      {!editing && (
-        <Card title="Data Management" className="border-l-4 border-green-500">
-          <div className="space-y-4">
-            <p className="text-neutral-600">
-              Your data is yours.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {features.export && (
-                <button
-                  onClick={() => navigate('/export')}
-                  className="flex items-center gap-3 p-4 bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 rounded-lg border-2 border-green-200 transition-all"
-                >
-                  <Download className="text-green-600" size={32} />
-                  <div className="text-left">
-                    <h3 className="font-semibold text-neutral-800">Export Data</h3>
-                    <p className="text-sm text-neutral-600">
-                      Download your data as CSV, JSON, or PDF
-                    </p>
-                  </div>
-                </button>
-              )}
-              
-              <div className="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg border-2 border-neutral-200">
-                <Database className="text-neutral-400" size={32} />
-                <div className="text-left">
-                  <h3 className="font-semibold text-neutral-800">Data Privacy</h3>
-                  <p className="text-sm text-neutral-600">
-                    We never sell your data. Period.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {features.export && (
+        <Card title="Your data">
+          <Button variant="secondary" onClick={() => navigate('/export')}>
+            <Download size={18} className="mr-2" />
+            Export data
+          </Button>
         </Card>
       )}
 
       {/* Action Buttons */}
-      {editing && (
-        <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={handleCancel} disabled={saving}>
-            Cancel
-          </Button>
-          <Button variant="secondary" onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <LoadingSpinner size="sm" />
-            ) : (
-              <>
-                <Save size={18} className="mr-2" />
-                Save Changes
-              </>
-            )}
-          </Button>
-        </div>
-      )}
+      <div className="flex items-center justify-end gap-3">
+        {saved && <span className="text-small text-neutral-600">Saved</span>}
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? <LoadingSpinner size="sm" /> : <><Save size={18} className="mr-2" />Save</>}
+        </Button>
+      </div>
     </div>
   );
 };

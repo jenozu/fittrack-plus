@@ -582,12 +582,12 @@
       {
         "title": "Profile polish: readable targets and editing",
         "description": "Profile shows raw floats (167.92499999999998), every field greyed out until 'Edit Profile', and generic filler.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           21
         ],
-        "details": "Round displayed targets and weights (if the save path stores long floats, round on save; no migration). Fields editable in place with one Save, or a clear read view; no all-grey disabled form. Remove the one-off coloured left borders on Physical Stats / Fitness Goals. Replace the 'Data Management / We never sell your data. Period.' filler with something true and useful, or remove it. Plain section names. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "Round displayed targets and weights (if the save path stores long floats, round on save; no migration). Fields editable in place with one Save, or a clear read view; no all-grey disabled form. Remove the one-off coloured left borders on Physical Stats / Fitness Goals. Replace the 'Data Management / We never sell your data. Period.' filler with something true and useful, or remove it. Plain section names. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T20:11:33-05:00] Profile.jsx: always-editable form, one Save, values rounded to 1dp on load+save, removed coloured borders/filler, plain section names. Screens+persist verified; build/eslint/pytest ok.\n\n[2026-11-11T20:12:55-05:00] done by sonnet; verified (builder ran save/reload via puppeteer)",
         "testStrategy": "Profile at 375+1280: no number shows more than 1 decimal; change target calories, save, reload, value persists. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 4,
         "id": 24,
@@ -636,7 +636,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T20:08:25-05:00",
+      "updated": "2026-11-11T20:12:55-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

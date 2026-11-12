@@ -108,3 +108,7 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 2. Last point/bar carries today's date.
 3. Macros-by-day table shows hit/miss per day. Hit thresholds are the builder's choice (kcal within 10%, protein >=90%, carbs/fat <=110%): owner to OK or adjust.
 4. Fresh account: both empty states render.
+
+## Task 24 - Profile polish (2026-11-11)
+1. 375 and 1280: no number over 1 decimal, no greyed fields, one Save, sections Account/Body/Goal/Daily targets.
+2. Change Target Calories, Save, reload: persists.

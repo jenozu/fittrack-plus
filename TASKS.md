@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 22/27 tasks done.**
+**Progress: 23/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -111,7 +111,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **23. Progress polish: weight trend and macros by day** _(after 20, 21)_  
   Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.  
   _Test:_ Seeded user with 10 days of entries and weights: last bar/point carries today's date; 7-day average matches a hand calculation for one day (logged); empty states render for a fresh user. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
-- [ ] **24. Profile polish: readable targets and editing** _(after 21)_  
+- [x] **24. Profile polish: readable targets and editing** _(after 21)_  
   Profile shows raw floats (167.92499999999998), every field greyed out until 'Edit Profile', and generic filler.  
   _Test:_ Profile at 375+1280: no number shows more than 1 decimal; change target calories, save, reload, value persists. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
 - [ ] **25. Copy a whole day or a meal from any past day** _(after 22)_  
