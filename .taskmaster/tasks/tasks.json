@@ -567,13 +567,13 @@
       {
         "title": "Progress polish: weight trend and macros by day",
         "description": "Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           20,
           21
         ],
-        "details": "Fix chart dates shown one day early (new Date('YYYY-MM-DD') parses as UTC; parse as local). Header: plain 'Progress', one period control instead of two (7/14/30/90 at top plus a 30-day select inside Weight). Weight: form fits at 375 (placeholder truncates to 'Toda', select to '30 c'); headline = current 7-day average and change over the period; raw points faint, average line strong. Replace the macro line chart with a macros-by-day summary (per day: kcal and P/C/F vs target, hit/miss). Drop the emoji hero-metric cards (Avg calories / Tracking days) or fold them into the summary. Empty states for no weights / no entries. Uses existing dashboard endpoints; no schema change. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "Fix chart dates shown one day early (new Date('YYYY-MM-DD') parses as UTC; parse as local). Header: plain 'Progress', one period control instead of two (7/14/30/90 at top plus a 30-day select inside Weight). Weight: form fits at 375 (placeholder truncates to 'Toda', select to '30 c'); headline = current 7-day average and change over the period; raw points faint, average line strong. Replace the macro line chart with a macros-by-day summary (per day: kcal and P/C/F vs target, hit/miss). Drop the emoji hero-metric cards (Avg calories / Tracking days) or fold them into the summary. Empty states for no weights / no entries. Uses existing dashboard endpoints; no schema change. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T20:03:56-05:00] plan (sonnet): Progress.jsx only - one period control, local date parse, weight headline, macros-by-day rows hit/miss, empty states\n\n[2026-11-11T20:06:43-05:00] Built Progress.jsx. 7-day avg hand check: weights last 7d (Nov5 81.1, Nov7 80.84, Nov9 80.58, Nov11 80.32) mean=80.71 -> page headline 80.7 kg, matches. Last bar/point dated Nov 11 (today). Empty states verified with fresh user fresh23@example.com (local dev db). Screenshots 375/1280 in scratchpad shots/progress-*.png, fresh-*.png. eslint, build, pytest pass.\n\n[2026-11-11T20:08:24-05:00] done by sonnet; verified (7-day avg hand calc 80.71 logged by builder)",
         "testStrategy": "Seeded user with 10 days of entries and weights: last bar/point carries today's date; 7-day average matches a hand calculation for one day (logged); empty states render for a fresh user. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 5,
         "id": 23,
@@ -636,7 +636,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T20:02:42-05:00",
+      "updated": "2026-11-11T20:08:25-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

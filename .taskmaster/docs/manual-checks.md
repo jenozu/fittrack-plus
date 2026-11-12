@@ -102,3 +102,9 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 3. Bottom nav Add > Quick add logs to the time-of-day meal.
 4. Barcode miss: "No food found" with Dismiss and "Add it" opens custom food form.
 5. 1280px: /food single column looks right.
+
+## Task 23 - Progress polish (2026-11-11)
+1. 375 and 1280: plain "Progress", one period control, weight form not truncated, headline 7-day average + change.
+2. Last point/bar carries today's date.
+3. Macros-by-day table shows hit/miss per day. Hit thresholds are the builder's choice (kcal within 10%, protein >=90%, carbs/fat <=110%): owner to OK or adjust.
+4. Fresh account: both empty states render.

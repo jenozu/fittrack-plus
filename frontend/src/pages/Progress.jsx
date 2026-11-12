@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { dashboardAPI } from '../services/api';
-import { Card, Select, Input, LoadingSpinner } from '../components/ui';
-import { TrendingUp } from 'lucide-react';
+import { Card, Button, Input, LoadingSpinner } from '../components/ui';
+import { Check, X } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -11,27 +11,70 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
+const PERIODS = [7, 14, 30, 90];
+const LB = 2.20462;
+
+// 'YYYY-MM-DD' -> local Date (new Date(str) parses as UTC and shows the day before)
+const parseLocal = (s) => {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+const fmtDay = (s) => parseLocal(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const tooltipStyle = { backgroundColor: '#FFFFFF', border: '1px solid #D4D4D4', borderRadius: '8px', fontSize: '0.875rem' };
+
+// Trailing 7-day average by calendar day, over logs sorted ascending
+const withAverages = (logs) =>
+  logs.map((log) => {
+    const t = parseLocal(log.log_date).getTime();
+    const win = logs.filter((l) => {
+      const d = (t - parseLocal(l.log_date).getTime()) / 86400000;
+      return d >= 0 && d < 7;
+    });
+    return { date: log.log_date, kg: log.weight_kg, avgKg: win.reduce((a, l) => a + l.weight_kg, 0) / win.length };
+  });
+
+const Cell = ({ value, ok }) => (
+  <div className="flex items-center gap-1 justify-end">
+    <span className={ok ? 'text-neutral-800' : 'text-neutral-500'}>
+      {Math.round(value)}
+    </span>
+    {ok
+      ? <Check size={14} className="text-brand-600 shrink-0" aria-label="hit" />
+      : <X size={14} className="text-neutral-500 shrink-0" aria-label="missed" />}
+  </div>
+);
+
 const Progress = () => {
+  const [period, setPeriod] = useState(7);
   const [calorieData, setCalorieData] = useState([]);
   const [macroData, setMacroData] = useState([]);
   const [weightData, setWeightData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [timePeriod, setTimePeriod] = useState('7');
-  const [weightDays, setWeightDays] = useState(30);
   const [unit, setUnit] = useState(() => localStorage.getItem('weightUnit') || 'kg');
   const [weightInput, setWeightInput] = useState('');
-  const LB = 2.20462;
   const toUnit = (kg) => Math.round((unit === 'lb' ? kg * LB : kg) * 10) / 10;
 
-  const loadWeights = async () => {
-    const res = await dashboardAPI.getWeightLogs(weightDays);
-    setWeightData(res.data);
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [c, m, w] = await Promise.all([
+        dashboardAPI.getCalorieProgress(period),
+        dashboardAPI.getMacroProgress(period),
+        dashboardAPI.getWeightLogs(period),
+      ]);
+      setCalorieData(c.data.data);
+      setMacroData(m.data.data);
+      setWeightData(w.data);
+    } catch (error) {
+      console.error('Failed to fetch progress data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
-  useEffect(() => { loadWeights().catch(() => {}); }, [weightDays]);
+  useEffect(() => { load(); }, [period]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveWeight = async (e) => {
     e.preventDefault();
@@ -42,235 +85,151 @@ const Progress = () => {
     try {
       await dashboardAPI.logWeight({ weight_kg: unit === 'lb' ? v / LB : v, log_date });
       setWeightInput('');
-      await loadWeights();
+      await load();
     } catch (err) {
       console.error('Failed to log weight:', err);
     }
   };
 
-  useEffect(() => {
-    fetchProgressData();
-  }, [timePeriod]);
+  const weightChart = withAverages(weightData).map((p) => ({
+    date: p.date, weight: toUnit(p.kg), average: toUnit(p.avgKg),
+  }));
+  const latest = weightChart[weightChart.length - 1];
+  const change = weightChart.length > 1 ? Math.round((latest.average - weightChart[0].average) * 10) / 10 : null;
 
-  const fetchProgressData = async () => {
-    setLoading(true);
-    try {
-      const [caloriesRes, macrosRes] = await Promise.all([
-        dashboardAPI.getCalorieProgress(parseInt(timePeriod)),
-        dashboardAPI.getMacroProgress(parseInt(timePeriod)),
-      ]);
-
-      setCalorieData(caloriesRes.data.data);
-      setMacroData(macrosRes.data.data);
-    } catch (error) {
-      console.error('Failed to fetch progress data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  // Weight chart data with trailing 7-day moving average (by calendar day)
-  const weightChartData = weightData.map((log) => {
-    const t = new Date(log.log_date).getTime();
-    const win = weightData.filter((l) => {
-      const d = (t - new Date(l.log_date).getTime()) / 86400000;
-      return d >= 0 && d < 7;
-    });
-    return {
-      date: new Date(log.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      weight: toUnit(log.weight_kg),
-      average: toUnit(win.reduce((a, l) => a + l.weight_kg, 0) / win.length),
-    };
-  });
+  // Macros by day, newest first
+  const days = calorieData.map((c, i) => ({ ...c, ...macroData[i] })).reverse();
+  const logged = days.filter((d) => d.calories_consumed > 0);
+  const avgCal = logged.length ? Math.round(logged.reduce((s, d) => s + d.calories_consumed, 0) / logged.length) : 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary-pink to-primary-blue rounded-full flex items-center justify-center">
-            <TrendingUp className="text-white" size={24} />
-          </div>
-          <h1 className="text-3xl font-bold text-neutral-800">Progress & Analytics</h1>
+      <div className="space-y-3">
+        <h1 className="text-display text-neutral-800">Progress</h1>
+        <div className="flex gap-2 sm:max-w-sm" role="group" aria-label="Period">
+          {PERIODS.map((p) => (
+            <Button
+              key={p}
+              size="sm"
+              variant={p === period ? 'primary' : 'secondary'}
+              onClick={() => setPeriod(p)}
+              className="flex-1"
+            >
+              {p}d
+            </Button>
+          ))}
         </div>
-
-        <Select
-          value={timePeriod}
-          onChange={(e) => setTimePeriod(e.target.value)}
-          options={[
-            { value: '7', label: 'Last 7 Days' },
-            { value: '14', label: 'Last 14 Days' },
-            { value: '30', label: 'Last 30 Days' },
-            { value: '90', label: 'Last 90 Days' },
-          ]}
-          className="w-auto"
-        />
       </div>
 
-      {/* Weight Progress */}
-      <Card title="Weight">
-        <form onSubmit={saveWeight} className="flex gap-2 items-end mb-4">
-          <Input
-            type="number"
-            step="0.1"
-            inputMode="decimal"
-            placeholder={`Today's weight (${unit})`}
-            value={weightInput}
-            onChange={(e) => setWeightInput(e.target.value)}
-          />
-          <button type="submit" className="px-4 py-2 rounded-lg bg-primary-pink text-white font-semibold min-h-[44px]">Log</button>
-          <button
-            type="button"
-            className="px-3 py-2 rounded-lg border-2 border-primary-blue min-h-[44px]"
-            onClick={() => {
-              const u = unit === 'kg' ? 'lb' : 'kg';
-              localStorage.setItem('weightUnit', u);
-              setUnit(u);
-            }}
-          >
-            {unit}
-          </button>
-          <Select
-            value={String(weightDays)}
-            onChange={(e) => setWeightDays(parseInt(e.target.value))}
-            options={[{ value: '30', label: '30 days' }, { value: '90', label: '90 days' }]}
-            className="w-auto"
-          />
-        </form>
-        {weightChartData.length > 0 && (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={weightChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-              <XAxis dataKey="date" stroke="#737373" />
-              <YAxis stroke="#737373" domain={['dataMin - 1', 'dataMax + 1']} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#FFFFFF', border: '2px solid #A7D9F0', borderRadius: '8px' }}
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[300px]"><LoadingSpinner size="lg" /></div>
+      ) : (
+        <>
+          <Card title="Weight">
+            <form onSubmit={saveWeight} className="flex gap-2 mb-4">
+              <Input
+                type="number"
+                step="0.1"
+                inputMode="decimal"
+                aria-label={`Weight in ${unit}`}
+                placeholder={`Weight (${unit})`}
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
               />
-              <Legend />
-              <Line type="monotone" dataKey="weight" name={`Weight (${unit})`} stroke="#F0A7D9" strokeWidth={0} dot={{ fill: '#F0A7D9', r: 4 }} />
-              <Line type="monotone" dataKey="average" name="7-day average" stroke="#D06CA0" strokeWidth={3} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </Card>
+              <Button type="submit">Log</Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const u = unit === 'kg' ? 'lb' : 'kg';
+                  localStorage.setItem('weightUnit', u);
+                  setUnit(u);
+                }}
+              >
+                {unit}
+              </Button>
+            </form>
+            {weightChart.length === 0 ? (
+              <p className="text-small text-neutral-600">No weigh-ins in this period. Log today&apos;s weight above to start the trend.</p>
+            ) : (
+              <>
+                <div className="mb-4">
+                  <p className="text-caption text-neutral-600">7-day average</p>
+                  <p className="text-display text-neutral-800">{latest.average} {unit}</p>
+                  <p className="text-small text-neutral-600">
+                    {change === null
+                      ? 'Log more weigh-ins to see the change.'
+                      : `${change > 0 ? '+' : ''}${change} ${unit} over ${period} days`}
+                  </p>
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={weightChart}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
+                    <XAxis dataKey="date" stroke="#737373" tickFormatter={fmtDay} fontSize={12} minTickGap={24} />
+                    <YAxis stroke="#737373" fontSize={12} width={40} domain={['dataMin - 1', 'dataMax + 1']} />
+                    <Tooltip contentStyle={tooltipStyle} labelFormatter={fmtDay} />
+                    <Line dataKey="weight" name="Weigh-in" stroke="#BE185D" strokeWidth={0} dot={{ fill: '#BE185D', fillOpacity: 0.35, r: 3, strokeWidth: 0 }} activeDot={false} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="average" name="7-day average" stroke="#BE185D" strokeWidth={3} dot={false} isAnimationActive={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </>
+            )}
+          </Card>
 
-      {/* Calorie Trends */}
-      <Card title="Calorie Trends">
-        <ResponsiveContainer width="100%" height={300}>
-          <ComposedChart data={calorieData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-            <XAxis
-              dataKey="date"
-              stroke="#737373"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            />
-            <YAxis stroke="#737373" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#FFFFFF',
-                border: '2px solid #A7D9F0',
-                borderRadius: '8px',
-              }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            />
-            <Legend />
-            <Bar dataKey="calories_consumed" fill="#F0A7D9" name="Consumed" radius={[8, 8, 0, 0]} />
-            <Line
-              type="monotone"
-              dataKey="target_calories"
-              stroke="#D06CA0"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              name="Target"
-              dot={false}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </Card>
+          {logged.length === 0 ? (
+            <Card title="Calories and macros">
+              <p className="text-small text-neutral-600">No food logged in this period. Add something from Today and your days will show up here.</p>
+            </Card>
+          ) : (
+            <>
+              <Card title="Calories" subtitle={`${logged.length} of ${days.length} days logged, average ${avgCal} kcal`}>
+                <ResponsiveContainer width="100%" height={200}>
+                  <ComposedChart data={calorieData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
+                    <XAxis dataKey="date" stroke="#737373" tickFormatter={fmtDay} fontSize={12} minTickGap={24} />
+                    <YAxis stroke="#737373" fontSize={12} width={40} />
+                    <Tooltip contentStyle={tooltipStyle} labelFormatter={fmtDay} />
+                    <Bar dataKey="calories_consumed" fill="#BE185D" fillOpacity={0.5} name="Eaten" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                    <Line type="stepAfter" dataKey="target_calories" stroke="#404040" strokeWidth={2} strokeDasharray="5 5" name="Target" dot={false} isAnimationActive={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </Card>
 
-      {/* Macro Distribution */}
-      <Card title="Macronutrient Trends">
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={macroData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-            <XAxis
-              dataKey="date"
-              stroke="#737373"
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-            />
-            <YAxis stroke="#737373" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#FFFFFF',
-                border: '2px solid #A7D9F0',
-                borderRadius: '8px',
-              }}
-              labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="protein_g"
-              stroke="#EF4444"
-              strokeWidth={2}
-              name="Protein (g)"
-              dot={{ fill: '#EF4444' }}
-            />
-            <Line
-              type="monotone"
-              dataKey="carbs_g"
-              stroke="#3B82F6"
-              strokeWidth={2}
-              name="Carbs (g)"
-              dot={{ fill: '#3B82F6' }}
-            />
-            <Line
-              type="monotone"
-              dataKey="fat_g"
-              stroke="#FACC15"
-              strokeWidth={2}
-              name="Fat (g)"
-              dot={{ fill: '#FACC15' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </Card>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-gradient-to-br from-primary-pink/10 to-primary-pink/5">
-          <div className="text-center">
-            <div className="text-4xl mb-2">📊</div>
-            <p className="text-sm text-neutral-600">Avg. Daily Calories</p>
-            <p className="text-3xl font-bold text-neutral-800">
-              {Math.round(
-                calorieData.reduce((sum, day) => sum + day.calories_consumed, 0) / calorieData.length || 0
-              )}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-100/50 to-green-50/50">
-          <div className="text-center">
-            <div className="text-4xl mb-2">📈</div>
-            <p className="text-sm text-neutral-600">Tracking Days</p>
-            <p className="text-3xl font-bold text-neutral-800">
-              {calorieData.filter(day => day.calories_consumed > 0).length}
-            </p>
-          </div>
-        </Card>
-      </div>
+              <Card title="Macros by day" subtitle="Target under each heading. Hit = calories within 10%, protein 90%+, carbs and fat at most 110%." noPadding>
+                <div className="grid grid-cols-[3.5rem_1fr_1fr_1fr_1fr] gap-x-2 px-4 py-2 text-caption text-neutral-600 border-b border-neutral-200">
+                  <span>Day</span>
+                  {[['kcal', 'target_calories'], ['Protein', 'target_protein_g'], ['Carbs', 'target_carbs_g'], ['Fat', 'target_fat_g']].map(([label, key]) => (
+                    <span key={label} className="text-right">{label}<br />{Math.round(days[0][key])}{key === 'target_calories' ? '' : ' g'}</span>
+                  ))}
+                </div>
+                <ul>
+                  {days.map((d) => {
+                    if (!(d.calories_consumed > 0)) {
+                      return (
+                        <li key={d.date} className="grid grid-cols-[3.5rem_1fr] gap-x-2 px-4 py-2 text-small border-b border-neutral-100 last:border-0">
+                          <span className="text-neutral-800">{fmtDay(d.date)}</span>
+                          <span className="text-neutral-500">Nothing logged</span>
+                        </li>
+                      );
+                    }
+                    const cal = Math.abs(d.calories_consumed - d.target_calories) <= d.target_calories * 0.1;
+                    return (
+                      <li key={d.date} className="grid grid-cols-[3.5rem_1fr_1fr_1fr_1fr] gap-x-2 px-4 py-2 text-small border-b border-neutral-100 last:border-0">
+                        <span className="text-neutral-800">{fmtDay(d.date)}</span>
+                        <Cell value={d.calories_consumed} ok={cal} />
+                        <Cell value={d.protein_g} ok={d.protein_g >= d.target_protein_g * 0.9} />
+                        <Cell value={d.carbs_g} ok={d.carbs_g <= d.target_carbs_g * 1.1} />
+                        <Cell value={d.fat_g} ok={d.fat_g <= d.target_fat_g * 1.1} />
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Card>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };
 
 export default Progress;
-

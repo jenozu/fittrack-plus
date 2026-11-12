@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 21/27 tasks done.**
+**Progress: 22/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -108,7 +108,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
   - [x] 22.1 Today summary: distinct macro bars, over-target state, ?date param
   - [x] 22.2 Today meal sections: empty state, one-line copy, amount under name
   - [x] 22.3 Add screen: search-first FoodLog, no diary list
-- [ ] **23. Progress polish: weight trend and macros by day** _(after 20, 21)_  
+- [x] **23. Progress polish: weight trend and macros by day** _(after 20, 21)_  
   Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.  
   _Test:_ Seeded user with 10 days of entries and weights: last bar/point carries today's date; 7-day average matches a hand calculation for one day (logged); empty states render for a fresh user. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
 - [ ] **24. Profile polish: readable targets and editing** _(after 21)_  
