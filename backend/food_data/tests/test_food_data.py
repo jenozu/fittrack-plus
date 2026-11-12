@@ -138,3 +138,58 @@ def test_reimport_is_idempotent(conn, fixtures):
     load_everything(conn, fixtures)
     after = one(conn, "SELECT count(*) FROM foods")[0], one(conn, "SELECT count(*) FROM food_portions")[0]
     assert before == after
+
+
+# (source, name, brand, popularity, complete). Names mirror the real USDA/CNF/OFF rows; OFF rows
+# compete with short, query-like names, real-ish scan counts and same-name+brand duplicates.
+RANKING_ROWS = [
+    ("usda_foundation", "Bananas, raw", None, 0, True),
+    ("cnf", "Banana, raw", None, 0, True),
+    ("off", "Banana", "Dole", 400, True), ("off", "Banana", "Dole", 120, True),
+    ("off", "Banana", "Chiquita", 350, True), ("off", "Bananas", "Del Monte", 250, False),
+    ("off", "Banana chips", "Compliments", 200, True), ("off", "Banana Bread", "Dempster's", 150, True),
+    ("usda_foundation", "Chicken, breast, boneless, skinless, raw", None, 0, True),
+    ("usda_sr", "Chicken, broilers or fryers, breast, meat only, cooked, roasted", None, 0, True),
+    ("cnf", "Chicken, broiler, breast, meat, roasted", None, 0, True),
+    ("off", "Chicken Breast", "Kirkland Signature", 450, True),
+    ("off", "Chicken Breast", "Maple Leaf", 300, True), ("off", "Chicken breast", "Maple Leaf", 120, True),
+    ("off", "Chicken Breast", "President's Choice", 260, True), ("off", "Chicken Breast", "Lilydale", 90, True),
+    ("off", "Chicken Breast Strips", "Janes", 200, True), ("off", "Grilled Chicken Breast", "Compliments", 150, True),
+    ("off", "Chicken Breast Fillets", "Lilydale", 80, False),
+    ("usda_sr", "Yogurt, Greek, plain, nonfat", None, 0, True),
+    ("usda_foundation", "Yogurt, Greek, strawberry, nonfat", None, 0, True),
+    ("cnf", "Yogurt, Greek, plain, 2% M.F.", None, 0, True),
+    ("off", "Greek Yogurt", "Chobani", 800, True), ("off", "Greek yogurt", "Oikos", 600, True),
+    ("off", "Greek Yogurt", "Oikos", 300, True), ("off", "Greek Yogurt", "Liberte", 400, True),
+    ("off", "Greek Yogurt Plain", "Kirkland Signature", 350, True), ("off", "Greek Yogurt", "Iogo", 150, True),
+    ("off", "Greek Yogurt Vanilla", "Chobani", 250, True),
+    ("off", "Shreddies", "Post", 900, True), ("off", "Shreddies", "Post", 200, False),
+    ("off", "Honey Shreddies", "Post", 300, True), ("off", "Frosted Shreddies", "Post", 200, True),
+    ("cnf", "Cereal, ready-to-eat, whole wheat squares, Shreddies", None, 0, True),
+    ("off", "Kraft Dinner Original", "Kraft", 700, True), ("off", "Kraft Dinner Original", "Kraft", 90, True),
+    ("off", "Kraft Dinner Spirals", "Kraft", 200, True), ("off", "Kraft Dinner Three Cheese", "Kraft", 150, True),
+    ("usda_sr", "KRAFT, Macaroni and Cheese Dinner, Original Flavor, unprepared", None, 0, True),
+]
+VERIFIED = ("usda_foundation", "usda_sr", "cnf")
+
+
+def test_search_prefers_verified_and_keeps_brands(conn, session):
+    apply_schema(conn)
+    with conn.cursor() as cur:
+        for i, (src, name, brand, pop, full) in enumerate(RANKING_ROWS):
+            extra = (2.0, 10.0, 300.0, 100.0) if full else (None, None, None, None)
+            cur.execute("INSERT INTO foods (source, source_id, name, brand, kcal_100g, popularity, "
+                        "fiber_100g, sugar_100g, sodium_mg_100g, serving_g) "
+                        "VALUES (%s,%s,%s,%s,100,%s,%s,%s,%s,%s)", (src, f"r{i}", name, brand, pop, *extra))
+    conn.commit()
+
+    def top3(q):
+        return [(f["source"], f["name"], f["brand"]) for f in search_foods(session, q)[:3]]
+
+    for q in ("banana", "chicken breast", "greek yogurt"):
+        assert any(src in VERIFIED for src, _, _ in top3(q)), (q, top3(q))
+    assert any(src == "off" and name.startswith("Kraft Dinner") for src, name, _ in top3("kraft dinner"))
+    assert any(src == "off" and name == "Shreddies" for src, name, _ in top3("shreddies")), top3("shreddies")
+    # same-name+brand OFF duplicates collapse to one row
+    names = [(f["name"].lower(), f["brand"]) for f in search_foods(session, "chicken breast")]
+    assert names.count(("chicken breast", "Maple Leaf")) == 1

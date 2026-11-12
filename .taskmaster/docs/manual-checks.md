@@ -115,3 +115,6 @@ Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
 
 ## Task 25 - Copy a whole day or a meal (2026-11-11)
 At 375px: on an empty day tap "Copy yesterday's whole day" (same kcal/grams as yesterday). On a day with entries pick a date 3 days ago in a meal's "Copy <meal> from" input; only that meal copies, row doesn't overflow, buttons >=44px.
+
+## Task 26 - Search ranking (2026-11-11)
+After deploy: apply backend/food_data/schema.sql on the VPS (psql -f), then EXPLAIN ANALYZE SELECT * FROM search_foods('chicken breast', 10) (match signature) plus 'greek yog' and 'a' on the ~957k-row table; each must be < 300 ms. If slower, fix stage 1, not ranking. Then search chicken breast / greek yogurt / kraft dinner / shreddies in the app and judge the top 3.

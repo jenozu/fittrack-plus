@@ -67,6 +67,7 @@ RETURNS TABLE (id BIGINT, score REAL)
 LANGUAGE plpgsql STABLE AS $$
 DECLARE
     raw  TEXT := lower(f_unaccent(trim(coalesce(q, ''))));
+    pfx  TEXT := regexp_replace(raw, '[^[:alnum:]]+', ' ', 'g');  -- punctuation-free, for the prefix bonus
     tsq  TSQUERY;
     ids  BIGINT[];
 BEGIN
@@ -99,20 +100,38 @@ BEGIN
         );
     END IF;
 
-    -- Stage 2: rank the candidates.
+    -- Stage 2: rank the candidates. Verified sources (usda/cnf) and well-filled
+    -- rows win; OFF rows with the same name + brand collapse to the best one, and each
+    -- further OFF row with the same name (other brands) drops 0.3 so they can't fill the top.
     RETURN QUERY
-    SELECT f.id,
-           (  CASE WHEN f.search_vec @@ tsq THEN 1 ELSE 0 END
-            + similarity(f.search_text, raw) * 2
-            + CASE WHEN lower(f_unaccent(f.name)) LIKE raw || '%' THEN 0.4 ELSE 0 END
-            + CASE WHEN f.source IN ('usda_foundation', 'usda_sr', 'cnf') THEN 0.35 ELSE 0 END
-            + CASE WHEN f.source = 'custom' THEN 0.5 ELSE 0 END
-            + ln(1 + f.popularity) * 0.05
-            - CASE WHEN f.quality = 'suspect' THEN 0.5 ELSE 0 END
-            - length(f.name) * 0.002
-           )::REAL
-    FROM foods f
-    WHERE f.id = ANY(ids)
+    WITH scored AS (
+        SELECT f.id AS fid, f.source AS src, f.name AS nm, f.brand AS br,
+               (  CASE WHEN f.search_vec @@ tsq THEN 1 ELSE 0 END
+                + similarity(f.search_text, raw) * 2
+                + CASE WHEN regexp_replace(lower(f_unaccent(f.name)), '[^[:alnum:]]+', ' ', 'g') LIKE pfx || '%' THEN 0.4 ELSE 0 END
+                + CASE WHEN f.source IN ('usda_foundation', 'usda_sr', 'cnf') THEN 0.9 ELSE 0 END
+                + CASE WHEN f.source = 'custom' THEN 0.5 ELSE 0 END
+                + (  (f.fiber_100g IS NOT NULL)::int + (f.sugar_100g IS NOT NULL)::int
+                   + (f.sodium_mg_100g IS NOT NULL)::int + (f.serving_g IS NOT NULL)::int) * 0.05
+                + ln(1 + f.popularity) * 0.05
+                - CASE WHEN f.quality = 'suspect' THEN 0.5 ELSE 0 END
+                - length(f.name) * 0.002
+               )::REAL AS sc
+        FROM foods f
+        WHERE f.id = ANY(ids)
+    ), ranked AS (
+        SELECT s.*, row_number() OVER (
+                   PARTITION BY CASE WHEN s.src = 'off' THEN lower(s.nm) || '|' || lower(coalesce(s.br, '')) ELSE s.fid::text END
+                   ORDER BY s.sc DESC) AS rn
+        FROM scored s
+    ), deduped AS (
+        SELECT r.fid, r.sc, row_number() OVER (
+                   PARTITION BY CASE WHEN r.src = 'off' THEN lower(r.nm) ELSE r.fid::text END
+                   ORDER BY r.sc DESC) AS nrn
+        FROM ranked r
+        WHERE r.rn = 1
+    )
+    SELECT d.fid, (d.sc - (d.nrn - 1) * 0.3)::REAL FROM deduped d
     ORDER BY 2 DESC
     LIMIT lim;
 END

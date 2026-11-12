@@ -610,10 +610,10 @@
       {
         "title": "Search ranking: verified and common foods first",
         "description": "Generic searches show OFF branded duplicates in the top 3 (see 17.5); put USDA/CNF generic entries and well-filled common products first.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [],
-        "details": "Change ranking inside backend/food_data/schema.sql search_foods() (owned by schema.sql, not Alembic). Keep it two-stage (prefix candidates, then ranking): single-pass was ~600 ms. Signals: source (usda/cnf = verified), nutrient completeness, collapse near-identical OFF name+brand rows, the user's own recent/frequent foods as a boost if cheap. Optional small 'verified' marker in FoodSearch results. No paid APIs, no OFF search API.",
+        "details": "Change ranking inside backend/food_data/schema.sql search_foods() (owned by schema.sql, not Alembic). Keep it two-stage (prefix candidates, then ranking): single-pass was ~600 ms. Signals: source (usda/cnf = verified), nutrient completeness, collapse near-identical OFF name+brand rows, the user's own recent/frequent foods as a boost if cheap. Optional small 'verified' marker in FoodSearch results. No paid APIs, no OFF search API.\n\n[2026-11-11T22:14:25-05:00] done (sonnet): schema.sql search_foods stage 2 reranked (verified +0.9, completeness, collapse OFF name+brand dupes); test added; applied to dev db; EXPLAIN skipped, no 500k local data -> VPS manual check; user-recent boost skipped\n\n[2026-11-11T22:20:33-05:00] escalate sonnet→opus: verifier FAIL, tests missing chicken breast/greek yogurt/shreddies\n\n[2026-11-11T22:21:44-05:00] plan (opus): backend/food_data/tests/test_food_data.py, backend/food_data/schema.sql - realistic fixture rows for chicken breast/greek yogurt/shreddies/kraft dinner with competing OFF rows; tune stage 2 only if tests fail\n\n[2026-11-11T22:25:31-05:00] opus: test rewritten with realistic rows (banana, chicken breast, greek yogurt, shreddies, kraft dinner; several OFF brands + dupes + verified competitors). It failed on 'greek yogurt' (4 OFF 'Greek Yogurt' brands filled top 3) and 'chicken breast' passed by only 0.04. Fixes in stage 2: (a) OFF rows sharing a name across brands drop 0.3 per extra row (after name+brand collapse); (b) prefix bonus compares punctuation-free name/query, so 'Chicken, breast, ...' gets it (also removes LIKE wildcards from user input). Still two-stage. Applied to fittrack_db + fittrack_test; EXPLAIN 'greek yog' 9 ms dev (1 row) / 21 ms test (39 rows) - 500k check still manual on VPS. backend pytest 31 passed, food_data 11 passed, frontend build ok; no frontend files touched (eslint n/a).\n\n[2026-11-11T22:29:17-05:00] done by opus, escalated from sonnet; verified, reviewer APPROVE; 500k EXPLAIN ANALYZE deferred to VPS (manual-checks)",
         "testStrategy": "pytest ranking tests: 'banana', 'chicken breast', 'greek yogurt' top-3 contain a usda/cnf entry; 'kraft dinner', 'shreddies' still return the branded product in the top 3. EXPLAIN ANALYZE on 500k+ rows < 300 ms locally (or on the VPS at deploy). Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 6,
         "id": 26,
@@ -636,7 +636,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T22:12:21-05:00",
+      "updated": "2026-11-11T22:29:17-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }

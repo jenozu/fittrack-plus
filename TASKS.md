@@ -3,7 +3,7 @@
 Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate with
 `python .taskmaster/render_tasks_md.py`. Work the tasks in order; each one says how to test it.
 
-**Progress: 24/27 tasks done.**
+**Progress: 25/27 tasks done.**
 
 ## Phase 0 - Foundation
 
@@ -117,7 +117,7 @@ Generated from `.taskmaster/tasks/tasks.json` (the source of truth). Regenerate 
 - [x] **25. Copy a whole day or a meal from any past day** _(after 22)_  
   One tap to copy yesterday's whole day, or pick a past date to copy one meal from.  
   _Test:_ pytest: whole-day copy creates one entry per source entry with identical snapshot values; user isolation holds. Manual at 375: copy yesterday's whole day into an empty day, copy one meal from 3 days ago. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
-- [ ] **26. Search ranking: verified and common foods first**  
+- [x] **26. Search ranking: verified and common foods first**  
   Generic searches show OFF branded duplicates in the top 3 (see 17.5); put USDA/CNF generic entries and well-filled common products first.  
   _Test:_ pytest ranking tests: 'banana', 'chicken breast', 'greek yogurt' top-3 contain a usda/cnf entry; 'kraft dinner', 'shreddies' still return the branded product in the top 3. EXPLAIN ANALYZE on 500k+ rows < 300 ms locally (or on the VPS at deploy). Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.
 - [ ] **27. Recent and Favourites per meal** _(after 22)_  
