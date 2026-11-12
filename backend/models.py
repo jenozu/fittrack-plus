@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date, Text, Index, Boolean, BigInteger
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date, Text, Index, Boolean, BigInteger, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -134,6 +134,18 @@ class FoodEntry(Base):
     __table_args__ = (
         Index('idx_user_date', 'user_id', 'entry_date'),
     )
+
+
+class FavouriteFood(Base):
+    __tablename__ = "favourite_foods"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    # FK to foods(id) is added by the migration only if foods exists (foods is owned by food_data/schema.sql)
+    food_id = Column(BigInteger, ForeignKey("foods.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (UniqueConstraint('user_id', 'food_id', name='uq_favourite_foods_user_food'),)
 
 
 # Exercise tracking table

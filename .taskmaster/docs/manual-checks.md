@@ -73,3 +73,51 @@ Automatic: all 5 PRD searches return in 170-275 ms end to end over the public AP
 ## Task 18 - Backups (2026-11-10)
 Tomorrow: `ssh root@2.25.108.3 'ls -lh /var/backups/fittrack; tail /var/log/fittrack-backup.log'` should show a new dump from the 03:15 cron and no errors. Optionally scp a dump to your computer (off-server copy).
 Also before task 19: delete test user deploycheck@example.com (id 1) from prod.
+
+## Task 20 - Remove dead exercise data from Progress (2026-11-11)
+1. Open Progress at 375px and 1280px.
+2. No "Burned" legend entry, burned bar or Total Burned card.
+3. Dashed Target line is visible across the Calorie Trends chart.
+4. Two remaining stat cards: 2 columns at 1280, stacked at 375.
+
+## Task 21 - Design foundation (2026-11-11)
+1. Today/Add/Progress/Profile at 375 and 1280: one primary button style (brand magenta, white text); Add's Scan Barcode is outlined secondary.
+2. Active nav item reads clearly (brand-700 on brand-100), mobile and desktop.
+3. Tab through a form: visible focus ring.
+4. Fit Boo SVG mark replaces F+; Login/Register background flat pale pink.
+
+## Task 22.1 - Today summary (2026-11-11)
+1. /?date=<yesterday> shows yesterday and a Today link; /?date=not-a-date falls back to today.
+2. 375 and 1280: P/C/F bars in three distinct colours.
+3. Over protein target: right-hand text red, bar stays full. Over kcal: red number with "kcal over".
+
+## Task 22.2 - Today meal sections (2026-11-11)
+1. 375px: empty meal shows "No <meal> logged yet."; "Add food" and "Copy yesterday" on one line.
+2. Logged row shows amount under name ("1 slice · 28 g"); quick add shows "Quick add".
+3. Tap row, edit amount, Save; tap row, Delete.
+
+## Task 22.3 / 22 - Search-first Add (2026-11-11)
+1. 375px: Today > Add food under Lunch: "Add to Lunch", search focused, no diary list.
+2. Search "banana", pick, Add: back on Today with entry and amount. Edit amount, Save; Delete.
+3. Bottom nav Add > Quick add logs to the time-of-day meal.
+4. Barcode miss: "No food found" with Dismiss and "Add it" opens custom food form.
+5. 1280px: /food single column looks right.
+
+## Task 23 - Progress polish (2026-11-11)
+1. 375 and 1280: plain "Progress", one period control, weight form not truncated, headline 7-day average + change.
+2. Last point/bar carries today's date.
+3. Macros-by-day table shows hit/miss per day. Hit thresholds are the builder's choice (kcal within 10%, protein >=90%, carbs/fat <=110%): owner to OK or adjust.
+4. Fresh account: both empty states render.
+
+## Task 24 - Profile polish (2026-11-11)
+1. 375 and 1280: no number over 1 decimal, no greyed fields, one Save, sections Account/Body/Goal/Daily targets.
+2. Change Target Calories, Save, reload: persists.
+
+## Task 25 - Copy a whole day or a meal (2026-11-11)
+At 375px: on an empty day tap "Copy yesterday's whole day" (same kcal/grams as yesterday). On a day with entries pick a date 3 days ago in a meal's "Copy <meal> from" input; only that meal copies, row doesn't overflow, buttons >=44px.
+
+## Task 26 - Search ranking (2026-11-11)
+After deploy: apply backend/food_data/schema.sql on the VPS (psql -f), then EXPLAIN ANALYZE SELECT * FROM search_foods('chicken breast', 10) (match signature) plus 'greek yog' and 'a' on the ~957k-row table; each must be < 300 ms. If slower, fix stage 1, not ranking. Then search chicken breast / greek yogurt / kraft dinner / shreddies in the app and judge the top 3.
+
+## Task 27 - Recent and Favourites per meal (2026-11-11)
+At 375px on /food?meal=breakfast: Recent/Favourites tabs show under search (tap targets >=44px). Star a food in search: star fills. Switch to Lunch and Dinner: it shows under Favourites each time. Unstar: it disappears. Open from Favourites: PortionPicker star matches; log it to the chosen meal. Recent changes per meal. No horizontal overflow, long names truncate. On deploy: alembic upgrade head applies c3e5a7b9d1f2.

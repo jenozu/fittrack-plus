@@ -5,7 +5,7 @@ Handles food search, logging, and CRUD operations.
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import date, datetime
 from uuid import uuid4
 from sqlalchemy import text
@@ -14,7 +14,7 @@ from schemas.food_schemas import (
     FoodEntryUpdate, FoodEntryResponse, FoodEntryDay, FoodUsageOut, EntryCopyIn
 )
 from services import nutrition
-from models import User, FoodEntry, Streak, Food
+from models import User, FoodEntry, Streak, Food, FavouriteFood
 from utils.auth import get_db, get_current_user
 from food_data import service as food_service
 from food_data.common import normalize_barcode
@@ -60,20 +60,21 @@ def _usage(db: Session, user_id: int, rows) -> list:
 
 
 @router.get("/recent", response_model=List[FoodUsageOut])
-def recent_foods(limit: int = Query(20, ge=1, le=100), current_user: User = Depends(get_current_user),
+def recent_foods(limit: int = Query(20, ge=1, le=100), meal_type: Optional[str] = None, current_user: User = Depends(get_current_user),
                  db: Session = Depends(get_db)):
     """Distinct foods by most recent entry, with the last amount used."""
     rows = db.execute(text("""
         SELECT * FROM (
             SELECT DISTINCT ON (food_id) food_id, grams, portion_label, quantity, created_at, id
             FROM food_entries WHERE user_id = :u AND food_id IS NOT NULL
+              AND (CAST(:m AS text) IS NULL OR meal_type = :m)
             ORDER BY food_id, created_at DESC, id DESC
-        ) t ORDER BY created_at DESC, id DESC LIMIT :n"""), {"u": current_user.id, "n": limit}).fetchall()
+        ) t ORDER BY created_at DESC, id DESC LIMIT :n"""), {"u": current_user.id, "n": limit, "m": meal_type}).fetchall()
     return _usage(db, current_user.id, rows)
 
 
 @router.get("/frequent", response_model=List[FoodUsageOut])
-def frequent_foods(limit: int = Query(20, ge=1, le=100), days: int = Query(60, ge=1, le=3650),
+def frequent_foods(limit: int = Query(20, ge=1, le=100), meal_type: Optional[str] = None, days: int = Query(60, ge=1, le=3650),
                    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Most-logged foods in the last `days` days, with the last amount used."""
     rows = db.execute(text("""
@@ -81,13 +82,40 @@ def frequent_foods(limit: int = Query(20, ge=1, le=100), days: int = Query(60, g
             SELECT food_id, COUNT(*) AS times_logged, MAX(created_at) AS last_at
             FROM food_entries
             WHERE user_id = :u AND food_id IS NOT NULL AND entry_date >= CURRENT_DATE - :d
+              AND (CAST(:m AS text) IS NULL OR meal_type = :m)
             GROUP BY food_id) c
         JOIN LATERAL (
             SELECT grams, portion_label, quantity FROM food_entries
-            WHERE user_id = :u AND food_id = c.food_id ORDER BY created_at DESC, id DESC LIMIT 1) l ON TRUE
+            WHERE user_id = :u AND food_id = c.food_id AND (CAST(:m AS text) IS NULL OR meal_type = :m)
+            ORDER BY created_at DESC, id DESC LIMIT 1) l ON TRUE
         ORDER BY c.times_logged DESC, c.last_at DESC LIMIT :n"""),
-        {"u": current_user.id, "d": days, "n": limit}).fetchall()
+        {"u": current_user.id, "d": days, "n": limit, "m": meal_type}).fetchall()
     return _usage(db, current_user.id, rows)
+
+
+@router.get("/favourites", response_model=List[FoodOut])
+def list_favourites(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """The user's starred foods, newest star first."""
+    rows = db.query(FavouriteFood.food_id).filter(FavouriteFood.user_id == current_user.id)         .order_by(FavouriteFood.created_at.desc(), FavouriteFood.id.desc()).all()
+    foods = (_visible_food(db, r.food_id, current_user.id) for r in rows)
+    return [f for f in foods if f]
+
+
+@router.put("/favourites/{food_id:int}", status_code=status.HTTP_204_NO_CONTENT)
+def add_favourite(food_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not _visible_food(db, food_id, current_user.id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Food not found")
+    db.execute(text("INSERT INTO favourite_foods (user_id, food_id, created_at) VALUES (:u, :f, now()) "
+                    "ON CONFLICT (user_id, food_id) DO NOTHING"), {"u": current_user.id, "f": food_id})
+    db.commit()
+    return None
+
+
+@router.delete("/favourites/{food_id:int}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_favourite(food_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    db.query(FavouriteFood).filter(FavouriteFood.user_id == current_user.id, FavouriteFood.food_id == food_id)         .delete(synchronize_session=False)
+    db.commit()
+    return None
 
 
 @router.get("/{food_id:int}", response_model=FoodOut)

@@ -37,13 +37,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-blue via-neutral-50 to-primary-pink px-4">
+    <div className="min-h-screen flex items-center justify-center bg-brand-50 px-4">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-block w-16 h-16 bg-gradient-to-br from-primary-pink to-primary-blue rounded-2xl flex items-center justify-center mb-4">
-            <span className="text-white font-bold text-3xl">F+</span>
-          </div>
+          <svg viewBox="0 0 32 32" aria-hidden="true" className="mx-auto mb-4 h-16 w-16">
+            <rect width="32" height="32" rx="8" className="fill-brand-600" />
+            <path d="M9 12v8M23 12v8M6 14v4M26 14v4M9 16h14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          </svg>
           <h1 className="text-3xl font-bold text-neutral-800">
             Welcome to Fit Boo
           </h1>

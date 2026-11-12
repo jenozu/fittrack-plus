@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { addDays, format, parseISO } from 'date-fns';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { addDays, format, isValid, parseISO } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, ScanLine } from 'lucide-react';
 import { dashboardAPI, foodAPI } from '../services/api';
 import { LoadingSpinner } from '../components/ui';
@@ -14,16 +14,23 @@ const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const num = (v) => Math.round(v || 0);
 
 function portionText(e) {
-  if (e.portion_label === 'g' || (!e.portion_label && e.grams)) return `${num(e.grams)} g`;
-  return e.portion_label ? `${Math.round((e.quantity || 1) * 10) / 10} ${e.portion_label}` : '';
+  if (e.portion_label && e.portion_label !== 'g') {
+    const qty = `${Math.round((e.quantity || 1) * 10) / 10} ${e.portion_label}`;
+    return e.grams ? `${qty} · ${num(e.grams)} g` : qty;
+  }
+  return e.grams ? `${num(e.grams)} g` : 'Quick add';
 }
 
-function Bar({ label, value, target }) {
+function Bar({ label, value, target, color }) {
   const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
+  const over = target > 0 && value > target;
   return (
     <div>
-      <div className="flex justify-between text-sm"><span>{label}</span><span>{num(value)} / {num(target)} g</span></div>
-      <div className="h-2 rounded-full bg-neutral-200"><div className="h-2 rounded-full bg-pink-300" style={{ width: `${pct}%` }} /></div>
+      <div className="flex justify-between text-small">
+        <span>{label}</span>
+        <span className={`tabular-nums ${over ? 'text-danger-600' : ''}`}>{num(value)} / {num(target)} g</span>
+      </div>
+      <div className="h-2 rounded-full bg-neutral-100"><div className={`h-2 rounded-full ${color}`} style={{ width: `${pct}%` }} /></div>
     </div>
   );
 }
@@ -31,7 +38,11 @@ function Bar({ label, value, target }) {
 const Dashboard = () => {
   const navigate = useNavigate();
   const today = ymd(new Date());
-  const [date, setDate] = useState(today);
+  const [params] = useSearchParams();
+  const [date, setDate] = useState(() => {
+    const q = params.get('date');
+    return q && /^\d{4}-\d{2}-\d{2}$/.test(q) && isValid(parseISO(q)) ? q : today;
+  });
   const [data, setData] = useState(null); // {entries, totals, target}
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,14 +98,17 @@ const Dashboard = () => {
     try { await foodAPI.createEntry(body); load(date); } catch { setNote("Couldn't add that food."); }
   }
 
-  async function copyYesterday(meal) {
-    const from_date = ymd(addDays(parseISO(date), -1));
+  async function copyFrom(meal, from_date) {
+    if (!from_date || from_date === date) return;
+    const what = meal || 'day';
     try {
-      const r = await foodAPI.copyEntries({ from_date, to_date: date, meal_type: meal });
-      setNote(r.data.length ? '' : `Nothing logged for ${meal} yesterday.`);
+      const r = await foodAPI.copyEntries({ from_date, to_date: date, ...(meal ? { meal_type: meal } : {}) });
+      setNote(r.data.length ? '' : `Nothing logged for the ${what} on ${from_date}.`);
       load(date);
     } catch { setNote("Couldn't copy."); }
   }
+
+  const yesterday = () => ymd(addDays(parseISO(date), -1));
 
   async function onScan(code) {
     setScanning(false);
@@ -115,12 +129,12 @@ const Dashboard = () => {
         <button type="button" aria-label="Previous day" onClick={() => shift(-1)} className={iconBtn}><ChevronLeft /></button>
         <div className="text-center">
           <h1 className="text-lg font-semibold">{date === today ? 'Today' : format(parseISO(date), 'EEE, MMM d')}</h1>
-          {date !== today && <button type="button" onClick={() => setDate(today)} className="min-h-[44px] text-sm text-blue-600">Today</button>}
+          {date !== today && <button type="button" onClick={() => setDate(today)} className="min-h-[44px] text-sm text-brand-700">Today</button>}
         </div>
         <button type="button" aria-label="Next day" onClick={() => shift(1)} className={iconBtn}><ChevronRight /></button>
       </div>
 
-      {error && <p className="text-sm text-red-500">Couldn&apos;t load. <button type="button" className="underline" onClick={() => load(date)}>Retry</button></p>}
+      {error && <p className="text-sm text-danger-600">Couldn&apos;t load. <button type="button" className="underline" onClick={() => load(date)}>Retry</button></p>}
       {note && <p className="text-sm text-neutral-600">{note}</p>}
 
       <div className="min-h-[170px] space-y-3 rounded-2xl bg-white p-4 shadow-sm">
@@ -129,18 +143,30 @@ const Dashboard = () => {
         ) : (
           <>
             <div className="text-center">
-              <div className="text-5xl font-bold" data-testid="remaining">{num(t.target_calories - tot.calories)}</div>
-              <div className="text-sm text-neutral-500">kcal remaining · {num(tot.calories)} of {num(t.target_calories)}</div>
+              {(() => {
+                const left = num(t.target_calories - tot.calories);
+                return left < 0 ? (
+                  <>
+                    <div className="text-5xl font-bold tabular-nums text-danger-600" data-testid="remaining">{-left}</div>
+                    <div className="text-small text-neutral-500">kcal over · {num(tot.calories)} of {num(t.target_calories)}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-5xl font-bold tabular-nums" data-testid="remaining">{left}</div>
+                    <div className="text-small text-neutral-500">kcal remaining · {num(tot.calories)} of {num(t.target_calories)}</div>
+                  </>
+                );
+              })()}
             </div>
-            <Bar label="Protein" value={tot.protein_g} target={t.target_protein_g} />
-            <Bar label="Carbs" value={tot.carbs_g} target={t.target_carbs_g} />
-            <Bar label="Fat" value={tot.fat_g} target={t.target_fat_g} />
+            <Bar label="Protein" value={tot.protein_g} target={t.target_protein_g} color="bg-brand-600" />
+            <Bar label="Carbs" value={tot.carbs_g} target={t.target_carbs_g} color="bg-amber-600" />
+            <Bar label="Fat" value={tot.fat_g} target={t.target_fat_g} color="bg-sky-700" />
           </>
         )}
       </div>
 
       <button type="button" onClick={() => setScanning(true)}
-        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 text-base text-white">
+        className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-base text-white">
         <ScanLine size={20} /> Scan barcode
       </button>
 
@@ -155,6 +181,11 @@ const Dashboard = () => {
         </div>
       )}
 
+      {data && data.entries.length === 0 && (
+        <button type="button" onClick={() => copyFrom(null, yesterday())}
+          className="min-h-[44px] w-full rounded-lg border border-neutral-300 bg-white text-sm">Copy yesterday&apos;s whole day</button>
+      )}
+
       {data && MEALS.map((m) => {
         const items = data.entries.filter((e) => e.meal_type === m);
         const kcal = items.reduce((s, e) => s + e.calories, 0);
@@ -164,22 +195,27 @@ const Dashboard = () => {
               <h2 className="font-semibold">{cap(m)}</h2>
               <span className="text-sm text-neutral-500">{num(kcal)} kcal</span>
             </div>
-            {items.length === 0 && <p className="py-2 text-sm text-neutral-400">Nothing yet</p>}
+            {items.length === 0 && <p className="py-2 text-small text-neutral-600">No {m} logged yet.</p>}
             {items.map((e) => (
               <button key={e.id} type="button" onClick={() => openEdit(e)}
                 className="flex min-h-[44px] w-full items-center justify-between gap-2 border-b border-neutral-100 text-left last:border-0">
                 <span className="min-w-0"><span className="block truncate">{e.food_name}</span>
-                  <span className="block text-xs text-neutral-500">{portionText(e)}</span></span>
-                <span className="shrink-0 text-sm">{num(e.calories)}</span>
+                  <span className="block text-caption text-neutral-600">{portionText(e)}</span></span>
+                <span className="shrink-0 text-sm tabular-nums">{num(e.calories)} kcal</span>
               </button>
             ))}
-            <div className="mt-1 flex gap-2">
-              <button type="button" onClick={() => navigate(`/food?meal=${m}&date=${date}`)}
-                className="flex min-h-[44px] flex-1 items-center justify-center gap-1 rounded-lg bg-pink-100 text-sm">
-                <Plus size={16} /> Add
+            <div className="mt-1 flex flex-wrap gap-2">
+              <button type="button" onClick={() => navigate(`/food?meal=${m}&date=${date}`)} aria-label={`Add food to ${m}`}
+                className="flex min-h-[44px] flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-50 text-sm font-medium">
+                <Plus size={16} /> Add food
               </button>
-              <button type="button" onClick={() => copyYesterday(m)}
-                className="min-h-[44px] flex-1 rounded-lg border border-neutral-300 text-sm">Copy yesterday&apos;s {m}</button>
+              <button type="button" onClick={() => copyFrom(m, yesterday())} aria-label={`Copy yesterday's ${m}`}
+                className="min-h-[44px] flex-1 whitespace-nowrap rounded-lg border border-neutral-300 text-sm">Copy yesterday</button>
+              <label className="flex min-h-[44px] w-full items-center justify-between gap-2 text-sm text-neutral-600">
+                Copy {m} from
+                <input type="date" max={date} value="" onChange={(e) => copyFrom(m, e.target.value)}
+                  className="min-h-[44px] rounded-lg border border-neutral-300 px-2" />
+              </label>
             </div>
           </section>
         );
@@ -193,7 +229,7 @@ const Dashboard = () => {
           <p className="text-sm">No food found for {missing}.</p>
           <div className="flex gap-2">
             <button type="button" className="min-h-[44px] px-2 text-sm" onClick={() => setMissing(null)}>Dismiss</button>
-            <button type="button" className="min-h-[44px] rounded-lg bg-pink-100 px-3 text-sm" onClick={() => setCustomForm(true)}>Add it</button>
+            <button type="button" className="min-h-[44px] rounded-lg bg-brand-100 px-3 text-sm text-brand-700" onClick={() => setCustomForm(true)}>Add it</button>
           </div>
         </div>
       )}

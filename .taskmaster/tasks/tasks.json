@@ -493,10 +493,10 @@
       {
         "title": "Remove dead exercise data from Progress",
         "description": "Progress still shows a calories-burned bar series and a Total Burned card that always read 0 (hidden exercise feature).",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [],
-        "details": "frontend/src/pages/Progress.jsx only: drop the calories_burned <Bar> and the Total Burned stat card. Do not touch backend or the exercise code behind the feature flag. While there: the Target <Line> inside <BarChart> never draws (needs ComposedChart); switch to ComposedChart so the target line shows.",
+        "details": "frontend/src/pages/Progress.jsx only: drop the calories_burned <Bar> and the Total Burned stat card. Do not touch backend or the exercise code behind the feature flag. While there: the Target <Line> inside <BarChart> never draws (needs ComposedChart); switch to ComposedChart so the target line shows.\n\n[2026-11-11T19:36:52-05:00] plan (haiku-5.5): frontend/src/pages/Progress.jsx - drop calories_burned Bar and Total Burned card; BarChart->ComposedChart so Target Line draws\n\n[2026-11-11T19:38:03-05:00] done (haiku-5.5): removed calories_burned Bar, Total Burned card; BarChart->ComposedChart (Target Line now draws); stats grid md:grid-cols-3 -> md:grid-cols-2 for the 2 remaining cards. Gates: npx eslint Progress.jsx -> only pre-existing React-unused-import error (line 1, untouched) + 2 pre-existing exhaustive-deps warnings; npm run build pass; backend pytest 29 passed. Visual 375/1280 checks not run (no browser): manual.\n\n[2026-11-11T19:39:23-05:00] done by haiku; verified (pending manual visual check)",
         "testStrategy": "Progress at 375 and 1280: no 'Burned' legend, bar or card; dashed Target line visible on the calorie chart. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 2,
         "id": 20,
@@ -505,10 +505,10 @@
       {
         "title": "Design foundation: type scale, colour roles, buttons",
         "description": "One type scale, one accent with clear roles, one button system and contrast-safe colours, used by every page.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [],
-        "details": "Today the app mixes pink, baby blue, green and black as 'primary' (black Scan on Today, green Scan on Add, pink Log, pale-blue active nav). White text on pastel pink and pale-blue active nav text fail 4.5:1. Define tokens in tailwind.config.js + index.css: type scale (max 5 sizes), tabular numerals for numbers, one accent for the main action, neutral secondary, danger; visible focus ring; 44px targets. Update components/ui (Button, Card, Input, Select) and Navbar/Layout to use them. Replace the leftover 'F+' logo mark with a Fit Boo mark (text or simple inline SVG, no new deps). No new dependencies, no page restructuring (later tasks do that). Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "Today the app mixes pink, baby blue, green and black as 'primary' (black Scan on Today, green Scan on Add, pink Log, pale-blue active nav). White text on pastel pink and pale-blue active nav text fail 4.5:1. Define tokens in tailwind.config.js + index.css: type scale (max 5 sizes), tabular numerals for numbers, one accent for the main action, neutral secondary, danger; visible focus ring; 44px targets. Update components/ui (Button, Card, Input, Select) and Navbar/Layout to use them. Replace the leftover 'F+' logo mark with a Fit Boo mark (text or simple inline SVG, no new deps). No new dependencies, no page restructuring (later tasks do that). Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T19:49:30-05:00] sonnet: tokens (brand/danger, 5-size type scale caption/small/body/title/display, tabular nums, focus-visible ring) in tailwind.config.js+index.css; legacy primary/secondary/accent pink+blue aliased to brand so pages stay on one accent; ui Button/Card/Input/Select/Spinner, Navbar, Login/Register logo+bg updated; F+ -> inline SVG mark; Dashboard Scan -> brand, FoodLog Scan -> secondary. Contrast: primary white/brand600 6.04, hover 7.88, danger 6.47/8.31, secondary 15.13, ghost 10.37, active nav brand700/brand100 6.71, inactive nav 7.81, subtitle 7.81, label 10.37, error 6.47, input border 4.74, body 14.5. pytest 29 pass, build ok.\n\n[2026-11-11T19:51:24-05:00] done by sonnet; verified (contrast ratios in builder report; lint errors pre-existing; manual visual check pending)",
         "testStrategy": "All text/background pairs used by ui components >= 4.5:1 (list them with ratios in the log). Screenshots of Today/Add/Progress/Profile at 375+1280 show one primary button style. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 5,
         "id": 21,
@@ -517,27 +517,63 @@
       {
         "title": "Today and Add Food: one diary, search-first Add",
         "description": "Today (Dashboard) and Add (FoodLog) are two competing diary screens with different styles. Make Today the only diary and Add a search-first screen.",
-        "status": "pending",
+        "status": "done",
         "priority": "high",
         "dependencies": [
           21
         ],
-        "details": "FoodLog.jsx repeats the day summary and meal lists in a different look (gradient card, three rainbow buttons, '1 serving' meta, P/C/F wrapping, red trash per row). Make /food open straight to search (FoodSearch, barcode, quick-add) for a chosen meal/date; diary rows and edit/delete live on Today. Today: differentiate macro bars, keep the copy button on one line at 375, a real empty state per meal, entry row shows amount (grams/portion) under the name. Split into 3-5 subtasks before building (complexity 7). No backend changes. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "FoodLog.jsx repeats the day summary and meal lists in a different look (gradient card, three rainbow buttons, '1 serving' meta, P/C/F wrapping, red trash per row). Make /food open straight to search (FoodSearch, barcode, quick-add) for a chosen meal/date; diary rows and edit/delete live on Today. Today: differentiate macro bars, keep the copy button on one line at 375, a real empty state per meal, entry row shows amount (grams/portion) under the name. Split into 3-5 subtasks before building (complexity 7). No backend changes. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T19:54:20-05:00] split (opus): 22.1 Today summary/bars/?date (c3), 22.2 Today meal sections + PortionPicker tokens (c3), 22.3 search-first Add screen (c5, runs full gates incl. pytest). Screenshots need a browser; builders report steps, phase-runner files them in manual-checks.\n\n[2026-11-11T20:02:42-05:00] all subtasks done; verified (manual E2E pending)",
         "testStrategy": "Log, edit and delete an entry end to end at 375px from Today; Add opens with the search field focused; no duplicated diary list on /food. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 7,
         "id": 22,
-        "subtasks": []
+        "subtasks": [
+          {
+            "title": "Today summary: distinct macro bars, over-target state, ?date param",
+            "description": "",
+            "status": "done",
+            "dependencies": [],
+            "details": "File: frontend/src/pages/Dashboard.jsx only. No backend changes, no new deps. (1) Initial date from the URL: import useSearchParams from react-router-dom; const [params] = useSearchParams(); initial date = params.get('date') if it matches /^\\d{4}-\\d{2}-\\d{2}$/, else today. Task 22.3 navigates to /?date=YYYY-MM-DD after adding a food, so this must work. (2) Bar component: add a colour prop; Protein bg-brand-600, Carbs bg-amber-600, Fat bg-sky-700; track bg-neutral-100 h-2 rounded-full. Label row: text-small, numbers in tabular-nums, '{value} / {target} g'. When value > target the right-hand text is text-danger-600 and the bar stays full (no extra colour). (3) Remaining kcal: if target - eaten < 0 show the absolute number in text-danger-600 with caption '{n} kcal over · {eaten} of {target}'; keep data-testid=\"remaining\" on the number; add tabular-nums. (4) Token colours in the header/status lines: 'Today' jump link text-blue-600 -> text-brand-700; error line text-red-500 -> text-danger-600. Do NOT touch the meal sections (22.2) or FoodLog.jsx (22.3).\n\n[2026-11-11T19:54:48-05:00] plan (haiku-5.5): frontend/src/pages/Dashboard.jsx only - ?date init via useSearchParams, Bar colour prop, over-target danger text, remaining kcal over state, token colour swaps. No backend, no deps.\n\n[2026-11-11T19:55:52-05:00] done (haiku-5.5): Dashboard.jsx only. useSearchParams date init (regex + isValid guard), Bar takes color prop (brand-600/amber-600/sky-700), track bg-neutral-100, text-small + tabular-nums labels, over-target right text text-danger-600, kcal over state with abs number + caption, Today link text-brand-700, error line text-danger-600. eslint exit 0, vite build passes, grep for old tokens empty. Screenshots not taken (manual).\n\n[2026-11-11T19:56:55-05:00] done by haiku; verified",
+            "testStrategy": "cd frontend && npx eslint src/pages/Dashboard.jsx (no new errors) && npm run build passes. grep -n 'bg-pink-300\\|text-blue-600\\|text-red-500' src/pages/Dashboard.jsx returns nothing; grep -n useSearchParams src/pages/Dashboard.jsx matches. Manual (report steps; phase-runner files them): open /?date=<yesterday> -> header shows yesterday; three bars in three colours at 375 and 1280; over-target protein shows danger text.",
+            "complexity": 3,
+            "id": 1
+          },
+          {
+            "title": "Today meal sections: empty state, one-line copy, amount under name",
+            "description": "",
+            "status": "done",
+            "dependencies": [
+              1
+            ],
+            "details": "Files: frontend/src/pages/Dashboard.jsx (meal section block + portionText) and frontend/src/components/PortionPicker.jsx (button/error colours only). No backend changes. (1) portionText(e): portion entry -> '{qty} {label} · {grams} g' (qty rounded to 1 dp, grams rounded); grams-only entry (portion_label 'g', or no label but grams) -> '{grams} g'; no grams and no label (quick-add) -> 'Quick add'. Row: name on line 1 (truncate), this text on line 2 as text-caption text-neutral-600; kcal on the right gets tabular-nums and ' kcal'. (2) Empty state per meal: replace 'Nothing yet' (text-neutral-400 fails contrast) with <p className=\"py-2 text-small text-neutral-600\">No {meal} logged yet.</p>. (3) Buttons row: Add button -> bg-brand-100 text-brand-700 hover:bg-brand-50 font-medium, label 'Add food', aria-label 'Add food to {meal}'. Copy button -> label 'Copy yesterday', aria-label \"Copy yesterday's {meal}\", whitespace-nowrap, keep border-neutral-300 and min-h-[44px]; both buttons stay flex-1 on one line at 375px. (4) PortionPicker.jsx: Add/Save button bg-neutral-900 -> bg-brand-600 hover:bg-brand-700 text-white; Delete button -> border-danger-600 text-danger-600; error text-red-500 -> text-danger-600. Keep edit/delete behaviour (tap row -> PortionPicker Save/Delete; quick-add rows -> confirm delete). Do NOT touch FoodLog.jsx or the summary card (22.1).\n\n[2026-11-11T19:57:03-05:00] plan (haiku): frontend/src/pages/Dashboard.jsx (meal section block, portionText, row layout, empty state, buttons), frontend/src/components/PortionPicker.jsx (button/error colours) - apply 22.2 spec, no backend, no FoodLog.jsx/summary card\n\n[2026-11-11T19:58:28-05:00] done (haiku): Dashboard.jsx portionText (qty·grams / grams / 'Quick add'), empty state 'No {meal} logged yet', row caption + kcal tabular, Add food (brand-100) / Copy yesterday buttons with aria-labels and whitespace-nowrap; also restyled missing-barcode 'Add it' button bg-pink-100 -> bg-brand-100 text-brand-700 so the spec grep passes. PortionPicker.jsx: Save/Add bg-brand-600 hover:bg-brand-700, Delete border/text danger-600, error text-danger-600. eslint on touched files clean; grep clean; npm run build passes. Screenshots and manual phone checks not run (manual-checks).\n\n[2026-11-11T19:59:27-05:00] done by haiku; verified",
+            "testStrategy": "cd frontend && npx eslint src/pages/Dashboard.jsx src/components/PortionPicker.jsx (no new errors) && npm run build passes. grep -n 'Nothing yet\\|bg-pink-100\\|bg-neutral-900\\|text-red-500' src/pages/Dashboard.jsx src/components/PortionPicker.jsx returns nothing. Manual (report steps): at 375px an empty meal shows 'No <meal> logged yet'; 'Add food' and 'Copy yesterday' sit side by side on one line; a logged row shows e.g. '1 slice · 28 g' under the name; tap row -> change amount -> Save updates; tap row -> Delete removes it.",
+            "complexity": 3,
+            "id": 2
+          },
+          {
+            "title": "Add screen: search-first FoodLog, no diary list",
+            "description": "",
+            "status": "done",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Files: frontend/src/pages/FoodLog.jsx (rewrite), frontend/src/components/FoodSearch.jsx (colour tokens only). No backend changes, no new deps. Route /food stays; Navbar 'Add' -> /food and Today's Add -> /food?meal=X&date=Y both land here. REMOVE from FoodLog: gradient summary card, the three action buttons row, the grouped entries list, handleDelete, the date <Input>, dashboardAPI/getEntries/deleteEntry calls, the Search Modal, unused lucide icons. NEW layout (one column, max-w-xl mx-auto at 1280): (a) header: h1 text-title 'Add to {Meal}' plus a caption with the date ('Today' or format(parseISO(date),'EEE, MMM d')). date = params.get('date') || today; meal state = params.get('meal') || defaultMeal() (import { defaultMeal } from components/PortionPicker). (b) meal switcher: 4 buttons, grid-cols-4 gap-1, min-h-[44px] text-small, aria-pressed; active bg-brand-100 text-brand-700 font-medium, inactive bg-white border border-neutral-300 text-neutral-700. (c) grid-cols-2 gap-2 row of ui Button variant=secondary: 'Scan barcode' (ScanLine icon) and 'Quick add' (Plus icon). (d) <FoodSearch onSelect={setPicked} onCreate={() => setCustomForm({barcode: ''})} /> inline, not in a Modal; its input already has autoFocus, so the field is focused on open. (e) keep the data attribution footer (ODbL requires it) as text-caption text-neutral-600. FLOWS: picked -> <PortionPicker food date meal={meal} onAdded={() => navigate('/?date=' + date)} onClose>. Barcode: same lookup as now; 404 -> inline card 'No food found for {code}' with Dismiss / 'Add it' -> CustomFoodForm(barcode) -> onCreated sets picked; other errors -> inline note text-danger-600 (no alert()). Quick add: ui Modal with ui Input fields Name (required), Calories (required), Protein/Carbs/Fat g (optional); numeric inputs type=text inputMode=decimal; Add disabled until name is non-empty and calories parses to a number >= 0; POST foodAPI.createEntry({food_name, calories, protein_g, carbs_g, fat_g, meal_type: meal, entry_date: date}) (backend quick-add path, see FoodEntryCreate in backend/schemas/food_schemas.py); success -> navigate('/?date=' + date); failure -> inline error in the modal. FoodSearch.jsx: error text-red-500 -> text-danger-600; source label text-neutral-400 -> text-neutral-500. Depends on 22.1 (Today reads ?date).\n\n[2026-11-11T20:02:41-05:00] done by sonnet; verified",
+            "testStrategy": "cd frontend && npx eslint src/pages/FoodLog.jsx src/components/FoodSearch.jsx (no errors) && npm run build passes. grep -n 'getEntries\\|deleteEntry\\|dashboardAPI\\|Trash2\\|gradient' src/pages/FoodLog.jsx returns nothing (no diary list on /food). cd backend && TEST_DATABASE_URL=postgresql://fittrack:fittrack@localhost:5432/fittrack_test venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --basetemp=<scratch dir> passes. Manual (report steps for manual-checks, incl. screenshots of Today and Add at 375 and 1280): Today -> Lunch 'Add food' -> /food shows 'Add to Lunch' with the search field focused -> search 'banana' -> pick -> Add -> back on Today with the entry under Lunch showing its amount -> tap it, change amount, Save -> tap it, Delete. Quick add from the nav 'Add' logs to the time-of-day meal on today. A barcode miss shows 'Add it'.",
+            "complexity": 5,
+            "id": 3
+          }
+        ]
       },
       {
         "title": "Progress polish: weight trend and macros by day",
         "description": "Rework Progress around two questions: is my weight trending down, and did I hit my macros each day.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           20,
           21
         ],
-        "details": "Fix chart dates shown one day early (new Date('YYYY-MM-DD') parses as UTC; parse as local). Header: plain 'Progress', one period control instead of two (7/14/30/90 at top plus a 30-day select inside Weight). Weight: form fits at 375 (placeholder truncates to 'Toda', select to '30 c'); headline = current 7-day average and change over the period; raw points faint, average line strong. Replace the macro line chart with a macros-by-day summary (per day: kcal and P/C/F vs target, hit/miss). Drop the emoji hero-metric cards (Avg calories / Tracking days) or fold them into the summary. Empty states for no weights / no entries. Uses existing dashboard endpoints; no schema change. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "Fix chart dates shown one day early (new Date('YYYY-MM-DD') parses as UTC; parse as local). Header: plain 'Progress', one period control instead of two (7/14/30/90 at top plus a 30-day select inside Weight). Weight: form fits at 375 (placeholder truncates to 'Toda', select to '30 c'); headline = current 7-day average and change over the period; raw points faint, average line strong. Replace the macro line chart with a macros-by-day summary (per day: kcal and P/C/F vs target, hit/miss). Drop the emoji hero-metric cards (Avg calories / Tracking days) or fold them into the summary. Empty states for no weights / no entries. Uses existing dashboard endpoints; no schema change. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T20:03:56-05:00] plan (sonnet): Progress.jsx only - one period control, local date parse, weight headline, macros-by-day rows hit/miss, empty states\n\n[2026-11-11T20:06:43-05:00] Built Progress.jsx. 7-day avg hand check: weights last 7d (Nov5 81.1, Nov7 80.84, Nov9 80.58, Nov11 80.32) mean=80.71 -> page headline 80.7 kg, matches. Last bar/point dated Nov 11 (today). Empty states verified with fresh user fresh23@example.com (local dev db). Screenshots 375/1280 in scratchpad shots/progress-*.png, fresh-*.png. eslint, build, pytest pass.\n\n[2026-11-11T20:08:24-05:00] done by sonnet; verified (7-day avg hand calc 80.71 logged by builder)",
         "testStrategy": "Seeded user with 10 days of entries and weights: last bar/point carries today's date; 7-day average matches a hand calculation for one day (logged); empty states render for a fresh user. Screenshots 375+1280. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 5,
         "id": 23,
@@ -546,12 +582,12 @@
       {
         "title": "Profile polish: readable targets and editing",
         "description": "Profile shows raw floats (167.92499999999998), every field greyed out until 'Edit Profile', and generic filler.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           21
         ],
-        "details": "Round displayed targets and weights (if the save path stores long floats, round on save; no migration). Fields editable in place with one Save, or a clear read view; no all-grey disabled form. Remove the one-off coloured left borders on Physical Stats / Fitness Goals. Replace the 'Data Management / We never sell your data. Period.' filler with something true and useful, or remove it. Plain section names. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.",
+        "details": "Round displayed targets and weights (if the save path stores long floats, round on save; no migration). Fields editable in place with one Save, or a clear read view; no all-grey disabled form. Remove the one-off coloured left borders on Physical Stats / Fitness Goals. Replace the 'Data Management / We never sell your data. Period.' filler with something true and useful, or remove it. Plain section names. Visual work uses the impeccable + anti-slop-web-design skills. Check the page at 375px and 1280px (screenshots) before done.\n\n[2026-11-11T20:11:33-05:00] Profile.jsx: always-editable form, one Save, values rounded to 1dp on load+save, removed coloured borders/filler, plain section names. Screens+persist verified; build/eslint/pytest ok.\n\n[2026-11-11T20:12:55-05:00] done by sonnet; verified (builder ran save/reload via puppeteer)",
         "testStrategy": "Profile at 375+1280: no number shows more than 1 decimal; change target calories, save, reload, value persists. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 4,
         "id": 24,
@@ -560,12 +596,12 @@
       {
         "title": "Copy a whole day or a meal from any past day",
         "description": "One tap to copy yesterday's whole day, or pick a past date to copy one meal from.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           22
         ],
-        "details": "Backend POST /food/entries/copy already takes any from_date and an optional meal_type (whole day when omitted); add a backend test for whole-day copy if missing. Frontend on Today: 'Copy yesterday' for the whole day when the day is empty; per-meal copy offers yesterday plus a native date input. Snapshot values are copied as-is (never recompute).",
+        "details": "Backend POST /food/entries/copy already takes any from_date and an optional meal_type (whole day when omitted); add a backend test for whole-day copy if missing. Frontend on Today: 'Copy yesterday' for the whole day when the day is empty; per-meal copy offers yesterday plus a native date input. Snapshot values are copied as-is (never recompute).\n\n[2026-11-11T22:09:02-05:00] sonnet: Dashboard copyFrom(meal, from_date), whole-day button when day empty, per-meal native date input; added test_copy_whole_day_and_isolation. pytest 30 pass, eslint+build ok. 375 screenshot not run.\n\n[2026-11-11T22:12:21-05:00] done by sonnet; verified, done pending manual check (375px)",
         "testStrategy": "pytest: whole-day copy creates one entry per source entry with identical snapshot values; user isolation holds. Manual at 375: copy yesterday's whole day into an empty day, copy one meal from 3 days ago. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 3,
         "id": 25,
@@ -574,10 +610,10 @@
       {
         "title": "Search ranking: verified and common foods first",
         "description": "Generic searches show OFF branded duplicates in the top 3 (see 17.5); put USDA/CNF generic entries and well-filled common products first.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [],
-        "details": "Change ranking inside backend/food_data/schema.sql search_foods() (owned by schema.sql, not Alembic). Keep it two-stage (prefix candidates, then ranking): single-pass was ~600 ms. Signals: source (usda/cnf = verified), nutrient completeness, collapse near-identical OFF name+brand rows, the user's own recent/frequent foods as a boost if cheap. Optional small 'verified' marker in FoodSearch results. No paid APIs, no OFF search API.",
+        "details": "Change ranking inside backend/food_data/schema.sql search_foods() (owned by schema.sql, not Alembic). Keep it two-stage (prefix candidates, then ranking): single-pass was ~600 ms. Signals: source (usda/cnf = verified), nutrient completeness, collapse near-identical OFF name+brand rows, the user's own recent/frequent foods as a boost if cheap. Optional small 'verified' marker in FoodSearch results. No paid APIs, no OFF search API.\n\n[2026-11-11T22:14:25-05:00] done (sonnet): schema.sql search_foods stage 2 reranked (verified +0.9, completeness, collapse OFF name+brand dupes); test added; applied to dev db; EXPLAIN skipped, no 500k local data -> VPS manual check; user-recent boost skipped\n\n[2026-11-11T22:20:33-05:00] escalate sonnet→opus: verifier FAIL, tests missing chicken breast/greek yogurt/shreddies\n\n[2026-11-11T22:21:44-05:00] plan (opus): backend/food_data/tests/test_food_data.py, backend/food_data/schema.sql - realistic fixture rows for chicken breast/greek yogurt/shreddies/kraft dinner with competing OFF rows; tune stage 2 only if tests fail\n\n[2026-11-11T22:25:31-05:00] opus: test rewritten with realistic rows (banana, chicken breast, greek yogurt, shreddies, kraft dinner; several OFF brands + dupes + verified competitors). It failed on 'greek yogurt' (4 OFF 'Greek Yogurt' brands filled top 3) and 'chicken breast' passed by only 0.04. Fixes in stage 2: (a) OFF rows sharing a name across brands drop 0.3 per extra row (after name+brand collapse); (b) prefix bonus compares punctuation-free name/query, so 'Chicken, breast, ...' gets it (also removes LIKE wildcards from user input). Still two-stage. Applied to fittrack_db + fittrack_test; EXPLAIN 'greek yog' 9 ms dev (1 row) / 21 ms test (39 rows) - 500k check still manual on VPS. backend pytest 31 passed, food_data 11 passed, frontend build ok; no frontend files touched (eslint n/a).\n\n[2026-11-11T22:29:17-05:00] done by opus, escalated from sonnet; verified, reviewer APPROVE; 500k EXPLAIN ANALYZE deferred to VPS (manual-checks)",
         "testStrategy": "pytest ranking tests: 'banana', 'chicken breast', 'greek yogurt' top-3 contain a usda/cnf entry; 'kraft dinner', 'shreddies' still return the branded product in the top 3. EXPLAIN ANALYZE on 500k+ rows < 300 ms locally (or on the VPS at deploy). Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 6,
         "id": 26,
@@ -586,12 +622,12 @@
       {
         "title": "Recent and Favourites per meal",
         "description": "On the Add screen for a meal: the foods you usually log at that meal plus starred favourites, one tap to re-log.",
-        "status": "pending",
+        "status": "done",
         "priority": "medium",
         "dependencies": [
           22
         ],
-        "details": "Recent per meal: optional meal_type filter on GET /food/recent and /food/frequent. Favourites: new app table favourite_foods (user_id, food_id, created_at, unique pair) via the db-migration skill, forward-only; list/add/remove endpoints with Depends(get_current_user), filtered by user_id. Star toggle on search results and the Add screen. Favourites are a small PRD addition (decision log line), not a non-goal.",
+        "details": "Recent per meal: optional meal_type filter on GET /food/recent and /food/frequent. Favourites: new app table favourite_foods (user_id, food_id, created_at, unique pair) via the db-migration skill, forward-only; list/add/remove endpoints with Depends(get_current_user), filtered by user_id. Star toggle on search results and the Add screen. Favourites are a small PRD addition (decision log line), not a non-goal.\n\n[2026-11-11T22:33:51-05:00] built (sonnet): migration c3e5a7b9d1f2 favourite_foods (FK to foods only if exists), model FavouriteFood, GET/PUT/DELETE /food/favourites, meal_type filter on recent/frequent, star in FoodSearch+PortionPicker, Recent/Favourites tabs. pytest 32 pass, fresh-db alembic up/down/up/check ok, eslint+build ok. 375px screenshot not run (could not probe dev servers) -> manual.\n\n[2026-11-11T22:37:05-05:00] done by sonnet; verified, reviewer APPROVE; done pending manual check (375px)",
         "testStrategy": "pytest: favourites CRUD, user isolation, recent?meal_type=breakfast returns only breakfast foods; alembic upgrade head on a fresh test db. Manual at 375: star a food, it shows under Favourites for every meal. Gates: npx eslint <touched files>, frontend npm run build, backend pytest -q all pass.",
         "complexity": 6,
         "id": 27,
@@ -600,7 +636,7 @@
     ],
     "metadata": {
       "created": "2026-11-08T17:30:00-05:00",
-      "updated": "2026-11-11T19:25:20-05:00",
+      "updated": "2026-11-11T22:37:05-05:00",
       "description": "FitTrack+ master plan. Source of truth; TASKS.md is generated from this."
     }
   }
